@@ -61,33 +61,33 @@ const ProductsPage = ({ setCurrentPage, setIsAuthenticated }) => {
       
       {/* Main Content - Scrollable with padding for header and footer */}
       <div className="flex-1 bg-gray-50 pt-16 pb-12 sm:pb-16 overflow-y-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-          <div className="text-center mb-6 sm:mb-8 lg:mb-12">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-900 mb-3 sm:mb-4 lg:mb-6">Our Product Ecosystem</h1>
-            <p className="text-sm sm:text-base lg:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="text-center mb-4 sm:mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-blue-900 mb-2 sm:mb-3">Our Product Ecosystem</h1>
+            <p className="text-sm sm:text-base text-gray-600 max-w-3xl mx-auto px-4">
               Comprehensive AI-powered solutions for modern trading and investment management
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {products.map((product) => (
-              <div key={product.id} className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 relative">
+              <div key={product.id} className="bg-white p-4 sm:p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 relative">
                 {!product.enabled && (
-                  <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
+                  <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
                     <span className="text-xs italic text-gray-400">Coming soon!</span>
                   </div>
                 )}
                 
-                <div className="flex items-start space-x-3 sm:space-x-4 mb-3 sm:mb-4 lg:mb-6">
-                  <div className="text-2xl sm:text-3xl lg:text-4xl">{product.icon}</div>
+                <div className="flex items-start space-x-3 mb-3">
+                  <div className="text-2xl sm:text-3xl">{product.icon}</div>
                   <div className="flex-1">
-                    <h3 className={`text-lg sm:text-xl lg:text-2xl font-bold mb-2 text-${product.color}-600`}>
+                    <h3 className={`text-lg sm:text-xl font-bold mb-2 text-${product.color}-600`}>
                       {product.name}
                     </h3>
                   </div>
                 </div>
                 
-                <p className="text-gray-700 mb-4 sm:mb-6 lg:mb-8 leading-relaxed text-xs sm:text-sm lg:text-base">
+                <p className="text-gray-700 mb-4 leading-relaxed text-xs sm:text-sm">
                   {product.description}
                 </p>
                 
@@ -95,9 +95,9 @@ const ProductsPage = ({ setCurrentPage, setIsAuthenticated }) => {
                   {product.enabled ? (
                     <button
                       onClick={() => handleGoogleAuth(product.id)}
-                      className={`w-full ${getColorClasses(product.color, product.enabled)} text-white px-4 sm:px-6 py-2 sm:py-3 lg:py-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 sm:space-x-3 text-sm sm:text-base`}
+                      className={`w-full ${getColorClasses(product.color, product.enabled)} text-white px-4 py-2 sm:py-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 text-sm`}
                     >
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24">
                         <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                         <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                         <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -108,7 +108,7 @@ const ProductsPage = ({ setCurrentPage, setIsAuthenticated }) => {
                   ) : (
                     <button
                       onClick={() => setCurrentPage('contact')}
-                      className={`w-full ${getColorClasses(product.color, product.enabled)} text-white px-4 sm:px-6 py-2 sm:py-3 lg:py-4 rounded-lg font-semibold cursor-not-allowed text-sm sm:text-base`}
+                      className={`w-full ${getColorClasses(product.color, product.enabled)} text-white px-4 py-2 sm:py-3 rounded-lg font-semibold cursor-not-allowed text-sm`}
                       disabled
                     >
                       Coming Soon - Get Notified

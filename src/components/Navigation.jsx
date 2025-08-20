@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 const Navigation = ({ isMarketsAI1 = false, setCurrentPage, transparent = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [showProductsDropdown, setShowProductsDropdown] = useState(false);
   
   useEffect(() => {
     const handleScroll = () => {
@@ -22,13 +21,6 @@ const Navigation = ({ isMarketsAI1 = false, setCurrentPage, transparent = false 
   const textColor = 'text-gray-700';
   const logoColor = isMarketsAI1 ? 'text-teal-600' : 'text-blue-900';
   
-  const products = [
-    { id: 'marketsai1', name: 'MarketsAI1', enabled: true },
-    { id: 'chatai1', name: 'ChatAI1', enabled: false },
-    { id: 'papertraderai1', name: 'PaperTraderAI1', enabled: false },
-    { id: 'scanai1', name: 'ScanAI1', enabled: false }
-  ];
-  
   return (
     <nav className={`fixed w-full top-0 z-50 transition-all duration-300 ${navBg}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,43 +37,12 @@ const Navigation = ({ isMarketsAI1 = false, setCurrentPage, transparent = false 
               Home
             </button>
             
-            <div 
-              className="relative"
-              onMouseEnter={() => setShowProductsDropdown(true)}
-              onMouseLeave={() => setShowProductsDropdown(false)}
+            <button 
+              onClick={() => setCurrentPage('products')} 
+              className={`${textColor} hover:text-blue-600 transition-colors font-medium text-sm xl:text-base`}
             >
-              <button 
-                onClick={() => setCurrentPage('products')} 
-                className={`${textColor} hover:text-blue-600 transition-colors font-medium flex items-center space-x-1 text-sm xl:text-base`}
-              >
-                <span>Products</span>
-                <svg className="w-3 h-3 xl:w-4 xl:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {showProductsDropdown && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2">
-                  {products.map((product) => (
-                    <button
-                      key={product.id}
-                      onClick={() => {
-                        setCurrentPage(product.id);
-                        setShowProductsDropdown(false);
-                      }}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors ${
-                        product.enabled ? 'text-gray-700' : 'text-gray-400'
-                      }`}
-                    >
-                      {product.name}
-                      {!product.enabled && (
-                        <span className="text-xs italic text-gray-400 ml-2">(Coming Soon)</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+              Products
+            </button>
             
             <button onClick={() => setCurrentPage('services')} className={`${textColor} hover:text-blue-600 transition-colors font-medium text-sm xl:text-base`}>
               Services
