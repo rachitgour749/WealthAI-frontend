@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import ETFStrategy from '../pages/ETFStrategy';
+
 
 const MarketsAI1App = ({ setCurrentPage }) => {
-  const [activeSection, setActiveSection] = useState('dashboard');
+  const [activeSection, setActiveSection] = useState('default');
 
   const handleLogout = () => {
     setCurrentPage('marketsai1');
@@ -33,11 +35,11 @@ const MarketsAI1App = ({ setCurrentPage }) => {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex space-x-8">
             {[
-              { id: 'dashboard', name: 'Dashboard' },
-              { id: 'strategies', name: 'Strategies' },
-              { id: 'backtest', name: 'Backtest' },
-              { id: 'paper-trade', name: 'Paper Trade' },
-              { id: 'marketplace', name: 'Marketplace' }
+              // { id: 'dashboard', name: 'Dashboard' },
+              { id: 'strategy', name: 'Strategys' },
+              // { id: 'backtest', name: 'Backtest' },
+              // { id: 'paper-trade', name: 'Paper Trade' }
+              // { id: 'marketplace', name: 'Marketplace' }
             ].map((section) => (
               <button
                 key={section.id}
@@ -54,9 +56,40 @@ const MarketsAI1App = ({ setCurrentPage }) => {
           </div>
         </div>
       </div>
+      {/* Strategy List */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {activeSection == "default"? 
+        <div className="flex space-x-8">
+        {[
+          { id: 'etf-strategy', name: 'ETF Strategy'},
+          { id: 'button2', name: 'RS Strategy Coming Soon'},
+          { id: 'button3', name: 'RS Strategy Coming Soon'},
+          { id: 'button4', name: 'RS Strategy Coming Soon'},
+          { id: 'button5', name: 'RS Strategy Coming Soon'}
+        ].map((section) => (
+          <button
+            key={section.id}
+            onClick={() => setActiveSection(section.id)}
+            className={`py-[20px] px-[20px] rounded-[8px] font-semibold text-[15px] ${
+              activeSection === section.id
+                ? 'bg-teal-600 text-white'
+                : 'bg-teal-100 text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {section.name}
+          </button>
+        ))}
+      </div>
+       : 
+      <div>
+        <button className='border px-4 py-2 rounded-[8px] ml-[31px] font-semibold text-[15px] bg-blue-900 text-white mb-4' onClick={() => setActiveSection("default")}>Back</button>
+         <ETFStrategy/>
+      </div>}
+        
+      </div>
       
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* <div className="max-w-7xl mx-auto px-4 py-8">
         {activeSection === 'dashboard' && (
           <div>
             <h2 className="text-3xl font-bold text-gray-800 mb-8">Trading Dashboard</h2>
@@ -160,7 +193,7 @@ const MarketsAI1App = ({ setCurrentPage }) => {
             </div>
           </div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };

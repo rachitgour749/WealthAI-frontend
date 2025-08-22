@@ -8,10 +8,11 @@ import ServicesPage from './components/ServicesPage';
 import FoundersPage from './components/FoundersPage';
 import InsightsPage from './components/InsightsPage';
 import ContactPage from './components/ContactPage';
+import Test from './components/Test';
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -31,6 +32,8 @@ const App = () => {
         return <InsightsPage setCurrentPage={setCurrentPage} />;
       case 'contact':
         return <ContactPage setCurrentPage={setCurrentPage} />;
+      case 'test':
+        return <Test setCurrentPage={setCurrentPage} />; 
       default:
         return <WealthAI1Home setCurrentPage={setCurrentPage} />;
     }
