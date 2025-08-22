@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import ETFStrategy from '../pages/ETFStrategy';
 
-
 const MarketsAI1App = ({ setCurrentPage }) => {
   const [activeSection, setActiveSection] = useState('default');
 
@@ -10,9 +9,9 @@ const MarketsAI1App = ({ setCurrentPage }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
       {/* App Header */}
-      <div className="bg-teal-600 text-white shadow-lg">
+      <div className="bg-teal-600 text-white shadow-lg flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <h1 className="text-2xl font-bold">MarketsAI1</h1>
@@ -30,196 +29,223 @@ const MarketsAI1App = ({ setCurrentPage }) => {
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b shadow-lg">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-center space-x-12">
-            {[
-              // { id: 'dashboard', name: 'Dashboard' },
-              { id: 'strategy', name: 'Strategy' },
-              // { id: 'backtest', name: 'Backtest' },
-              // { id: 'paper-trade', name: 'Paper Trade' }
-              // { id: 'marketplace', name: 'Marketplace' }
-            ].map((section) => (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`relative py-5 px-6 font-semibold text-[15px] transition-all duration-300 group ${
-                  activeSection === section.id
-                    ? 'text-teal-600'
-                    : 'text-gray-600 hover:text-teal-600'
-                }`}
-              >
-                {section.name}
-                <div className={`absolute bottom-0 left-0 w-full h-1 rounded-t-full transition-all duration-300 transform origin-left ${
-                  activeSection === section.id
-                    ? 'bg-gradient-to-r from-teal-400 to-teal-600 scale-x-100'
-                    : 'bg-teal-400 scale-x-0 group-hover:scale-x-100'
-                }`}></div>
-                <div className={`absolute -bottom-[1px] left-0 w-full h-[2px] transition-all duration-300 ${
-                  activeSection === section.id
-                    ? 'bg-white'
-                    : 'bg-transparent group-hover:bg-white'
-                }`}></div>
-              </button>
-            ))}
+
+
+      {/* Main Content Area - Now properly sized and scrollable */}
+      <div className="flex-1 overflow-auto">
+        {activeSection === "default" ? (
+          <div className="min-h-full bg-gradient-to-br from-slate-50 to-teal-50 py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {/* Header Section */}
+              <div className="text-center mb-12">
+                <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                  AI-Powered Trading Strategies
+                </h1>
+                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                  Choose from our suite of advanced algorithmic trading strategies designed for modern markets
+                </p>
+              </div>
+
+              {/* Strategy Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                {[
+                  { 
+                    id: 'etf-strategy', 
+                    name: 'ETF Rotation Strategy',
+                    description: 'Momentum-based ETF rotation with comprehensive analysis',
+                    icon: '📊',
+                    gradient: 'from-teal-400 to-emerald-500',
+                    borderColor: 'border-teal-300',
+                    available: true,
+                    category: 'Active'
+                  },
+                  { 
+                    id: 'ai-momentum', 
+                    name: 'AI Momentum Alpha',
+                    description: 'Machine learning powered momentum detection system',
+                    icon: '🤖',
+                    gradient: 'from-blue-200 to-blue-300',
+                    borderColor: 'border-blue-200',
+                    available: false,
+                    category: 'AI-Driven'
+                  },
+                  { 
+                    id: 'smart-sector', 
+                    name: 'Smart Sector Rotation',
+                    description: 'Intelligent sector allocation using economic indicators',
+                    icon: '🔄',
+                    gradient: 'from-purple-200 to-purple-300',
+                    borderColor: 'border-purple-200',
+                    available: false,
+                    category: 'Rotation'
+                  },
+                  { 
+                    id: 'neural-swing', 
+                    name: 'Neural Swing Trader',
+                    description: 'Deep learning network for swing trading signals',
+                    icon: '🧠',
+                    gradient: 'from-orange-200 to-orange-300',
+                    borderColor: 'border-orange-200',
+                    available: false,
+                    category: 'AI-Driven'
+                  },
+                  { 
+                    id: 'quantum-mean', 
+                    name: 'Quantum Mean Reversion',
+                    description: 'Advanced statistical arbitrage using quantum algorithms',
+                    icon: '⚛️',
+                    gradient: 'from-cyan-200 to-cyan-300',
+                    borderColor: 'border-cyan-200',
+                    available: false,
+                    category: 'Quantitative'
+                  },
+                  { 
+                    id: 'adaptive-trend', 
+                    name: 'Adaptive Trend Following',
+                    description: 'Self-adjusting trend identification with ML optimization',
+                    icon: '📈',
+                    gradient: 'from-emerald-200 to-emerald-300',
+                    borderColor: 'border-emerald-200',
+                    available: false,
+                    category: 'Trend'
+                  },
+                  { 
+                    id: 'ml-breakouts', 
+                    name: 'ML Breakout Detection',
+                    description: 'Machine learning powered breakout pattern recognition',
+                    icon: '🚀',
+                    gradient: 'from-amber-200 to-amber-300',
+                    borderColor: 'border-amber-200',
+                    available: false,
+                    category: 'Pattern'
+                  },
+                  { 
+                    id: 'dynamic-risk', 
+                    name: 'Dynamic Risk Parity',
+                    description: 'Real-time risk allocation using volatility forecasting',
+                    icon: '⚖️',
+                    gradient: 'from-indigo-200 to-indigo-300',
+                    borderColor: 'border-indigo-200',
+                    available: false,
+                    category: 'Risk'
+                  },
+                  { 
+                    id: 'algo-pairs', 
+                    name: 'Algorithmic Pairs Trading',
+                    description: 'Statistical arbitrage with cointegration analysis',
+                    icon: '🔗',
+                    gradient: 'from-rose-200 to-rose-300',
+                    borderColor: 'border-rose-200',
+                    available: false,
+                    category: 'Arbitrage'
+                  },
+                  { 
+                    id: 'dl-volatility', 
+                    name: 'Deep Learning Volatility',
+                    description: 'Neural networks for volatility trading and hedging',
+                    icon: '⚡',
+                    gradient: 'from-violet-200 to-violet-300',
+                    borderColor: 'border-violet-200',
+                    available: false,
+                    category: 'Volatility'
+                  }
+                ].map((strategy) => (
+                  <div
+                    key={strategy.id}
+                    className={`group relative ${strategy.available ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                    onClick={() => strategy.available && setActiveSection(strategy.id)}
+                  >
+                    {/* Card */}
+                    <div className={`
+                      relative bg-white rounded-xl shadow-md border-2 ${strategy.borderColor} overflow-hidden h-64
+                      transition-all duration-300 ease-out
+                      ${strategy.available 
+                        ? 'hover:shadow-xl hover:-translate-y-1 hover:scale-105' 
+                        : 'opacity-80'
+                      }
+                      transform-gpu
+                    `}>
+                      
+                      {/* Coming Soon Badge - Only show once */}
+                      {!strategy.available && (
+                        <div className="absolute top-3 right-3 z-10">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 italic">
+                            Coming Soon
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Category Badge */}
+                      <div className="absolute top-3 left-3 z-10">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-90 text-gray-700 border">
+                          {strategy.category}
+                        </span>
+                      </div>
+
+                      {/* Header */}
+                      <div className={`h-20 bg-gradient-to-br ${strategy.gradient} relative overflow-hidden`}>
+                        {/* Icon */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-12 h-12 bg-white bg-opacity-80 rounded-lg flex items-center justify-center text-2xl backdrop-blur-sm border border-white border-opacity-50">
+                            {strategy.icon}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-4 text-center">
+                        <h3 className="text-base font-bold text-gray-900 mb-2 group-hover:text-teal-700 transition-colors leading-tight text-center">
+                          {strategy.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-3 text-center">
+                          {strategy.description}
+                        </p>
+
+                        {/* Status Indicator */}
+                        <div className="flex items-center justify-center space-x-2">
+                          <div className={`w-2 h-2 rounded-full ${strategy.available ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                          <span className="text-xs text-gray-600">
+                            {strategy.available ? 'Available' : 'In Development'}
+                          </span>
+                          
+                          {strategy.available && (
+                            <div className="text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-2">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Subtle Hover Effect */}
+                      <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${strategy.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none`}></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Custom Strategy Button */}
+              <div className="mt-12 text-center">
+                <button
+                  onClick={() => setCurrentPage('contact')}
+                  className="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-xl text-white bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                >
+                  <span className="mr-2">🛠️</span>
+                  Build Your Custom Strategy
+                </button>
+                <p className="mt-3 text-sm text-gray-600">
+                  Need a tailored solution? Our team can develop custom strategies for your specific requirements.
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      {/* Strategy List */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {activeSection == "default"? 
-        <div className="flex space-x-8">
-        {[
-          { id: 'etf-strategy', name: 'ETF Strategy'},
-          { id: 'button2', name: 'More Strategy 𝘊𝘰𝘮𝘪𝘯𝘨 𝘚𝘰𝘰𝘯'},
-          // { id: 'button3', name: 'RS Strategy Coming Soon'},
-          // { id: 'button4', name: 'RS Strategy Coming Soon'},
-          // { id: 'button5', name: 'RS Strategy Coming Soon'}
-        ].map((section) => (
-                      <div className="relative" key={section.id}>
-              {section.name.includes('Coming') && (
-                <div className="absolute -top-3 left-0 right-0 mx-auto w-[140px] h-[30px] bg-blue-500 text-white text-sm font-semibold flex items-center justify-center transform -rotate-[2deg] shadow-md rounded-md z-10" style={{ clipPath: 'polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%)' }}>
-                  <span className="text-[13px]">COMING SOON</span>
-                </div>
-              )}
-              <button
-                onClick={() => !section.name.includes('Coming') && setActiveSection(section.id)}
-                className={`relative py-[20px] px-[28px] rounded-[12px] font-semibold text-[16px] transition-all duration-300 ease-in-out transform hover:scale-105 shadow-sm hover:shadow-md ${
-                  activeSection === section.id
-                    ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg'
-                    : section.name.includes('Coming')
-                    ? 'bg-gray-50 text-gray-400 cursor-not-allowed border-2 border-gray-200'
-                    : 'bg-white text-teal-700 hover:bg-teal-50 border-2 border-teal-100 hover:border-teal-200'
-                }`}
-              >
-                <div className="flex flex-col items-center space-y-2 min-w-[160px]">
-                  <span className="relative">
-                    {section.name.includes('Coming') ? (
-                      <span className="block">More Strategy</span>
-                    ) : (
-                      section.name
-                    )}
-                  </span>
-                </div>
-              </button>
-            </div>
-        ))}
-      </div>
-       : 
-      <div>
-        <button className='border px-4 py-2 rounded-[8px] ml-[31px] font-semibold text-[15px] bg-blue-900 text-white mb-4' onClick={() => setActiveSection("default")}>Back</button>
-         <ETFStrategy/>
-      </div>}
-        
-      </div>
-      
-      {/* Main Content */}
-      {/* <div className="max-w-7xl mx-auto px-4 py-8">
-        {activeSection === 'dashboard' && (
-          <div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-8">Trading Dashboard</h2>
-            
-            <div className="grid lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white p-6 rounded-xl shadow-lg">
-                <h3 className="text-lg font-bold text-teal-600 mb-2">Active Strategies</h3>
-                <div className="text-3xl font-bold text-gray-800 mb-2">3</div>
-                <p className="text-sm text-gray-600">Currently running</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-lg">
-                <h3 className="text-lg font-bold text-blue-600 mb-2">Total Return</h3>
-                <div className="text-3xl font-bold text-green-600 mb-2">+15.2%</div>
-                <p className="text-sm text-gray-600">Year to date</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-lg">
-                <h3 className="text-lg font-bold text-purple-600 mb-2">Sharpe Ratio</h3>
-                <div className="text-3xl font-bold text-gray-800 mb-2">1.34</div>
-                <p className="text-sm text-gray-600">Risk-adjusted returns</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-lg">
-                <h3 className="text-lg font-bold text-orange-600 mb-2">Max Drawdown</h3>
-                <div className="text-3xl font-bold text-red-600 mb-2">-5.8%</div>
-                <p className="text-sm text-gray-600">Historical worst</p>
-              </div>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-8">
-              <div className="bg-white p-6 rounded-xl shadow-lg">
-                <h3 className="text-xl font-bold text-gray-800 mb-6">Quick Actions</h3>
-                <div className="space-y-4">
-                  <button 
-                    onClick={() => setActiveSection('strategies')}
-                    className="w-full bg-teal-600 text-white p-4 rounded-lg hover:bg-teal-700 transition-colors text-left flex items-center space-x-3"
-                  >
-                    <span>🔧</span>
-                    <span>Build New Strategy</span>
-                  </button>
-                  <button 
-                    onClick={() => setActiveSection('backtest')}
-                    className="w-full bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 transition-colors text-left flex items-center space-x-3"
-                  >
-                    <span>📊</span>
-                    <span>Run Backtest</span>
-                  </button>
-                  <button 
-                    onClick={() => setActiveSection('marketplace')}
-                    className="w-full bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition-colors text-left flex items-center space-x-3"
-                  >
-                    <span>🏪</span>
-                    <span>Browse Marketplace</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-xl shadow-lg">
-                <h3 className="text-xl font-bold text-gray-800 mb-6">Portfolio Performance</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                    <div>
-                      <div className="font-medium text-gray-800">Momentum Strategy v2.1</div>
-                      <div className="text-sm text-gray-600">+18.3% return • Running live</div>
-                    </div>
-                    <div className="text-green-600 font-bold">+$12,450</div>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                    <div>
-                      <div className="font-medium text-gray-800">Mean Reversion Bot</div>
-                      <div className="text-sm text-gray-600">+8.7% return • Paper trading</div>
-                    </div>
-                    <div className="text-blue-600 font-bold">+$5,230</div>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                    <div>
-                      <div className="font-medium text-gray-800">Factor Rotation</div>
-                      <div className="text-sm text-gray-600">+12.1% return • Backtesting</div>
-                    </div>
-                    <div className="text-purple-600 font-bold">+$7,890</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        ) : (
+          <div className="h-full">
+            <ETFStrategy onBack={() => setActiveSection("default")} />
           </div>
         )}
-
-        {activeSection !== 'dashboard' && (
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="text-center py-12">
-              <h3 className="text-2xl font-bold text-gray-800 mb-4">
-                {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)} Module
-              </h3>
-              <p className="text-gray-600 mb-8">
-                This section is under development. Full functionality coming soon.
-              </p>
-              <button 
-                onClick={() => setActiveSection('dashboard')}
-                className="bg-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-teal-700 transition-colors"
-              >
-                Back to Dashboard
-              </button>
-            </div>
-          </div>
-        )}
-      </div> */}
+      </div>
     </div>
   );
 };

@@ -7,7 +7,7 @@ import CostsDashboard from '../components/CostsDashboard';
 
 const API_BASE_URL = 'http://13.201.196.235:8000';
 
-function ETFStrategy() {
+function ETFStrategy({ onBack }) {
   // Main state
   const [showResults, setShowResults] = useState(false);
   const [etfs, setEtfs] = useState([]);
@@ -41,6 +41,9 @@ function ETFStrategy() {
 
   // Active tab
   const [activeTab, setActiveTab] = useState('metrics');
+
+  // UI State
+  const [activeSetupStep, setActiveSetupStep] = useState(1);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -865,256 +868,379 @@ function ETFStrategy() {
 
   if (!showResults) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="bg-white shadow rounded-lg mb-8">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h1 className="text-2xl font-bold text-gray-900">ETF Rotation Startegy</h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Advanced ETF rotation strategy with comprehensive analysis
-              </p>
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-teal-50 flex flex-col">
+
+        {/* Main Content */}
+        <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+          {/* Back Button */}
+          <div className="mb-6">
+            <button
+              onClick={() => onBack?.()}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 shadow-sm"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Strategies
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Panel - ETF Universe & Settings */}
-            <div className="lg:col-span-1 space-y-6">
-              {/* ETF Universe */}
-              <div className="bg-white shadow rounded-lg">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900">🎯 ETF Universe</h2>
-                </div>
-                <div className="p-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select ETFs
-                  </label>
-                  <Select
-                    isMulti
-                    options={etfs}
-                    value={selectedEtfs}
-                    onChange={setSelectedEtfs}
-                    placeholder="Choose ETFs..."
-                    isLoading={loading}
-                    className="mb-4"
-                  />
-                  
-                  {dateRangeLoading && (
-                    <div className="text-sm text-blue-600">Calculating date range...</div>
-                  )}
-                  
-                  {dateRange.start && dateRange.end && (
-                    <div className="mt-4 space-y-4">
-                      {/* Date Range Toggle */}
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id="useCustomDates"
-                          checked={useCustomDates}
-                          onChange={(e) => setUseCustomDates(e.target.checked)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor="useCustomDates" className="ml-2 block text-sm text-gray-900">
-                          Use Custom Date Range
-                        </label>
-                      </div>
+          {/* Strategy Configuration */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-teal-600 to-emerald-600 px-8 py-6">
+              <h2 className="text-2xl font-bold text-white flex items-center">
+                <span className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-3">
+                  ⚙️
+                </span>
+                Strategy Configuration
+              </h2>
+              <p className="text-teal-100 mt-2">Configure your ETF rotation strategy parameters</p>
+            </div>
 
-                      {/* Date Range Display */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">Available Start Date:</span>
-                          <span className="font-medium">{dateRange.start}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">Available End Date:</span>
-                          <span className="font-medium">{dateRange.end}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">Total Years Available:</span>
-                          <span className="font-medium">{dateRange.years.toFixed(1)}</span>
+            {/* Progress Steps */}
+            <div className="px-8 py-4 bg-gray-50 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                {[
+                  { step: 1, title: 'ETF Selection', icon: '📈' },
+                  { step: 2, title: 'Date Range', icon: '📅' },
+                  { step: 3, title: 'Parameters', icon: '⚙️' },
+                  { step: 4, title: 'Execute', icon: '🚀' }
+                ].map((item, index) => (
+                  <React.Fragment key={item.step}>
+                    <div className="flex flex-col items-center">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                          activeSetupStep >= item.step
+                            ? 'bg-teal-600 text-white shadow-lg'
+                            : 'bg-gray-200 text-gray-600'
+                        }`}
+                      >
+                        {item.icon}
+                      </div>
+                      <span
+                        className={`text-xs mt-2 font-medium ${
+                          activeSetupStep >= item.step ? 'text-teal-600' : 'text-gray-500'
+                        }`}
+                      >
+                        {item.title}
+                      </span>
+                    </div>
+                    {index < 3 && (
+                      <div
+                        className={`flex-1 h-0.5 mx-4 transition-all duration-300 ${
+                          activeSetupStep > item.step ? 'bg-teal-600' : 'bg-gray-200'
+                        }`}
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+
+            {/* Configuration Content */}
+            <div className="p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Column - Inputs */}
+                <div className="space-y-6">
+                  {/* ETF Selection */}
+                  <div className="bg-gradient-to-r from-teal-50 to-cyan-50 p-6 rounded-xl border border-teal-200">
+                    <div className="flex items-center mb-4">
+                      <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center text-white text-sm mr-3">
+                        📈
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900">ETF Universe Selection</h3>
+                    </div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Choose ETFs for rotation strategy
+                    </label>
+                    <Select
+                      isMulti
+                      options={etfs}
+                      value={selectedEtfs}
+                      onChange={(selected) => {
+                        setSelectedEtfs(selected);
+                        setActiveSetupStep(Math.max(activeSetupStep, 2));
+                      }}
+                      placeholder="Select multiple ETFs..."
+                      isLoading={loading}
+                      className="mb-4"
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          borderColor: '#0D9488',
+                          boxShadow: '0 0 0 1px #0D9488',
+                          '&:hover': {
+                            borderColor: '#0F766E'
+                          }
+                        })
+                      }}
+                    />
+                    
+                    {selectedEtfs.length > 0 && (
+                      <div className="mt-4 p-3 bg-white rounded-lg border border-teal-200">
+                        <p className="text-sm text-teal-700 font-medium">
+                          ✓ {selectedEtfs.length} ETFs selected
+                        </p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {selectedEtfs.slice(0, 3).map((etf) => (
+                            <span key={etf.value} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
+                              {etf.value}
+                            </span>
+                          ))}
+                          {selectedEtfs.length > 3 && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              +{selectedEtfs.length - 3} more
+                            </span>
+                          )}
                         </div>
                       </div>
+                    )}
+                  </div>
 
-                      {/* Custom Date Inputs */}
-                      {useCustomDates && (
-                        <div className="space-y-3 pt-2 border-t border-gray-200">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Custom Start Date
-                            </label>
+                  {/* Date Range Configuration */}
+                  {selectedEtfs.length > 0 && (
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+                      <div className="flex items-center mb-4">
+                        <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white text-sm mr-3">
+                          📅
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900">Date Range</h3>
+                      </div>
+                      
+                      {dateRangeLoading && (
+                        <div className="flex items-center text-sm text-teal-600 mb-4">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-teal-600 mr-2"></div>
+                          Calculating optimal date range...
+                        </div>
+                      )}
+                      
+                      {dateRange.start && dateRange.end && (
+                        <div className="space-y-4">
+                          <div className="bg-white p-4 rounded-lg border border-green-200">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-gray-500">Available Period:</span>
+                                <p className="font-semibold text-gray-900">{dateRange.start} to {dateRange.end}</p>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Duration:</span>
+                                <p className="font-semibold text-green-600">{dateRange.years.toFixed(1)} years</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center">
                             <input
-                              type="date"
-                              value={customStartDate}
+                              type="checkbox"
+                              id="useCustomDates"
+                              checked={useCustomDates}
                               onChange={(e) => {
-                                console.log('Setting custom start date to:', e.target.value);
-                                setCustomStartDate(e.target.value);
+                                setUseCustomDates(e.target.checked);
+                                setActiveSetupStep(Math.max(activeSetupStep, 3));
                               }}
-                              min={dateRange.start}
-                              max={dateRange.end}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                             />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Custom End Date
+                            <label htmlFor="useCustomDates" className="ml-2 block text-sm font-medium text-gray-900">
+                              Customize date range
                             </label>
-                            <input
-                              type="date"
-                              value={customEndDate}
-                              onChange={(e) => {
-                                console.log('Setting custom end date to:', e.target.value);
-                                setCustomEndDate(e.target.value);
-                              }}
-                              min={customStartDate || dateRange.start}
-                              max={dateRange.end}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
                           </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Custom Years:</span>
-                            <span className="font-medium">{calculateYearsBetweenDates(customStartDate, customEndDate).toFixed(1)}</span>
-                          </div>
-                          {/* Debug info */}
-                          <div className="text-xs text-gray-400 mt-2 p-2 bg-gray-50 rounded">
-                            Debug: Start={customStartDate}, End={customEndDate}, Years={calculateYearsBetweenDates(customStartDate, customEndDate).toFixed(1)}
-                          </div>
+
+                          {useCustomDates && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                <input
+                                  type="date"
+                                  value={customStartDate}
+                                  onChange={(e) => setCustomStartDate(e.target.value)}
+                                  min={dateRange.start}
+                                  max={dateRange.end}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                                <input
+                                  type="date"
+                                  value={customEndDate}
+                                  onChange={(e) => setCustomEndDate(e.target.value)}
+                                  min={customStartDate || dateRange.start}
+                                  max={dateRange.end}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
                   )}
+
+                  {/* Strategy Parameters */}
+                  {(dateRange.start || selectedEtfs.length > 0) && (
+                    <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-6 rounded-xl border border-orange-200">
+                      <div className="flex items-center mb-4">
+                        <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center text-white text-sm mr-3">
+                          ⚙️
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900">Strategy Parameters</h3>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Capital per Week (₹)
+                          </label>
+                          <input
+                            type="number"
+                            value={capitalPerWeek}
+                            onChange={(e) => {
+                              setCapitalPerWeek(e.target.value);
+                              setActiveSetupStep(Math.max(activeSetupStep, 4));
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            min="1000"
+                            max="1000000"
+                            step="1000"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Accumulation Weeks
+                          </label>
+                          <input
+                            type="number"
+                            value={accumulationWeeks}
+                            onChange={(e) => setAccumulationWeeks(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            min="4"
+                            max="208"
+                            step="4"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Brokerage (%)
+                          </label>
+                          <input
+                            type="number"
+                            value={brokeragePercent}
+                            onChange={(e) => setBrokeragePercent(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            min="0"
+                            max="1"
+                            step="0.001"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Risk-free Rate (%)
+                          </label>
+                          <input
+                            type="number"
+                            value={riskFreeRate}
+                            onChange={(e) => setRiskFreeRate(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            min="0"
+                            max="20"
+                            step="0.1"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="compounding"
+                            checked={compoundingEnabled}
+                            onChange={(e) => setCompoundingEnabled(e.target.checked)}
+                            className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                          />
+                          <label htmlFor="compounding" className="ml-2 block text-sm font-medium text-gray-900">
+                            Enable Compounding
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column - ETF Overview Table */}
+                <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                  <div className="flex items-center mb-4">
+                    <div className="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center text-white text-sm mr-3">
+                      📋
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900">Available ETFs</h3>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden max-h-96">
+                    <div className="overflow-y-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50 sticky top-0">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Symbol</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sector</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Years</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {etfOverview.map((etf, index) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{etf.symbol}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{etf.sector}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{etf.years_available}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Strategy Settings */}
-              <div className="bg-white shadow rounded-lg">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900">💰 Strategy Settings</h2>
-                </div>
-                <div className="p-6 space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Capital per Week (₹)
-                    </label>
-                    <input
-                      type="number"
-                      value={capitalPerWeek}
-                      onChange={(e) => setCapitalPerWeek(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      min="1000"
-                      max="1000000"
-                      step="1000"
-                    />
+              {/* Execute Button */}
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    {selectedEtfs.length === 0 ? (
+                      "Select ETFs to begin configuration"
+                    ) : activeSetupStep < 4 ? (
+                      "Complete all configuration steps"
+                    ) : (
+                      "Ready to run backtest"
+                    )}
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Accumulation Weeks
-                    </label>
-                    <input
-                      type="number"
-                      value={accumulationWeeks}
-                      onChange={(e) => setAccumulationWeeks(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      min="4"
-                      max="208"
-                      step="4"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Brokerage (%)
-                    </label>
-                    <input
-                      type="number"
-                      value={brokeragePercent}
-                      onChange={(e) => setBrokeragePercent(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      min="0"
-                      max="1"
-                      step="0.001"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Risk-free Rate (%)
-                    </label>
-                    <input
-                      type="number"
-                      value={riskFreeRate}
-                      onChange={(e) => setRiskFreeRate(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      min="0"
-                      max="20"
-                      step="0.1"
-                    />
-                  </div>
-
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="compounding"
-                      checked={compoundingEnabled}
-                      onChange={(e) => setCompoundingEnabled(e.target.checked)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="compounding" className="ml-2 block text-sm text-gray-900">
-                      Enable Compounding
-                    </label>
-                  </div>
-
-                  <div className="pt-4">
-                    <button
-                      onClick={runBacktest}
-                      disabled={backtestLoading || selectedEtfs.length === 0}
-                      className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {backtestLoading ? 'Running Backtest...' : '🚀 Run Backtest'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Panel - ETF Overview */}
-            <div className="lg:col-span-2">
-              <div className="bg-white shadow rounded-lg">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900">📋 Available ETFs</h2>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Symbol</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sector</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">To</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Years</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {etfOverview.map((etf, index) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{etf.symbol}</td>
-                          <td className="px-6 py-4 text-sm text-gray-900">{etf.description}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{etf.sector}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{etf.start_date}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{etf.end_date}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{etf.years_available}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <button
+                    onClick={runBacktest}
+                    disabled={backtestLoading || selectedEtfs.length === 0}
+                    className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200 shadow-lg"
+                  >
+                    {backtestLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                        Running Backtest...
+                      </>
+                    ) : (
+                      <>
+                        <span className="mr-2">🚀</span>
+                        Run Backtest
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Error Display */}
           {error && (
-            <div className="mt-6 bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="mt-6 bg-red-50 border border-red-200 rounded-xl p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -1122,21 +1248,37 @@ function ETFStrategy() {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">Error</h3>
+                  <h3 className="text-sm font-medium text-red-800">Configuration Error</h3>
                   <div className="mt-2 text-sm text-red-700">{error}</div>
                 </div>
               </div>
             </div>
           )}
         </div>
+
+        {/* Footer */}
+        <footer className="bg-white border-t border-gray-200 py-6 mt-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-500">
+                © 2024 WealthAI1. Advanced AI-powered trading strategies.
+              </div>
+              <div className="flex items-center space-x-6 text-sm text-gray-500">
+                <a href="#" className="hover:text-gray-900 transition-colors">Documentation</a>
+                <a href="#" className="hover:text-gray-900 transition-colors">Support</a>
+                <a href="#" className="hover:text-gray-900 transition-colors">API</a>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
     );
   }
 
-  // Results View
+  // Results View (keeping existing results view)
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="bg-gray-50 h-full p-4 overflow-auto">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white shadow rounded-lg mb-8">
           <div className="px-6 py-4 border-b border-gray-200">
@@ -1148,6 +1290,12 @@ function ETFStrategy() {
                 </p>
               </div>
               <div className="flex space-x-4">
+                <button
+                  onClick={() => onBack?.()}
+                  className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                >
+                  ← Back to Strategies
+                </button>
                 <button
                   onClick={() => setShowResults(false)}
                   className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
@@ -1186,18 +1334,6 @@ function ETFStrategy() {
                 📊 Show ETF Strategy
               </label>
             </div>
-            {/* <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="showNifty"
-                checked={showNiftyBenchmark}
-                onChange={(e) => setShowNiftyBenchmark(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="showNifty" className="ml-2 text-sm text-gray-900">
-                🏁 Show Nifty Benchmark
-              </label>
-            </div> */}
           </div>
         </div>
 
@@ -1250,7 +1386,7 @@ function ETFStrategy() {
 
         {/* Export Buttons */}
         {showResults && (
-          <div className="mt-8 bg-white p-6 rounded-lg shadow">
+          <div className="mt-8 mb-8 bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Export Data</h3>
             <div className="flex flex-wrap gap-4">
               <button
@@ -1287,6 +1423,22 @@ function ETFStrategy() {
             </div>
           </div>
         )}
+
+        {/* Footer for Results */}
+        <footer className="bg-white border-t border-gray-200 py-6 rounded-lg shadow mt-8">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-500">
+                © 2024 WealthAI1. Advanced AI-powered trading strategies.
+              </div>
+              <div className="flex items-center space-x-6 text-sm text-gray-500">
+                <a href="#" className="hover:text-gray-900 transition-colors">Documentation</a>
+                <a href="#" className="hover:text-gray-900 transition-colors">Support</a>
+                <a href="#" className="hover:text-gray-900 transition-colors">API</a>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );
