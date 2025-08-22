@@ -41,8 +41,6 @@ const App = () => {
         return <InsightsPage setCurrentPage={setCurrentPage} />;
       case 'contact':
         return <ContactPage setCurrentPage={setCurrentPage} />;
-      case 'test':
-        return <Test setCurrentPage={setCurrentPage} />; 
       default:
         return <WealthAI1Home setCurrentPage={setCurrentPage} setIsAuthenticated={setIsAuthenticated} />;
     }
