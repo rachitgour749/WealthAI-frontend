@@ -31,12 +31,12 @@ const MarketsAI1App = ({ setCurrentPage }) => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-white border-b shadow-sm">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex space-x-8">
+      <div className="bg-white border-b shadow-lg">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-center space-x-12">
             {[
               // { id: 'dashboard', name: 'Dashboard' },
-              { id: 'strategy', name: 'Strategys' },
+              { id: 'strategy', name: 'Strategy' },
               // { id: 'backtest', name: 'Backtest' },
               // { id: 'paper-trade', name: 'Paper Trade' }
               // { id: 'marketplace', name: 'Marketplace' }
@@ -44,13 +44,23 @@ const MarketsAI1App = ({ setCurrentPage }) => {
               <button
                 key={section.id}
                 onClick={() => setActiveSection(section.id)}
-                className={`py-4 px-2 border-b-2 font-medium text-sm ${
+                className={`relative py-5 px-6 font-semibold text-[15px] transition-all duration-300 group ${
                   activeSection === section.id
-                    ? 'border-teal-500 text-teal-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'text-teal-600'
+                    : 'text-gray-600 hover:text-teal-600'
                 }`}
               >
                 {section.name}
+                <div className={`absolute bottom-0 left-0 w-full h-1 rounded-t-full transition-all duration-300 transform origin-left ${
+                  activeSection === section.id
+                    ? 'bg-gradient-to-r from-teal-400 to-teal-600 scale-x-100'
+                    : 'bg-teal-400 scale-x-0 group-hover:scale-x-100'
+                }`}></div>
+                <div className={`absolute -bottom-[1px] left-0 w-full h-[2px] transition-all duration-300 ${
+                  activeSection === section.id
+                    ? 'bg-white'
+                    : 'bg-transparent group-hover:bg-white'
+                }`}></div>
               </button>
             ))}
           </div>
@@ -62,22 +72,38 @@ const MarketsAI1App = ({ setCurrentPage }) => {
         <div className="flex space-x-8">
         {[
           { id: 'etf-strategy', name: 'ETF Strategy'},
-          { id: 'button2', name: 'RS Strategy Coming Soon'},
-          { id: 'button3', name: 'RS Strategy Coming Soon'},
-          { id: 'button4', name: 'RS Strategy Coming Soon'},
-          { id: 'button5', name: 'RS Strategy Coming Soon'}
+          { id: 'button2', name: 'More Strategy 𝘊𝘰𝘮𝘪𝘯𝘨 𝘚𝘰𝘰𝘯'},
+          // { id: 'button3', name: 'RS Strategy Coming Soon'},
+          // { id: 'button4', name: 'RS Strategy Coming Soon'},
+          // { id: 'button5', name: 'RS Strategy Coming Soon'}
         ].map((section) => (
-          <button
-            key={section.id}
-            onClick={() => setActiveSection(section.id)}
-            className={`py-[20px] px-[20px] rounded-[8px] font-semibold text-[15px] ${
-              activeSection === section.id
-                ? 'bg-teal-600 text-white'
-                : 'bg-teal-100 text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {section.name}
-          </button>
+                      <div className="relative" key={section.id}>
+              {section.name.includes('Coming') && (
+                <div className="absolute -top-3 left-0 right-0 mx-auto w-[140px] h-[30px] bg-blue-500 text-white text-sm font-semibold flex items-center justify-center transform -rotate-[2deg] shadow-md rounded-md z-10" style={{ clipPath: 'polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%)' }}>
+                  <span className="text-[13px]">COMING SOON</span>
+                </div>
+              )}
+              <button
+                onClick={() => !section.name.includes('Coming') && setActiveSection(section.id)}
+                className={`relative py-[20px] px-[28px] rounded-[12px] font-semibold text-[16px] transition-all duration-300 ease-in-out transform hover:scale-105 shadow-sm hover:shadow-md ${
+                  activeSection === section.id
+                    ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg'
+                    : section.name.includes('Coming')
+                    ? 'bg-gray-50 text-gray-400 cursor-not-allowed border-2 border-gray-200'
+                    : 'bg-white text-teal-700 hover:bg-teal-50 border-2 border-teal-100 hover:border-teal-200'
+                }`}
+              >
+                <div className="flex flex-col items-center space-y-2 min-w-[160px]">
+                  <span className="relative">
+                    {section.name.includes('Coming') ? (
+                      <span className="block">More Strategy</span>
+                    ) : (
+                      section.name
+                    )}
+                  </span>
+                </div>
+              </button>
+            </div>
         ))}
       </div>
        : 

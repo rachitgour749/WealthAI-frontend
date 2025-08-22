@@ -11,7 +11,6 @@ import ServicesPage from './components/ServicesPage';
 import FoundersPage from './components/FoundersPage';
 import InsightsPage from './components/InsightsPage';
 import ContactPage from './components/ContactPage';
-import Test from './components/Test';
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
