@@ -5,7 +5,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import TradeExecutionTracker from '../components/TradeExecutionTracker';
 import CostsDashboard from '../components/CostsDashboard';
 
-const API_BASE_URL = 'http://13.201.196.235:8000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.wealthai1.in';
+
 
 function ETFStrategy({ onBack }) {
   // Main state

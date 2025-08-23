@@ -54,8 +54,8 @@ const MarketsAI1App = ({ setCurrentPage }) => {
                     name: 'ETF Rotation Strategy',
                     description: 'Momentum-based ETF rotation with comprehensive analysis',
                     icon: '📊',
-                    gradient: 'from-teal-400 to-emerald-500',
-                    borderColor: 'border-teal-300',
+                    gradient: 'from-emerald-400 via-teal-500 to-cyan-600',
+                    borderColor: 'border-emerald-400',
                     available: true,
                     category: 'Active'
                   },
@@ -160,33 +160,51 @@ const MarketsAI1App = ({ setCurrentPage }) => {
                       relative bg-white rounded-xl shadow-md border-2 ${strategy.borderColor} overflow-hidden h-64
                       transition-all duration-300 ease-out
                       ${strategy.available 
-                        ? 'hover:shadow-xl hover:-translate-y-1 hover:scale-105' 
+                        ? 'hover:shadow-xl hover:-translate-y-1 hover:scale-105 ring-2 ring-emerald-200 ring-opacity-50 shadow-emerald-100' 
                         : 'opacity-80'
                       }
                       transform-gpu
                     `}>
                       
-                      {/* Coming Soon Badge - Only show once */}
+                      {/* Coming Soon Badge */}
                       {!strategy.available && (
-                        <div className="absolute top-3 right-3 z-10">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 italic">
-                            Coming Soon
+                        <div className="absolute top-2 right-2 z-10">
+                          <span className="text-xs font-medium text-blue-600 italic bg-white bg-opacity-90 px-2 py-1 rounded-md shadow-sm">
+                            Coming Soon!
                           </span>
                         </div>
                       )}
 
-                      {/* Category Badge */}
-                      <div className="absolute top-3 left-3 z-10">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-90 text-gray-700 border">
-                          {strategy.category}
-                        </span>
-                      </div>
+                      {/* Live indicator for available strategy */}
+                      {strategy.available && (
+                        <div className="absolute top-2 left-2 z-10">
+                          <div className="flex items-center">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-1"></div>
+                            <span className="text-xs font-medium text-green-600 bg-white bg-opacity-90 px-2 py-1 rounded-md shadow-sm">
+                              LIVE
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Category Badge - only for non-available strategies */}
+                      {!strategy.available && (
+                        <div className="absolute top-3 left-3 z-10">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-90 text-gray-700 border">
+                            {strategy.category}
+                          </span>
+                        </div>
+                      )}
 
                       {/* Header */}
-                      <div className={`h-20 bg-gradient-to-br ${strategy.gradient} relative overflow-hidden`}>
+                      <div className={`h-20 bg-gradient-to-br ${strategy.gradient} relative overflow-hidden ${
+                        strategy.available ? 'shadow-lg' : ''
+                      }`}>
                         {/* Icon */}
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-12 h-12 bg-white bg-opacity-80 rounded-lg flex items-center justify-center text-2xl backdrop-blur-sm border border-white border-opacity-50">
+                          <div className={`w-12 h-12 bg-white bg-opacity-90 rounded-lg flex items-center justify-center text-2xl backdrop-blur-sm border border-white border-opacity-50 shadow-lg ${
+                            strategy.available ? 'transform group-hover:scale-110 transition-transform duration-300' : ''
+                          }`}>
                             {strategy.icon}
                           </div>
                         </div>
@@ -194,7 +212,11 @@ const MarketsAI1App = ({ setCurrentPage }) => {
 
                       {/* Content */}
                       <div className="p-4 text-center">
-                        <h3 className="text-base font-bold text-gray-900 mb-2 group-hover:text-teal-700 transition-colors leading-tight text-center">
+                        <h3 className={`text-base font-bold mb-2 transition-colors leading-tight text-center ${
+                          strategy.available 
+                            ? 'text-emerald-700 group-hover:text-emerald-800' 
+                            : 'text-gray-700 group-hover:text-gray-800'
+                        }`}>
                           {strategy.name}
                         </h3>
                         <p className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-3 text-center">
@@ -203,13 +225,17 @@ const MarketsAI1App = ({ setCurrentPage }) => {
 
                         {/* Status Indicator */}
                         <div className="flex items-center justify-center space-x-2">
-                          <div className={`w-2 h-2 rounded-full ${strategy.available ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                          <span className="text-xs text-gray-600">
+                          <div className={`w-2 h-2 rounded-full ${
+                            strategy.available ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'
+                          }`}></div>
+                          <span className={`text-xs ${
+                            strategy.available ? 'text-emerald-600 font-semibold' : 'text-gray-600'
+                          }`}>
                             {strategy.available ? 'Available' : 'In Development'}
                           </span>
                           
                           {strategy.available && (
-                            <div className="text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-2">
+                            <div className="text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-2">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                               </svg>
@@ -219,7 +245,11 @@ const MarketsAI1App = ({ setCurrentPage }) => {
                       </div>
 
                       {/* Subtle Hover Effect */}
-                      <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${strategy.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none`}></div>
+                      <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none ${
+                        strategy.available 
+                          ? 'bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600' 
+                          : `bg-gradient-to-br ${strategy.gradient}`
+                      }`}></div>
                     </div>
                   </div>
                 ))}

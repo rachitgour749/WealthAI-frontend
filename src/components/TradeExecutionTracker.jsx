@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://13.201.196.235:8000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.wealthai1.in';
 
 const TradeExecutionTracker = () => {
   const [tradeStatus, setTradeStatus] = useState(null);
