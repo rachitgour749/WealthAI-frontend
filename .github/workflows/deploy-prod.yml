@@ -1,0 +1,70 @@
+name: Deploy React to S3 + CloudFront (prod)
+
+on:
+  push:
+    branches: [ "prod" ]
+
+env:
+  S3_BUCKET: wealthai1.in
+  AWS_REGION: ap-south-1
+  DISTRIBUTION_ID: ${{ secrets.CF_DISTRIBUTION_ID }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write   # REQUIRED for OIDC
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: github-actions-deploy
+
+      - name: Install AWS CLI
+        run: pipx install awscli
+
+      # Upload static assets (immutable, long cache) and delete removed ones
+      - name: Upload static assets
+        run: |
+          aws s3 sync build s3://$S3_BUCKET \
+            --delete \
+            --exclude "*.html" \
+            --cache-control "public, max-age=31536000, immutable"
+
+      # Upload HTML last with no-cache so users get newest HTML
+      - name: Upload HTML
+        run: |
+          aws s3 sync build s3://$S3_BUCKET \
+            --exclude "*" --include "*.html" \
+            --cache-control "no-cache, no-store, must-revalidate, max-age=0"
+
+      # Optional: sanity check headers on a couple files
+      - name: Head check
+        run: |
+          aws s3api head-object --bucket $S3_BUCKET --key index.html || true
+
+      # Invalidate CloudFront HTML (add more HTML paths if needed)
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "$DISTRIBUTION_ID" \
+            --paths "/index.html" "/index.htm" "/"
