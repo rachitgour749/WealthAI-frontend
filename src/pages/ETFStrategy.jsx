@@ -5,7 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import TradeExecutionTracker from '../components/TradeExecutionTracker';
 import CostsDashboard from '../components/CostsDashboard';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.wealthai1.in';
+const API_BASE_URL = 'http://127.0.0.1:8000' || 'https://api.wealthai1.in';
 
 
 function ETFStrategy({ onBack }) {
@@ -336,7 +336,7 @@ function ETFStrategy({ onBack }) {
     if (typeof value === 'string' && value.includes('₹')) {
       return value;
     }
-    return `₹${parseFloat(value || 0).toLocaleString('en-IN')}`;
+    return `₹${Math.round(parseFloat(value || 0)).toLocaleString('en-IN')}`;
   };
 
   const formatPercentage = (value) => {
@@ -346,24 +346,110 @@ function ETFStrategy({ onBack }) {
     return `${parseFloat(value || 0).toFixed(2)}%`;
   };
 
-  const renderMetricsCard = (title, value, subtitle = '') => (
-    <div className="bg-white p-4 rounded-lg shadow">
-      <h4 className="text-sm font-medium text-gray-500">{title}</h4>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
-    </div>
-  );
+  const renderMetricsCard = (title, value, subtitle = '') => {
+    const getDefinition = (metricTitle) => {
+      const definitions = {
+        'Total Return': 'The total percentage gain or loss on an investment over a specific period, including dividends and capital appreciation.',
+        'CAGR': 'Compound Annual Growth Rate - the mean annual growth rate of an investment over a specified period longer than one year.',
+        'XIRR': 'Extended Internal Rate of Return - calculates the rate of return for investments with multiple cash flows occurring at irregular intervals.',
+        'Volatility': 'A measure of the rate at which the price of a security increases or decreases for a given set of returns.',
+        'Sharpe Ratio': 'A measure of risk-adjusted return, calculated as excess return per unit of risk. Higher values indicate better risk-adjusted performance.',
+        'Treynor Ratio': 'A risk-adjusted measure of return based on systematic risk, calculated as excess return per unit of systematic risk.',
+        'Calmar Ratio': 'A risk-adjusted measure that compares the annualized return to the maximum drawdown, indicating return per unit of downside risk.',
+        'Max Drawdown': 'The maximum observed loss from a peak to a subsequent trough, representing the largest percentage decline in portfolio value.',
+        'Win Rate': 'The percentage of profitable trades out of total trades executed during the investment period.',
+        'Total Investment': 'The total amount of capital invested over the entire investment period.',
+        'Final Value': 'The total portfolio value at the end of the investment period.',
+        'Total Trades': 'The total number of buy and sell transactions executed during the investment period.'
+      };
+      return definitions[metricTitle] || 'No definition available for this metric.';
+    };
+  
+    return (
+      <div className="group relative bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow duration-200 cursor-pointer">
+        <h4 className="text-sm font-medium text-gray-500">{title}</h4>
+        <p className="text-2xl font-bold text-gray-900">{value}</p>
+        {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+  
+        {/* Tooltip: rectangular, single column (title then definition) */}
+        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3
+                        opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                        pointer-events-none z-[9999]">
+          <div className="relative w-[220px] max-w-[40vw] px-4 py-3 bg-gray-900 text-white
+                          rounded-md shadow-lg whitespace-normal break-words leading-snug">
+            <div className="font-semibold text-sm mb-1">{title}</div>
+            <div className="text-gray-200 text-xs leading-relaxed">
+              {getDefinition(title)}
+            </div>
+  
+            {/* Arrow */}
+            <span className="absolute left-[-6px] top-1/2 -translate-y-1/2 w-3 h-3 bg-gray-900 rotate-45"></span>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const renderPerformanceChart = () => {
     if (!backtestResult || !backtestResult.performance_data) return null;
 
     const { performance_data } = backtestResult;
-    const chartData = performance_data.dates.map((date, index) => ({
-      date,
-      'ETF Strategy': performance_data.etf_strategy[index] || 0,
-      'Cumulative Investment': performance_data.cumulative_investment[index] || 0,
-      'Nifty50 Buy & Hold': performance_data.nifty50_buyhold[index] || 0
-    }));
+    
+    // Add comprehensive validation for all required arrays
+    if (!performance_data.dates || !Array.isArray(performance_data.dates) || performance_data.dates.length === 0) {
+      console.warn('Performance data dates array is missing or empty');
+      return (
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Comparison</h3>
+          <div className="text-center text-gray-500 py-8">
+            No performance data available. Please run a backtest first.
+          </div>
+        </div>
+      );
+    }
+
+    // Ensure all required arrays exist and have the same length
+    const dates = performance_data.dates || [];
+    const etfStrategy = performance_data.etf_strategy || [];
+    const cumulativeInvestment = performance_data.cumulative_investment || [];
+    const nifty50BuyHold = performance_data.nifty50_buyhold || [];
+
+    // Safe array access function
+    const safeArrayAccess = (array, index) => {
+      if (!Array.isArray(array) || index < 0 || index >= array.length) {
+        return 0;
+      }
+      const value = array[index];
+      return (value !== null && value !== undefined && !isNaN(value)) ? value : 0;
+    };
+
+    const chartData = dates.map((date, index) => {
+      // Validate date
+      if (!date) {
+        console.warn(`Invalid date at index ${index}`);
+        return null;
+      }
+      
+      return {
+        date,
+        'ETF Strategy': safeArrayAccess(etfStrategy, index),
+        'Cumulative Investment': safeArrayAccess(cumulativeInvestment, index),
+        'Nifty50 Buy & Hold': safeArrayAccess(nifty50BuyHold, index)
+      };
+    }).filter(item => item !== null); // Remove any null items
+
+    // Check if we have valid chart data
+    if (!chartData || chartData.length === 0) {
+      console.warn('No valid chart data available');
+      return (
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Comparison</h3>
+          <div className="text-center text-gray-500 py-8">
+            No valid performance data available for charting. Please run a backtest first.
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="bg-white p-6 rounded-lg shadow">
@@ -377,14 +463,55 @@ function ETFStrategy({ onBack }) {
               angle={-45}
               textAnchor="end"
               height={80}
+              tickFormatter={(value) => {
+                try {
+                  if (!value) return 'N/A';
+                  const date = new Date(value);
+                  if (isNaN(date.getTime())) return 'Invalid Date';
+                  const month = date.toLocaleDateString('en-US', { month: 'short' });
+                  const year = date.getFullYear();
+                  return `${month}, ${year}`;
+                } catch (error) {
+                  console.warn('Error formatting date:', error);
+                  return 'Invalid Date';
+                }
+              }}
             />
             <YAxis 
               tick={{ fontSize: 12 }}
-              tickFormatter={(value) => `₹${(value / 1000000).toFixed(1)}M`}
+              tickFormatter={(value) => {
+                try {
+                  if (value === null || value === undefined || isNaN(value)) return '₹0M';
+                  return `₹${(value / 1000000).toFixed(1)}M`;
+                } catch (error) {
+                  console.warn('Error formatting Y-axis value:', error);
+                  return '₹0M';
+                }
+              }}
             />
             <Tooltip 
-              formatter={(value) => [formatCurrency(value), 'Value']}
-              labelFormatter={(label) => `Date: ${label}`}
+              formatter={(value) => {
+                try {
+                  if (value === null || value === undefined || isNaN(value)) return ['₹0', 'Value'];
+                  if (typeof formatCurrency === 'function') {
+                    return [formatCurrency(value), 'Value'];
+                  } else {
+                    return [`₹${parseFloat(value || 0).toLocaleString('en-IN')}`, 'Value'];
+                  }
+                } catch (error) {
+                  console.warn('Error formatting tooltip value:', error);
+                  return ['₹0', 'Value'];
+                }
+              }}
+              labelFormatter={(label) => {
+                try {
+                  if (!label) return 'Date: N/A';
+                  return `Date: ${label}`;
+                } catch (error) {
+                  console.warn('Error formatting tooltip label:', error);
+                  return 'Date: N/A';
+                }
+              }}
             />
             <Legend />
             {showETFStrategy && (
@@ -422,9 +549,42 @@ function ETFStrategy({ onBack }) {
   };
 
   const renderMetricsTable = () => {
-    if (!backtestResult || !backtestResult.etf_metrics || !backtestResult.nifty_metrics) return null;
+    if (!backtestResult) {
+      return (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Performance Metrics Comparison</h3>
+          </div>
+          <div className="p-6 text-center text-gray-500">
+            <p>No backtest results available. Please run a backtest first.</p>
+          </div>
+        </div>
+      );
+    }
 
-    const { etf_metrics, nifty_metrics } = backtestResult;
+    // Check for alternative key names for metrics data
+    const etf_metrics = backtestResult.etf_metrics || backtestResult.etf_metrics_data || {};
+    const nifty_metrics = backtestResult.nifty_metrics || backtestResult.nifty50_metrics || backtestResult.benchmark_metrics || backtestResult.nifty_50_metrics || {};
+    
+    // Debug logging
+    console.log('renderMetricsTable - backtestResult keys:', Object.keys(backtestResult));
+    console.log('renderMetricsTable - etf_metrics:', etf_metrics);
+    console.log('renderMetricsTable - nifty_metrics:', nifty_metrics);
+    
+    // If no metrics at all, show a message
+    if (!etf_metrics || Object.keys(etf_metrics).length === 0) {
+      return (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Performance Metrics Comparison</h3>
+          </div>
+          <div className="p-6 text-center text-gray-500">
+            <p>No metrics data available. Please run a backtest first.</p>
+            <p className="text-sm mt-2">Available data: {Object.keys(backtestResult).join(', ')}</p>
+          </div>
+        </div>
+      );
+    }
     const metrics = [
       { key: 'Total Investment', label: 'Total Investment' },
       { key: 'Final Value', label: 'Final Value' },
@@ -451,12 +611,16 @@ function ETFStrategy({ onBack }) {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Metric
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ETF Rotation Strategy
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nifty50 Buy & Hold
-                </th>
+                {etf_metrics && Object.keys(etf_metrics).length > 0 && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    ETF Rotation Strategy
+                  </th>
+                )}
+                {nifty_metrics && Object.keys(nifty_metrics).length > 0 && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nifty50 Buy & Hold
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -465,12 +629,16 @@ function ETFStrategy({ onBack }) {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {metric.label}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {etf_metrics[metric.key] || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {nifty_metrics[metric.key] || 'N/A'}
-                  </td>
+                  {etf_metrics && Object.keys(etf_metrics).length > 0 && (
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {etf_metrics[metric.key] || etf_metrics[metric.key.toLowerCase()] || 'N/A'}
+                    </td>
+                  )}
+                  {nifty_metrics && Object.keys(nifty_metrics).length > 0 && (
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {nifty_metrics[metric.key] || nifty_metrics[metric.key.toLowerCase()] || 'N/A'}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -576,7 +744,7 @@ function ETFStrategy({ onBack }) {
           }
           const numValue = parseFloat(value || 0);
           if (isNaN(numValue)) return '₹0';
-          return `₹${numValue.toLocaleString('en-IN')}`;
+          return `₹${Math.round(numValue).toLocaleString('en-IN')}`;
         } catch (error) {
           return '₹0';
         }
@@ -612,184 +780,271 @@ function ETFStrategy({ onBack }) {
 
       return (
         <div className="space-y-6">
-          {/* Trading Summary */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Monday Trading Summary</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{safeString(validTradingSummary.total_trades) || '0'}</div>
-                <div className="text-sm text-gray-500">Total Trades</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{safeString(validTradingSummary.buy_trades) || '0'}</div>
-                <div className="text-sm text-gray-500">Buy Trades</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">{safeString(validTradingSummary.sell_trades) || '0'}</div>
-                <div className="text-sm text-gray-500">Sell Trades</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">{safeString(validTradingSummary.churn_trades) || '0'}</div>
-                <div className="text-sm text-gray-500">Churn Trades</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-600">{safeString(validTradingSummary.no_trade_weeks) || '0'}</div>
-                <div className="text-sm text-gray-500">No Trade Weeks</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">{safeString(validTradingSummary.trading_frequency) || '0%'}</div>
-                <div className="text-sm text-gray-500">Trading Frequency</div>
-              </div>
+        {/* Trading Summary */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Monday Trading Summary</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{safeString(validTradingSummary.total_trades) || '0'}</div>
+              <div className="text-sm text-gray-500">Total Trades</div>
             </div>
+            {/* <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{safeString(validTradingSummary.buy_trades) || '0'}</div>
+              <div className="text-sm text-gray-500">Buy Trades</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-600">{safeString(validTradingSummary.sell_trades) || '0'}</div>
+              <div className="text-sm text-gray-500">Sell Trades</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">{safeString(validTradingSummary.churn_trades) || '0'}</div>
+              <div className="text-sm text-gray-500">Churn Trades</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-600">{safeString(validTradingSummary.no_trade_weeks) || '0'}</div>
+              <div className="text-sm text-gray-500">No Trade Weeks</div>
+            </div> */}
+            {/* <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">{safeString(validTradingSummary.trading_frequency) || '0%'}</div>
+              <div className="text-sm text-gray-500">Trading Frequency</div>
+            </div> */}
           </div>
+        </div>
 
-          {/* Transaction Table */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">📋 All Monday Trade Transactions</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                Complete list of all ETF trades executed every Monday during the backtest period
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Week</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Day</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ETF Ticker</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Units</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Costs</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capital Gains Tax</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Portfolio NAV</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {transactionLog.map((log, index) => {
-                    // Comprehensive validation for each log entry
-                    if (!log || typeof log !== 'object') {
-                      console.warn('Invalid log entry at index', index, ':', log);
-                      return (
-                        <tr key={`invalid-${index}`}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                              N/A
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                        </tr>
-                      );
-                    }
-                    
-                    const dateStr = safeString(log.date);
-                    const dayOfWeek = getDayOfWeek(dateStr);
-                    const isMonday = dayOfWeek === 'Mon';
-                    
+        {/* Transaction Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">📋 All Monday Trade Transactions</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Complete list of all Stock trades executed every Monday during the backtest period
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Week</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Day</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Symbols</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Units</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prices</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Costs</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capital Gains Tax</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Portfolio Value</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {transactionLog.map((log, index) => {
+                  // Comprehensive validation for each log entry
+                  if (!log || typeof log !== 'object') {
+                    console.warn('Invalid log entry at index', index, ':', log);
                     return (
-                      <tr key={`trade-${index}`} className={isMonday ? 'bg-blue-50' : ''}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <span className="font-medium">{safeString(log.week)}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {dateStr}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            isMonday ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
-                          }`}>
-                            {dayOfWeek}
+                      <tr key={`invalid-${index}`}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                            N/A
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                      </tr>
+                    );
+                  }
+                  
+                  const dateStr = safeString(log.date);
+                  const dayOfWeek = getDayOfWeek(dateStr);
+                  const isMonday = dayOfWeek === 'Mon';
+                  
+                  return (
+                    <tr key={`trade-${index}`} className={isMonday ? 'bg-blue-50' : ''}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span className="font-medium">{safeString(log.week)}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {dateStr}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          isMonday ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {dayOfWeek}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {log.action === 'churn' ? (
+                          <div className="flex gap-2">
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-200 text-orange-700">
+                              churn
+                            </span>
+                           
+                          </div>
+                        ) : (
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getActionColor(log.action)}`}>
                             {safeString(log.action)}
                           </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {log.action === 'churn' ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
+                              <span className="font-mono font-medium">{log.churning_details?.sell_transactions[0]?.ticker || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
+                              <span className="font-mono font-medium">{log?.churning_details?.buy_transaction?.ticker || 'N/A'}</span>
+                            </div>
+                          </div>
+                        ) : (
                           <span className="font-mono font-medium">{safeString(log.ticker)}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {(() => {
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {log.action === 'churn' ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
+                              <span className="font-medium">{log.units_sold?.toLocaleString('en-IN') || '0'}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
+                              <span className="font-medium">{log.units_bought?.toLocaleString('en-IN') || '0'}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          (() => {
                             try {
                               const units = parseFloat(safeString(log.units));
                               return isNaN(units) ? '0' : units.toLocaleString('en-IN');
                             } catch (error) {
                               return '0';
                             }
-                          })()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatCurrency(log.price)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          })()
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {log.action === 'churn' ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
+                              <span>{formatCurrency(log.churning_details?.sell_transactions?.[0]?.price || 0)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
+                              <span>{formatCurrency(log.churning_details?.buy_transaction?.price || 0)}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          formatCurrency(log.price)
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {log.action === 'churn' ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
+                              <span className="font-medium">{formatCurrency(log.sell_amount || 0)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
+                              <span className="font-medium">{formatCurrency(log.buy_amount || 0)}</span>
+                            </div>
+                          </div>
+                        ) : (
                           <span className="font-medium">{formatCurrency(log.amount)}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatCurrency(log.transaction_costs)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatCurrency(log.capital_gains_tax)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <span className="font-semibold">{formatCurrency(log.nav)}</span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            
-            {/* Summary Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-              <div className="flex justify-between items-center text-sm text-gray-600">
-                <div>
-                  <span className="font-medium">Total Transactions:</span> {transactionLog.length}
-                </div>
-                <div>
-                  <span className="font-medium">Monday Trades:</span> {(() => {
-                    try {
-                      return transactionLog.filter(log => {
-                        if (!log || typeof log !== 'object') return false;
-                        const dayOfWeek = getDayOfWeek(safeString(log.date));
-                        return dayOfWeek === 'Mon';
-                      }).length;
-                    } catch (error) {
-                      return 0;
-                    }
-                  })()}
-                </div>
-                <div>
-                  <span className="font-medium">Total Volume:</span> {(() => {
-                    try {
-                      const totalVolume = transactionLog.reduce((sum, log) => {
-                        if (!log || typeof log !== 'object') return sum;
-                        const amount = parseFloat(log.amount || 0);
-                        return sum + (isNaN(amount) ? 0 : amount);
-                      }, 0);
-                      return formatCurrency(totalVolume);
-                    } catch (error) {
-                      return '₹0';
-                    }
-                  })()}
-                </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {log.action === 'churn' ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
+                              <span>{formatCurrency(log.churning_details?.sell_transactions?.[0]?.costs?.total_costs || 0)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
+                              <span>{formatCurrency(log.churning_details?.buy_transaction?.costs?.total_costs || 0)}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          formatCurrency(log.transaction_costs)
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {log.action === 'churn' ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
+                              <span>{formatCurrency(log.churning_details?.sell_transactions?.[0]?.capital_gains_tax || 0)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
+                              <span>₹0</span>
+                            </div>
+                          </div>
+                        ) : (
+                          formatCurrency(log.capital_gains_tax)
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span className="font-semibold">{formatCurrency(log.nav)}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Summary Footer */}
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+            <div className="flex justify-between items-center text-sm text-gray-600">
+              <div>
+                <span className="font-medium">Total Transactions:</span> {transactionLog.length}
+              </div>
+              <div>
+                <span className="font-medium">Monday Trades:</span> {(() => {
+                  try {
+                    return transactionLog.filter(log => {
+                      if (!log || typeof log !== 'object') return false;
+                      const dayOfWeek = getDayOfWeek(safeString(log.date));
+                      return dayOfWeek === 'Mon';
+                    }).length;
+                  } catch (error) {
+                    return 0;
+                  }
+                })()}
+              </div>
+              <div>
+                <span className="font-medium">Total Volume:</span> {(() => {
+                  try {
+                    const totalVolume = transactionLog.reduce((sum, log) => {
+                      if (!log || typeof log !== 'object') return sum;
+                      const amount = parseFloat(log.amount || 0);
+                      return sum + (isNaN(amount) ? 0 : amount);
+                    }, 0);
+                    return formatCurrency(totalVolume);
+                  } catch (error) {
+                    return '₹0';
+                  }
+                })()}
               </div>
             </div>
           </div>
         </div>
+      </div>
       );
     } catch (error) {
       console.error('Error rendering transaction log:', error);
@@ -978,7 +1233,7 @@ function ETFStrategy({ onBack }) {
                       }}
                     />
                     
-                    {selectedEtfs.length > 0 && (
+                    {/* {selectedEtfs.length > 0 && (
                       <div className="mt-4 p-3 bg-white rounded-lg border border-teal-200">
                         <p className="text-sm text-teal-700 font-medium">
                           ✓ {selectedEtfs.length} ETFs selected
@@ -996,7 +1251,7 @@ function ETFStrategy({ onBack }) {
                           )}
                         </div>
                       </div>
-                    )}
+                    )} */}
                   </div>
 
                   {/* Date Range Configuration */}
@@ -1177,27 +1432,57 @@ function ETFStrategy({ onBack }) {
                     <div className="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center text-white text-sm mr-3">
                       📋
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900">Available ETFs</h3>
+                    <h3 className="text-lg font-bold text-gray-900">
+                      Available ETFs
+                    </h3>
                   </div>
-                  
-                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden max-h-96">
-                    <div className="overflow-y-auto">
+ 
+                  <div className="bg-white rounded-lg border border-gray-200">
+                    {/* Scroll area with hidden scrollbar */}
+                    <div className="max-h-96 overflow-y-auto scrollbar-hide">
                       <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50 sticky top-0">
+                        <thead className="bg-gray-50 sticky top-0 z-10">
                           <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Symbol</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sector</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Years</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Symbol
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Sector
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Years
+                            </th>
                           </tr>
                         </thead>
+ 
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {etfOverview.map((etf, index) => (
-                            <tr key={index} className="hover:bg-gray-50">
-                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{etf.symbol}</td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{etf.sector}</td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{etf.years_available}</td>
+                          {etfOverview.length === 0 ? (
+                            <tr>
+                              <td
+                                colSpan={3}
+                                className="px-4 py-6 text-sm text-gray-500 text-center"
+                              >
+                                No stocks found.
+                              </td>
                             </tr>
-                          ))}
+                          ) : (
+                            etfOverview.map((etf, idx) => (
+                              <tr
+                                key={etf?.symbol ?? idx}
+                                className="hover:bg-gray-50"
+                              >
+                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  {etf.symbol}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                  {etf.sector}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                  {etf.years_available}
+                                </td>
+                              </tr>
+                            ))
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -1339,18 +1624,24 @@ function ETFStrategy({ onBack }) {
         </div>
 
         {/* Metrics Cards */}
-        {backtestResult && backtestResult.etf_metrics && (
-          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-            {renderMetricsCard('Total Return', backtestResult.etf_metrics['Total Return'] || 'N/A')}
-            {renderMetricsCard('CAGR', backtestResult.etf_metrics['CAGR'] || 'N/A')}
-            {renderMetricsCard('XIRR', backtestResult.etf_metrics['XIRR'] || 'N/A')}
-            {renderMetricsCard('Sharpe Ratio', backtestResult.etf_metrics['Sharpe Ratio'] || 'N/A')}
-            {renderMetricsCard('Treynor Ratio', backtestResult.etf_metrics['Treynor Ratio'] || 'N/A')}
-            {renderMetricsCard('Calmar Ratio', backtestResult.etf_metrics['Calmar Ratio'] || 'N/A')}
-            {renderMetricsCard('Max Drawdown', backtestResult.etf_metrics['Max Drawdown'] || 'N/A')}
-            {renderMetricsCard('Win Rate', backtestResult.etf_metrics['Win Rate'] || 'N/A')}
-          </div>
-        )}
+        {backtestResult && (() => {
+          const etf_metrics = backtestResult.etf_metrics || backtestResult.etf_metrics_data || {};
+          if (etf_metrics && Object.keys(etf_metrics).length > 0) {
+            return (
+              <div className="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 overflow-visible relative" style={{ overflow: 'visible' }}>
+                {renderMetricsCard('Total Return', etf_metrics['Total Return'] || etf_metrics['total_return'] || 'N/A')}
+                {renderMetricsCard('CAGR', etf_metrics['CAGR'] || etf_metrics['cagr'] || 'N/A')}
+                {renderMetricsCard('XIRR', etf_metrics['XIRR'] || etf_metrics['xirr'] || 'N/A')}
+                {renderMetricsCard('Sharpe Ratio', etf_metrics['Sharpe Ratio'] || etf_metrics['sharpe_ratio'] || 'N/A')}
+                {renderMetricsCard('Treynor Ratio', etf_metrics['Treynor Ratio'] || etf_metrics['treynor_ratio'] || 'N/A')}
+                {renderMetricsCard('Calmar Ratio', etf_metrics['Calmar Ratio'] || etf_metrics['calmar_ratio'] || 'N/A')}
+                {renderMetricsCard('Max Drawdown', etf_metrics['Max Drawdown'] || etf_metrics['max_drawdown'] || 'N/A')}
+                {renderMetricsCard('Win Rate', etf_metrics['Win Rate'] || etf_metrics['win_rate'] || 'N/A')}
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         {/* Tabs */}
         <div className="mt-8">

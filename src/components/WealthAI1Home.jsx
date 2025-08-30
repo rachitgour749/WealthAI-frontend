@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Navigation from './Navigation';
 import Footer from './Footer';
+import AIAssistant from '../pages/AIAssistant/AIAssistant';
 
 const WealthAI1Home = ({ setCurrentPage, setIsAuthenticated }) => {
+  const [isAIPopupOpen, setIsAIPopupOpen] = useState(false);
+
   const products = [
     {
       id: 'marketsai1',
@@ -17,7 +20,7 @@ const WealthAI1Home = ({ setCurrentPage, setIsAuthenticated }) => {
       name: 'ChatAI1',
       description: 'Smart AI Assistant specially trained for Indian stock markets and mutual funds with natural language interaction.',
       color: 'green',
-      enabled: false,
+      enabled: true,
       icon: '🤖'
     },
     {
@@ -39,7 +42,9 @@ const WealthAI1Home = ({ setCurrentPage, setIsAuthenticated }) => {
   ];
 
   const handleProductClick = (productId) => {
-    if (productId === 'marketsai1') {
+    if (productId === 'chatai1') {
+      setIsAIPopupOpen(true);
+    } else if (productId === 'marketsai1') {
       setIsAuthenticated(true);
       setCurrentPage('marketsai1-app');
     } else {
@@ -120,7 +125,7 @@ const WealthAI1Home = ({ setCurrentPage, setIsAuthenticated }) => {
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-20 sm:h-20 bg-yellow-100 rounded-full"></div>
               </div>
               
-              <div className="relative z-10 h-full flex flex-col">
+              <div className="relative z-10 h-full overflow-y-auto scrollbar-hide">
                 <div className="text-center mb-4 sm:mb-6">
                   <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-blue-900 mb-2 sm:mb-3">Our Product Ecosystem</h2>
                   <p className="text-xs sm:text-sm text-gray-600">
@@ -128,7 +133,7 @@ const WealthAI1Home = ({ setCurrentPage, setIsAuthenticated }) => {
                   </p>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 flex-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pb-4">
                   {products.map((product) => (
                     <div key={product.id} className="bg-white bg-opacity-80 p-3 sm:p-4 rounded-2xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 relative">
                       {!product.enabled && (
@@ -168,6 +173,35 @@ const WealthAI1Home = ({ setCurrentPage, setIsAuthenticated }) => {
           </div>
         </div>
       </div>
+      
+      {/* AI Assistant Popup Modal */}
+      {isAIPopupOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-8">
+          {/* Backdrop with blur */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+            onClick={() => setIsAIPopupOpen(false)}
+          ></div>
+          
+          {/* Modal Content */}
+          <div className="relative w-full h-full max-w-5xl bg-white rounded-[20px] shadow-2xl overflow-hidden flex flex-col">
+            {/* Close Button */}
+            <button
+              onClick={() => setIsAIPopupOpen(false)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 bg-white bg-opacity-40 hover:bg-opacity-60 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            {/* AI Assistant Component */}
+            <div className="w-full h-full overflow-y-auto scrollbar-hide bg-gray-200">
+              <AIAssistant onBack={() => setIsAIPopupOpen(false)} />
+            </div>
+          </div>
+        </div>
+      )}
       
       <Footer setCurrentPage={setCurrentPage} />
     </div>

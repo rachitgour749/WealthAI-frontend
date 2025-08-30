@@ -27,7 +27,7 @@ const DEFAULTS = {
     "Define problem, users, and JTBD","Define success metrics and guardrails","Deliver a step-by-step plan",
     "Design an experiment or A/B test plan","Document a runbook/SOP","Draft a clear first version","Draft a content calendar",
     "Draft a formal document","Draft a PRD/spec","Draft a proposal with options","Draft a risk register","Draft email sequences",
-    "Draft OKRs or KPIs","Expand into long-form with headings","Explain like I’m five (ELI5)","Extract insights and implications",
+    "Draft OKRs or KPIs","Expand into long-form with headings","Explain like I'm five (ELI5)","Extract insights and implications",
     "Forecast scenarios with assumptions","Frame trade-offs and a recommendation","Generate API contract/spec",
     "Generate creative variants","Generate FAQs with concise answers","Generate ideas then critique them",
     "Generate SEO keywords and brief","Identify risks, assumptions, and gaps","Interpret a chart or dataset",
@@ -47,11 +47,11 @@ const DEFAULTS = {
     "5 bullets max per list, 1–2 lines each","Ask up to 3 clarifying questions, then proceed",
     "Avoid speculation about individuals or private companies","Be concise (max 300 words unless asked otherwise)",
     "Call out constraints that limit the answer","Cite assumptions explicitly","Do not include personal data or identifiers",
-    "Do not invent sources, quotes, or statistics","Don’t apologize unless there","Don’t repeat the prompt back to me",
+    "Do not invent sources, quotes, or statistics","Don't apologize unless there","Don't repeat the prompt back to me",
     "Explain why each step is necessary","Follow the exact schema keys and order","Follow the provided style guide",
-    "If unsure, say “I don’t know” and request data","Include risks and mitigations","Keep a neutral, professional tone",
+    "If unsure, say \"I don't know\" and request data","Include risks and mitigations","Keep a neutral, professional tone",
     "List 3–5 trade-offs, then a recommendation","Max 300 words (unless asked)","No backticks or code fences in the final output",
-    "No emojis or exclamation marks","No hallucinations, say “I don't know” if unsure",
+    "No emojis or exclamation marks","No hallucinations, say \"I don't know\" if unsure",
     "No medical/legal/financial advice beyond general info","No placeholders like \"TBD/XX/???\"",
     "One idea per sentence; ≤20 words","Prefer active voice","Provide citations with working URLs only",
     "Redact sensitive info with [REDACTED]","Refuse unsafe or disallowed requests; explain why",
@@ -198,8 +198,8 @@ function TagPicker({ title, hint, options, selected, setSelected, onAddCustom })
   };
 
   return (
-    <div ref={wrapRef} className="bg-white border border-gray-200 rounded-[5px] pt-2 px-2 shadow-sm md:col-span-6 col-span-12 relative">
-      <h2 className="text-[13px] uppercase tracking-wide text-[#2b3037] mb-1">{title}</h2>
+    <div ref={wrapRef} className="bg-white border border-gray-200 rounded-xl pt-3 px-3 shadow-lg hover:shadow-xl hover:mt-[-5px] hover:mb-[5px] transition-all duration-200 md:col-span-6 col-span-12 bg-gradient-to-br from-white to-gray-50">
+      <h2 className="text-sm uppercase tracking-wide text-blue-900 font-semibold mb-2">{title}</h2>
 
       <input
         type="text"
@@ -209,33 +209,34 @@ function TagPicker({ title, hint, options, selected, setSelected, onAddCustom })
         onFocus={() => setOpen(!!query)}
         onBlur={() => setTimeout(() => setOpen(false), 0)}
         placeholder={`Type to search & Enter to add ${title.toLowerCase()}…`}
-        className="w-full rounded-md border border-[#dde5f3] bg-[#f7faff] text-[#2c4975] px-3 py-[5px] text-[14px]"
+        className="w-full rounded-lg border border-gray-300 bg-white text-gray-700 px-3 py-2 text-sm focus:ring-1 focus:ring-blue-900 focus:border-blue-900 transition-all duration-200 shadow-sm outline-none"
       />
-
+      <div className="relative">
       {open && query && suggestions.length > 0 && (
-        <ul className="absolute left-0 right-0 z-20 mt-1 max-h-56 w-full overflow-auto rounded-md border border-[#dde5f3] bg-white shadow">
+        <ul className="absolute left-0 right-0 z-99999999  mt-1 max-h-56 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-2xl">
           {suggestions.map((opt, idx) => (
             <li
               key={opt}
               onMouseDown={() => addSuggestion(opt)}
-              className={`px-3 py-2 cursor-pointer ${idx === activeIdx ? "bg-[#eef3ff] text-[#2c4975]" : "hover:bg-[#f7faff]"}`}
+              className={`px-3 py-2 cursor-pointer text-sm ${idx === activeIdx ? "bg-blue-50 text-blue-900" : "hover:bg-gray-50"}`}
             >
               {opt}
             </li>
           ))}
         </ul>
       )}
-
-      <div className="flex items-center gap-2 mt-2">
-        <span className="text-sm text-[#6b88b9]">{hint}</span>
       </div>
 
-      <div className="flex flex-wrap gap-1 mt-2 mb-2">
+      <div className="flex items-center gap-2 mt-2">
+        <span className="text-xs text-gray-500">{hint}</span>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mt-3 mb-3">
         {selected.map((v) => (
-          <span key={v} className="inline-flex items-center gap-2 rounded-full bg-[#eaf1ff] text-[#2c4975] px-4 py-2">
+          <span key={v} className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-100 to-blue-200 text-blue-900 px-3 py-1.5 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200">
             {v}
             <button
-              className="text-[#6b88b9] hover:text-[#2c4975]"
+              className="text-blue-600 hover:text-blue-900 transition-colors"
               onClick={() => setSelected(selected.filter((x) => x !== v))}
               aria-label={`Remove ${v}`}
               title="Remove from selection"
@@ -403,47 +404,69 @@ function PromptBuilder({ onClose, onPromptGenerated }) {
   };
 
   return (
-    <div className="w-full p-2 bg-white overflow-x-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3 mb-2">
-        <h1 className="text-lg font-bold">🧩 Prompt Builder</h1>
+    <div className="w-full p-4 bg-gradient-to-br from-blue-50 via-gray-50 to-green-50 min-h-screen relative">
+      {/* 3D Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-10 left-10 w-32 h-32 bg-blue-100 rounded-full opacity-20 blur-xl"></div>
+        <div className="absolute bottom-20 right-20 w-40 h-40 bg-emerald-100 rounded-full opacity-20 blur-xl"></div>
+        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-yellow-100 rounded-full opacity-15 blur-lg"></div>
+      </div>
+      
+      {/* Content Container */}
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-900 rounded-xl flex items-center justify-center">
+            <span className="text-white text-lg font-bold">🧩</span>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-blue-900">Prompt Builder</h1>
+            <p className="text-sm text-gray-600">Create powerful AI prompts with precision</p>
+          </div>
+        </div>
         <div className="flex gap-2">
-          <button className="bg-red-200 font-semibold text-red-600 rounded-md px-3 py-1 text-[13px] hover:bg-red-300" onClick={onReset}>Reset</button>
+          <button 
+            className="bg-red-100 hover:bg-red-200 shadow-lg shadow-red-300/40 font-semibold text-red-700 rounded-lg px-4 py-2 text-sm transition-colors" 
+            onClick={onReset}
+          >
+            Reset
+          </button>
           <button
             aria-label="Close"
             onClick={onClose}
-            className="bg-gray-200 text-gray-600 hover:bg-gray-300 rounded-md px-3 py-1 text-[13px] font-semibold"
+            className="bg-gray-100 hover:bg-gray-200 border  shadow-lg shadow-gray-400/30 text-gray-700 rounded-lg px-3 py-1 text-[18px] font-semibold transition-colors"
           >
-            ×
+            x
           </button>
         </div>
       </div>
 
       {/* API + Model (kept in code but hidden from UI) */}
       <div
-        className={`bg-white border border-[#e8ecf3] rounded-[5px] p-2 shadow-sm mb-2 ${SHOW_API_BAR ? "" : "hidden"}`}
+        className={`bg-white border border-gray-200 rounded-xl p-4 shadow-sm mb-4 ${SHOW_API_BAR ? "" : "hidden"}`}
         style={!SHOW_API_BAR ? { display: "none" } : undefined}
         aria-hidden={!SHOW_API_BAR}
       >
         <div className="grid grid-cols-12 gap-3">
           <div className="md:col-span-5 col-span-12">
-            <input className="w-full bg-[#e0e4ed] text-gray-700 rounded-lg p-2" placeholder="OpenAI API Key (sk-...) — stored locally" value={apiKey} onChange={(e) => handleApiKeyChange(e.target.value)} type="password" />
+            <input className="w-full bg-gray-50 text-gray-700 rounded-lg p-3 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="OpenAI API Key (sk-...) — stored locally" value={apiKey} onChange={(e) => handleApiKeyChange(e.target.value)} type="password" />
           </div>
           <div className="md:col-span-4 col-span-12">
-            <select className="w-full bg-[#e0e4ed] text-gray-700 rounded-lg p-2" value={model} onChange={(e) => setModel(e.target.value)}>
+            <select className="w-full bg-gray-50 text-gray-700 rounded-lg p-3 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value={model} onChange={(e) => setModel(e.target.value)}>
               {DEFAULTS.models.map((m) => (<option key={m.value} value={m.value}>{m.label}</option>))}
             </select>
           </div>
           <div className="md:col-span-3 col-span-12 flex gap-2">
-            <button className="bg-blue-300 hover:bg-blue-400 text-blue-900 font-semibold rounded-lg px-3 py-2 w-full md:w-auto" onClick={onRefine}>Refine with Model</button>
-            <button className="bg-blue-300 hover:bg-blue-400 text-blue-900 font-semibold rounded-lg px-3 py-2 w-full md:w-auto" onClick={onCopy}>Copy Prompt</button>
+            <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-4 py-2 w-full md:w-auto transition-colors" onClick={onRefine}>Refine with Model</button>
+            <button className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg px-4 py-2 w-full md:w-auto transition-colors" onClick={onCopy}>Copy Prompt</button>
           </div>
         </div>
-        <div className="text-sm text-[#6b88b9] mt-2">Tip: your API key stays in your browser (localStorage).</div>
+        <div className="text-sm text-gray-500 mt-2">Tip: your API key stays in your browser (localStorage).</div>
       </div>
 
       {/* Pickers */}
-      <div className="grid grid-cols-12 gap-2">
+      <div className="grid grid-cols-12 gap-4 mb-6">
         <TagPicker title="ROLE" hint="Type to search & Enter to add ROLE" options={roles} selected={selRole} setSelected={setSelRole} onAddCustom={(val) => addCustom("role", val)} />
         <TagPicker title="TONE" hint="Type to search & Enter to add TONE" options={tones} selected={selTone} setSelected={setSelTone} onAddCustom={(val) => addCustom("tone", val)} />
         <TagPicker title="OBJECTIVE" hint="Type to search & Enter to add CONTENT" options={objectives} selected={selObjective} setSelected={setSelObjective} onAddCustom={(val) => addCustom("objective", val)} />
@@ -451,18 +474,25 @@ function PromptBuilder({ onClose, onPromptGenerated }) {
         <TagPicker title="CONSTRAINTS" hint="Type to search & Enter to add CONSTRAINT" options={constraints} selected={selConstraint} setSelected={setSelConstraint} onAddCustom={(val) => addCustom("constraint", val)} />
         <TagPicker title="OUTPUT" hint="Type to search & Enter to add OUTPUT" options={outputs} selected={selOutput} setSelected={setSelOutput} onAddCustom={(val) => addCustom("output", val)} />
       </div>
-
-      {/* Generated Prompt */}
-      <div className="bg-white border border-gray-300 rounded-[5px] p-2 shadow-sm mt-2">
-      <button className="bg-blue-300 hover:bg-blue-400 text-blue-900 font-semibold rounded-md px-2 py-1 text-sm" onClick={composePrompt}>Compose Prompt</button>
+      {/* Compose Button at Bottom */}
+      <div className="flex justify-center mb-6">
+        <button 
+          className="bg-gradient-to-r from-teal-600 to-teal-600 hover:from-teal-700 hover:to-teal-800 text-white font-bold rounded-xl px-5 py-2 text-lg shadow-lg hover:shadow-xl hover:mt-[-5px] hover:mb-[5px] transition-all duration-300"
+          onClick={composePrompt}
+        >
+          🚀 Compose Prompt
+        </button>
       </div>
 
-      <div className="text-slate-500 text-sm mt-2">Use "Compose Prompt" to build your final prompt quickly.</div>
+      <div className="text-gray-500 text-sm text-center mb-4">
+        Use "Compose Prompt" to build your final prompt quickly.
+      </div>
+      </div>
     </div>
   );
 }
 
-/* -------------------- MODAL WRAPPER (fixed 90vh, mobile-first) -------------------- */
+/* -------------------- MODAL WRAPPER (dynamic height based on content) -------------------- */
 function Modal({ open, onClose, children }) {
   useEffect(() => {
     if (open) {
@@ -475,22 +505,19 @@ function Modal({ open, onClose, children }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop with blur */}
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-[4px]" onClick={onClose} />
 
-      {/* Centered panel — phone: 100vw; tablet/desktop: min(90vw, 800px); height fixed at 90vh */}
+      {/* Centered panel with dynamic height */}
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-[100vw] max-w-[100vw] sm:w-[min(90vw,800px)] h-[90vh] bg-white rounded-xl shadow-2xl border border-[#e8ecf3] overflow-hidden overflow-x-hidden flex flex-col touch-pan-y"
+        className="relative z-10 w-full max-w-[1000px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden"
+        style={{ maxHeight: '90vh' }}
       >
-        {/* Top bar - removed heading */}
-        <div className="border-b bg-gray-50 h-1">
-        </div>
-
-        {/* Content area (vertical scrolling only) */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        {/* Content area with scroll */}
+        <div className="w-full" style={{ maxHeight: '90vh' }}>
           {children}
         </div>
       </div>
@@ -535,5 +562,6 @@ const PromptGenerater = ({ open, onClose, onPromptGenerated }) => {
   );
 }
 
-
 export default PromptGenerater
+
+

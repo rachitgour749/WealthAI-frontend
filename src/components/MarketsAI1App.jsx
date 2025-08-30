@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ETFStrategy from '../pages/ETFStrategy';
-import AIAssistant from '../pages/AIAssistant/AIAssistant';
+import StockStrategy from '../pages/StockStrategy';
 
 const MarketsAI1App = ({ setCurrentPage }) => {
   const [activeSection, setActiveSection] = useState('default');
@@ -53,10 +53,20 @@ const MarketsAI1App = ({ setCurrentPage }) => {
                   { 
                     id: 'etf-strategy', 
                     name: 'ETF Rotation Strategy',
-                    description: 'Momentum-based ETF rotation with comprehensive analysis',
+                    description: 'Momentum-based ETFs rotation with comprehensive analysis',
                     icon: '📊',
                     gradient: 'from-emerald-400 via-teal-500 to-cyan-600',
                     borderColor: 'border-emerald-400',
+                    available: true,
+                    category: 'Active'
+                  },
+                  { 
+                    id: 'stock-strategy', 
+                    name: 'Stock Rotation Strategy',
+                    description: 'Momentum-based Stock rotation with comprehensive analysis',
+                    icon: '💹',
+                    gradient: 'from-orange-200 to-orange-300',
+                    borderColor: 'border-orange-200',
                     available: true,
                     category: 'Active'
                   },
@@ -67,7 +77,7 @@ const MarketsAI1App = ({ setCurrentPage }) => {
                     icon: '🤖',
                     gradient: 'from-blue-200 to-blue-300',
                     borderColor: 'border-blue-200',
-                    available: true,
+                    available: false,
                     category: 'AI-Driven'
                   },
                   { 
@@ -80,16 +90,16 @@ const MarketsAI1App = ({ setCurrentPage }) => {
                     available: false,
                     category: 'Rotation'
                   },
-                  { 
-                    id: 'neural-swing', 
-                    name: 'Neural Swing Trader',
-                    description: 'Deep learning network for swing trading signals',
-                    icon: '🧠',
-                    gradient: 'from-orange-200 to-orange-300',
-                    borderColor: 'border-orange-200',
-                    available: false,
-                    category: 'AI-Driven'
-                  },
+                  // { 
+                  //   id: 'neural-swing', 
+                  //   name: 'Neural Swing Trader',
+                  //   description: 'Deep learning network for swing trading signals',
+                  //   icon: '🧠',
+                  //   gradient: 'from-orange-200 to-orange-300',
+                  //   borderColor: 'border-orange-200',
+                  //   available: false,
+                  //   category: 'AI-Driven'
+                  // },
                   { 
                     id: 'quantum-mean', 
                     name: 'Quantum Mean Reversion',
@@ -276,8 +286,8 @@ const MarketsAI1App = ({ setCurrentPage }) => {
             {activeSection === 'etf-strategy' && (
               <ETFStrategy onBack={() => setActiveSection("default")} />
             )}
-            {activeSection === 'ai-momentum' && (
-              <AIAssistant onBack={() => setActiveSection("default")} />
+            {activeSection === 'stock-strategy' && (
+              <StockStrategy onBack={() => setActiveSection("default")} />
             )}
           </div>
         )}
