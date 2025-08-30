@@ -7,7 +7,7 @@ import './AIAssistant.css';
 import PromptGenerater from "../../components/PromptGenerater";
 import RatingDisplay from "../../components/RatingDisplay";
 
-const AIAssistant = ({ onBack }) => {
+const AIAssistant = () => {
   const [input, setInput] = useState("");
   const [listening, setListening] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -456,9 +456,9 @@ const AIAssistant = ({ onBack }) => {
       
       <div className="rounded-[10px] flex flex-col h-full justify-between font-sans">
         {/* Header */}
-        <div className="text-center rounded-t-[20px] border p-5 bg-opacity-10 border-b border-white border-opacity-20 flex-shrink-0">
-          <h1 className="text-blue-900 text-3xl font-bold">Chat AI</h1>
-          <p className=" text-opacity-80 m-0 text-base font-normal">Hello, What are you working on?</p>
+        <div className="relative text-center rounded-t-[20px] border p-5 bg-gradient-to-r from-teal-50 to-blue-50 border-b border-teal-200 flex-shrink-0">
+          <h1 className="text-teal-800 text-3xl font-bold">Chat AI</h1>
+          <p className="text-teal-600 m-0 text-base font-normal">Hello, What are you working on?</p>
         </div>
 
         {/* Chat Container */}
@@ -467,7 +467,7 @@ const AIAssistant = ({ onBack }) => {
           <div className="flex-1 py-5 flex flex-col gap-4">
             {messages.length === 0 ? (
               <div className="text-center py-12 px-5 text-gray-800 text-opacity-80 text-lg">
-                <FaRobot className="text-5xl text-emerald-600 mb-4 mx-auto" />
+                <FaRobot className="text-5xl text-teal-600 mb-4 mx-auto" />
                 <p>Ask me anything about finance, investments, or any other topic!</p>
               </div>
             ) : (
@@ -483,7 +483,7 @@ const AIAssistant = ({ onBack }) => {
                       {message.sender === 'user' ? (
                         <FaUser className="text-white text-opacity-80 text-sm" />
                       ) : (
-                        <FaRobot className="text-emerald-600 text-sm" />
+                        <FaRobot className="text-teal-600 text-sm" />
                       )}
                       <span className="font-semibold text-sm opacity-80">
                         {message.sender === 'user' ? 'You' : 'Chat AI'}
@@ -587,7 +587,7 @@ const AIAssistant = ({ onBack }) => {
 
           {/* Input Area */}
           <div className="py-5 border-t border-white border-opacity-20 flex-shrink-0">
-            <div className="flex items-end bg-white bg-opacity-95 rounded-[50px] px-4 border border-gray-300 py-2 shadow-xl backdrop-blur-sm">
+            <div className="flex items-end bg-white bg-opacity-95 rounded-[50px] px-4 border border-teal-300 py-2 shadow-xl backdrop-blur-sm">
               <textarea
                 ref={textareaRef}
                 placeholder="Type or speak something..."
@@ -609,7 +609,7 @@ const AIAssistant = ({ onBack }) => {
 
               <button
                 onClick={handleSend}
-                className={`border-none bg-emerald-500 hover:bg-emerald-600 text-white rounded-full w-10 h-10 mb-[3px] cursor-pointer flex justify-center items-center transition-all duration-200 shadow-lg shadow-emerald-500/30 ${input.trim() ? 'opacity-100' : 'opacity-50'}`}
+                className={`border-none bg-teal-500 hover:bg-teal-600 text-white rounded-full w-10 h-10 mb-[3px] cursor-pointer flex justify-center items-center transition-all duration-200 shadow-lg shadow-teal-500/30 ${input.trim() ? 'opacity-100' : 'opacity-50'}`}
                 disabled={isLoading || !input.trim()}
               >
                 <FaPaperPlane />

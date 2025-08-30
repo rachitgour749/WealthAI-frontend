@@ -2,10 +2,10 @@ import React from 'react';
 import Navigation from './Navigation';
 import Footer from './Footer';
 
-const PaperTraderAI1Landing = ({ setCurrentPage }) => {
+const PaperTraderAI1Landing = ({ setCurrentPage, currentPage }) => {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <Navigation setCurrentPage={setCurrentPage} transparent={true} />
+      <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} transparent={true} />
       
       <section className="relative flex-1 bg-gradient-to-br from-purple-50 via-blue-50 to-gray-50 pt-16 pb-12 sm:pb-16 overflow-y-auto">
         <div className="absolute inset-0 opacity-30">

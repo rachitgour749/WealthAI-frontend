@@ -2,7 +2,7 @@ import React from 'react';
 import Navigation from './Navigation';
 import Footer from './Footer';
 
-const ProductsPage = ({ setCurrentPage }) => {
+const ProductsPage = ({ setCurrentPage, currentPage }) => {
   const products = [
     {
       id: 'marketsai1',
@@ -56,7 +56,7 @@ const ProductsPage = ({ setCurrentPage }) => {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <Navigation setCurrentPage={setCurrentPage} />
+      <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />
       
       {/* Main Content - Scrollable with padding for header and footer */}
       <div className="flex-1 bg-gray-50 pt-16 pb-12 sm:pb-16 overflow-y-auto">

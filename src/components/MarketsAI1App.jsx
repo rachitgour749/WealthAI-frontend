@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import ETFStrategy from '../pages/ETFStrategy';
 import StockStrategy from '../pages/StockStrategy';
+import Navigation from './Navigation';
 
-const MarketsAI1App = ({ setCurrentPage }) => {
+const MarketsAI1App = ({ setCurrentPage, currentPage }) => {
   const [activeSection, setActiveSection] = useState('default');
 
   const handleLogout = () => {
@@ -11,29 +12,13 @@ const MarketsAI1App = ({ setCurrentPage }) => {
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
-      {/* App Header */}
-      <div className="bg-teal-600 text-white shadow-lg flex-shrink-0">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold">MarketsAI1</h1>
-            <span className="bg-teal-700 px-3 py-1 rounded-full text-sm">Strategy Lab</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-teal-100">Welcome back!</span>
-            <button 
-              onClick={handleLogout}
-              className="bg-white text-teal-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Navigation */}
+      <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />
 
 
 
       {/* Main Content Area - Now properly sized and scrollable */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto pt-16 lg:pt-20">
         {activeSection === "default" ? (
           <div className="min-h-full bg-gradient-to-br from-slate-50 to-teal-50 py-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

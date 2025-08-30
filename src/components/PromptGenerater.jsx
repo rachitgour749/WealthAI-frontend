@@ -199,7 +199,7 @@ function TagPicker({ title, hint, options, selected, setSelected, onAddCustom })
 
   return (
     <div ref={wrapRef} className="bg-white border border-gray-200 rounded-xl pt-3 px-3 shadow-lg hover:shadow-xl hover:mt-[-5px] hover:mb-[5px] transition-all duration-200 md:col-span-6 col-span-12 bg-gradient-to-br from-white to-gray-50">
-      <h2 className="text-sm uppercase tracking-wide text-blue-900 font-semibold mb-2">{title}</h2>
+                      <h2 className="text-sm uppercase tracking-wide text-teal-900 font-semibold mb-2">{title}</h2>
 
       <input
         type="text"
@@ -218,7 +218,7 @@ function TagPicker({ title, hint, options, selected, setSelected, onAddCustom })
             <li
               key={opt}
               onMouseDown={() => addSuggestion(opt)}
-              className={`px-3 py-2 cursor-pointer text-sm ${idx === activeIdx ? "bg-blue-50 text-blue-900" : "hover:bg-gray-50"}`}
+                                className={`px-3 py-2 cursor-pointer text-sm ${idx === activeIdx ? "bg-teal-50 text-teal-900" : "hover:bg-gray-50"}`}
             >
               {opt}
             </li>
@@ -233,10 +233,10 @@ function TagPicker({ title, hint, options, selected, setSelected, onAddCustom })
 
       <div className="flex flex-wrap gap-2 mt-3 mb-3">
         {selected.map((v) => (
-          <span key={v} className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-100 to-blue-200 text-blue-900 px-3 py-1.5 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200">
+                          <span key={v} className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-teal-100 to-teal-200 text-teal-900 px-3 py-1.5 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200">
             {v}
             <button
-              className="text-blue-600 hover:text-blue-900 transition-colors"
+                                className="text-teal-600 hover:text-teal-900 transition-colors"
               onClick={() => setSelected(selected.filter((x) => x !== v))}
               aria-label={`Remove ${v}`}
               title="Remove from selection"
@@ -404,12 +404,12 @@ function PromptBuilder({ onClose, onPromptGenerated }) {
   };
 
   return (
-    <div className="w-full p-4 bg-gradient-to-br from-blue-50 via-gray-50 to-green-50 min-h-screen relative">
+    <div className="w-full p-4 bg-gradient-to-br from-teal-50 via-blue-50 to-gray-50 min-h-screen relative">
       {/* 3D Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-10 w-32 h-32 bg-blue-100 rounded-full opacity-20 blur-xl"></div>
-        <div className="absolute bottom-20 right-20 w-40 h-40 bg-emerald-100 rounded-full opacity-20 blur-xl"></div>
-        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-yellow-100 rounded-full opacity-15 blur-lg"></div>
+        <div className="absolute top-10 left-10 w-32 h-32 bg-teal-100 rounded-full opacity-20 blur-xl"></div>
+        <div className="absolute bottom-20 right-20 w-40 h-40 bg-teal-200 rounded-full opacity-20 blur-xl"></div>
+        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-blue-100 rounded-full opacity-15 blur-lg"></div>
       </div>
       
       {/* Content Container */}
@@ -421,7 +421,7 @@ function PromptBuilder({ onClose, onPromptGenerated }) {
             <span className="text-white text-lg font-bold">🧩</span>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-blue-900">Prompt Builder</h1>
+            <h1 className="text-2xl font-bold text-teal-900">Prompt Builder</h1>
             <p className="text-sm text-gray-600">Create powerful AI prompts with precision</p>
           </div>
         </div>
@@ -513,7 +513,7 @@ function Modal({ open, onClose, children }) {
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-full max-w-[1000px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden"
+        className="relative z-10 w-full max-w-[700px] bg-white rounded-2xl shadow-2xl border border-teal-200 overflow-hidden"
         style={{ maxHeight: '90vh' }}
       >
         {/* Content area with scroll */}

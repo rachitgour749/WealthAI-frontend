@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Navigation from './Navigation';
 
-const PaymentPage = ({ setCurrentPage }) => {
+const PaymentPage = ({ setCurrentPage, currentPage }) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('subscription');
 
@@ -83,7 +83,7 @@ const PaymentPage = ({ setCurrentPage }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation setCurrentPage={setCurrentPage} />
+      <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />
       
       <div className="pt-24 pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">

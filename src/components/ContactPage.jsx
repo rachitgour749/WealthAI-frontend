@@ -3,9 +3,9 @@ import Navigation from './Navigation';
 import ContactSection from './ContactSection';
 import Footer from './Footer';
 
-const ContactPage = ({ setCurrentPage }) => (
+const ContactPage = ({ setCurrentPage, currentPage }) => (
   <div className="h-screen flex flex-col overflow-hidden">
-    <Navigation setCurrentPage={setCurrentPage} />
+          <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />
     
     {/* Main Content - Scrollable with padding for header and footer */}
     <div className="flex-1 bg-gray-50 pt-16 pb-12 sm:pb-16 overflow-y-auto">

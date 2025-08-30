@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import Login from './Login';
 
-const ProtectedRoute = ({ children, redirectTo = null }) => {
+const ProtectedRoute = ({ children, redirectTo = null, setCurrentPage = null }) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
@@ -32,7 +32,7 @@ const ProtectedRoute = ({ children, redirectTo = null }) => {
                 This feature requires authentication. Please sign in to continue.
               </p>
             </div>
-            <Login redirectTo={redirectTo} />
+            <Login redirectTo={redirectTo} setCurrentPage={setCurrentPage} />
           </div>
         </div>
       </div>

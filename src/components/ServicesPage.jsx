@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Navigation from './Navigation';
 import Footer from './Footer';
 
-const ServicesPage = ({ setCurrentPage }) => {
+const ServicesPage = ({ setCurrentPage, currentPage }) => {
   const [formData, setFormData] = useState({
     requirement: '',
     email: '',
@@ -83,7 +83,7 @@ const ServicesPage = ({ setCurrentPage }) => {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <Navigation setCurrentPage={setCurrentPage} />
+      <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />
       
       {/* Main Content - Scrollable with padding for header and footer */}
       <div className="flex-1 bg-gray-50 pt-16 pb-12 sm:pb-16 overflow-y-auto">

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Navigation from './Navigation';
 import Footer from './Footer';
 
-const MarketsAI1Landing = ({ setCurrentPage }) => {
+const MarketsAI1Landing = ({ setCurrentPage, currentPage }) => {
   const [isLoading, setIsLoading] = useState(false);
   
   const handleGoogleAuth = () => {
@@ -15,13 +15,14 @@ const MarketsAI1Landing = ({ setCurrentPage }) => {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <Navigation isMarketsAI1={true} setCurrentPage={setCurrentPage} transparent={true} />
+      <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} transparent={true} />
       
       {/* Hero Section with padding for header and footer */}
       <section className="relative flex-1 bg-gradient-to-br from-teal-50 via-blue-50 to-gray-50 pt-16 pb-12 sm:pb-16 overflow-y-auto">
         <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-1/4 right-1/4 w-32 h-32 sm:w-64 sm:h-64 lg:w-96 lg:h-96 bg-teal-100 rounded-full"></div>
-          <div className="absolute bottom-1/3 left-1/6 w-24 h-24 sm:w-48 sm:h-48 lg:w-80 lg:h-80 bg-blue-100 rounded-full"></div>
+          <div className="absolute top-1/4 right-1/4 w-32 h-32 sm:w-64 sm:h-64 lg:w-96 lg:h-96 bg-teal-200 rounded-full"></div>
+          <div className="absolute bottom-1/3 left-1/6 w-24 h-24 sm:w-48 sm:h-48 lg:w-80 lg:h-80 bg-teal-100 rounded-full"></div>
+          <div className="absolute top-1/2 left-1/3 w-20 h-20 sm:w-40 sm:h-40 lg:w-60 lg:h-60 bg-blue-100 rounded-full"></div>
         </div>
         
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">

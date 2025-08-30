@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Footer = ({ setCurrentPage }) => (
-  <footer className="bg-blue-900 text-white h-12 sm:h-16 flex-shrink-0 border-t border-blue-800">
+  <footer className="bg-gradient-to-r from-blue-900 via-teal-800 to-blue-900 text-white h-12 sm:h-16 flex-shrink-0 border-t border-teal-700">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
       <div className="flex items-center justify-between h-full">
         {/* Left Side - Company Info */}
@@ -14,16 +14,16 @@ const Footer = ({ setCurrentPage }) => (
         
         {/* Center - Products */}
         <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
-          <button onClick={() => setCurrentPage('marketsai1')} className="text-xs text-blue-200 hover:text-white transition-colors">
+          <button onClick={() => setCurrentPage('marketsai1')} className="text-xs text-blue-200 hover:text-teal-300 transition-colors">
             MarketsAI1
           </button>
-          <button onClick={() => setCurrentPage('chatai1')} className="text-xs text-blue-200 hover:text-white transition-colors">
+          <button onClick={() => setCurrentPage('chatai1')} className="text-xs text-blue-200 hover:text-teal-300 transition-colors">
             ChatAI1
           </button>
-          <button onClick={() => setCurrentPage('papertraderai1')} className="text-xs text-blue-200 hover:text-white transition-colors">
+          <button onClick={() => setCurrentPage('papertraderai1')} className="text-xs text-blue-200 hover:text-teal-300 transition-colors">
             PaperTraderAI1
           </button>
-          <button onClick={() => setCurrentPage('scanai1')} className="text-xs text-blue-200 hover:text-white transition-colors">
+          <button onClick={() => setCurrentPage('scanai1')} className="text-xs text-blue-200 hover:text-teal-300 transition-colors">
             ScanAI1
           </button>
         </div>
@@ -31,10 +31,10 @@ const Footer = ({ setCurrentPage }) => (
         {/* Right Side - Company Links & Contact */}
         <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
           <div className="hidden lg:flex items-center space-x-3">
-            <button onClick={() => setCurrentPage('founders')} className="text-xs text-blue-200 hover:text-white transition-colors">
+            <button onClick={() => setCurrentPage('founders')} className="text-xs text-blue-200 hover:text-teal-300 transition-colors">
               About
             </button>
-            <button onClick={() => setCurrentPage('contact')} className="text-xs text-blue-200 hover:text-white transition-colors">
+            <button onClick={() => setCurrentPage('contact')} className="text-xs text-blue-200 hover:text-teal-300 transition-colors">
               Contact
             </button>
           </div>

@@ -5,7 +5,7 @@ import Footer from './Footer';
 import AIAssistant from '../pages/AIAssistant/AIAssistant';
 import Login from './Login';
 
-const WealthAI1Home = ({ setCurrentPage }) => {
+const WealthAI1Home = ({ setCurrentPage, currentPage }) => {
   const [isAIPopupOpen, setIsAIPopupOpen] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { isAuthenticated, loading, user } = useAuth();
@@ -94,9 +94,9 @@ const WealthAI1Home = ({ setCurrentPage }) => {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {showLoginModal && (
-        <Login onClose={() => setShowLoginModal(false)} />
+        <Login onClose={() => setShowLoginModal(false)} setCurrentPage={setCurrentPage} />
       )}
-      <Navigation setCurrentPage={setCurrentPage} transparent={true} showLoginModal={showLoginModal} setShowLoginModal={setShowLoginModal} />
+      <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} transparent={true} showLoginModal={showLoginModal} setShowLoginModal={setShowLoginModal} />
       
       {/* Main Content - Compact Cards */}
       <div className="flex-1 pt-16 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -104,12 +104,12 @@ const WealthAI1Home = ({ setCurrentPage }) => {
           <div className="grid lg:grid-cols-2 gap-4 lg:gap-6 h-full">
             
             {/* Left Card - Hero Section */}
-            <div className="group bg-gradient-to-br from-blue-50 via-gray-50 to-green-50 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+            <div className="group bg-gradient-to-br from-teal-50 via-blue-50 to-gray-50 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 p-4 sm:p-6 lg:p-8 relative overflow-hidden">
               {/* Background Elements */}
               <div className="absolute inset-0 opacity-20">
-                <div className="absolute top-1/4 left-1/6 w-16 h-16 sm:w-24 sm:h-24 bg-blue-100 rounded-full"></div>
-                <div className="absolute bottom-1/4 right-1/6 w-20 h-20 sm:w-32 sm:h-32 bg-green-100 rounded-full"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-20 sm:h-20 bg-yellow-100 rounded-full"></div>
+                <div className="absolute top-1/4 left-1/6 w-16 h-16 sm:w-24 sm:h-24 bg-teal-100 rounded-full"></div>
+                <div className="absolute bottom-1/4 right-1/6 w-20 h-20 sm:w-32 sm:h-32 bg-blue-100 rounded-full"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-20 sm:h-20 bg-teal-200 rounded-full"></div>
               </div>
               
               <div className="relative z-10 h-full flex flex-col justify-center text-center">
@@ -159,12 +159,12 @@ const WealthAI1Home = ({ setCurrentPage }) => {
             </div>
 
             {/* Right Card - Products Section - Same styling as left card */}
-            <div className="group bg-gradient-to-br from-blue-50 via-gray-50 to-green-50 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+            <div className="group bg-gradient-to-br from-teal-50 via-blue-50 to-gray-50 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 p-4 sm:p-6 lg:p-8 relative overflow-hidden">
               {/* Background Elements */}
               <div className="absolute inset-0 opacity-20">
-                <div className="absolute top-1/4 right-1/6 w-16 h-16 sm:w-24 sm:h-24 bg-blue-100 rounded-full"></div>
-                <div className="absolute bottom-1/4 left-1/6 w-20 h-20 sm:w-32 sm:h-32 bg-green-100 rounded-full"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-20 sm:h-20 bg-yellow-100 rounded-full"></div>
+                <div className="absolute top-1/4 right-1/6 w-16 h-16 sm:w-24 sm:h-24 bg-teal-100 rounded-full"></div>
+                <div className="absolute bottom-1/4 left-1/6 w-20 h-20 sm:w-32 sm:h-32 bg-blue-100 rounded-full"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-20 sm:h-20 bg-teal-200 rounded-full"></div>
               </div>
               
               <div className="relative z-10 h-full overflow-y-auto scrollbar-hide">
@@ -196,7 +196,7 @@ const WealthAI1Home = ({ setCurrentPage }) => {
                         {product.description}
                       </p>
                       
-                      <button
+                      {/* <button
                         onClick={() => handleProductClick(product.id)}
                         className={`w-full py-1.5 sm:py-2 rounded-lg font-semibold transition-colors text-xs ${
                           product.enabled 
@@ -206,7 +206,7 @@ const WealthAI1Home = ({ setCurrentPage }) => {
                         disabled={!product.enabled}
                       >
                         {product.enabled ? 'Access Platform' : 'Coming Soon'}
-                      </button>
+                      </button> */}
                     </div>
                   ))}
                 </div>
@@ -247,7 +247,7 @@ const WealthAI1Home = ({ setCurrentPage }) => {
       
       {/* Login Modal */}
       {showLoginModal && (
-        <Login onClose={() => setShowLoginModal(false)} />
+        <Login onClose={() => setShowLoginModal(false)} setCurrentPage={setCurrentPage} />
       )}
       
       <Footer setCurrentPage={setCurrentPage} />

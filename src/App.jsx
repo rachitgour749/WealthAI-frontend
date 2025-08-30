@@ -24,63 +24,63 @@ const App = () => {
     switch (currentPage) {
       // Public pages - accessible without login
       case 'home':
-        return <WealthAI1Home setCurrentPage={setCurrentPage} />;
+        return <WealthAI1Home setCurrentPage={setCurrentPage} currentPage={currentPage} />;
       case 'contact':
-        return <ContactPage setCurrentPage={setCurrentPage} />;
+        return <ContactPage setCurrentPage={setCurrentPage} currentPage={currentPage} />;
       case 'founders':
-        return <FoundersPage setCurrentPage={setCurrentPage} />;
+        return <FoundersPage setCurrentPage={setCurrentPage} currentPage={currentPage} />;
       case 'insights':
-        return <InsightsPage setCurrentPage={setCurrentPage} />;
+        return <InsightsPage setCurrentPage={setCurrentPage} currentPage={currentPage} />;
       case 'services':
-        return <ServicesPage setCurrentPage={setCurrentPage} />;
+        return <ServicesPage setCurrentPage={setCurrentPage} currentPage={currentPage} />;
       
       // Protected pages - require authentication
       case 'marketsai1':
         return (
-          <ProtectedRoute redirectTo="/marketsai1">
-            <MarketsAI1Landing setCurrentPage={setCurrentPage} />
+          <ProtectedRoute redirectTo="/marketsai1" setCurrentPage={setCurrentPage}>
+            <MarketsAI1Landing setCurrentPage={setCurrentPage} currentPage={currentPage} />
           </ProtectedRoute>
         );
       case 'marketsai1-app':
         return (
-          <ProtectedRoute redirectTo="/marketsai1-app">
-            <MarketsAI1App setCurrentPage={setCurrentPage} />
+          <ProtectedRoute redirectTo="/marketsai1-app" setCurrentPage={setCurrentPage}>
+            <MarketsAI1App setCurrentPage={setCurrentPage} currentPage={currentPage} />
           </ProtectedRoute>
         );
       case 'chatai1':
         return (
-          <ProtectedRoute redirectTo="/chatai1">
-            <ChatAI1Landing setCurrentPage={setCurrentPage} />
+          <ProtectedRoute redirectTo="/chatai1" setCurrentPage={setCurrentPage}>
+            <ChatAI1Landing setCurrentPage={setCurrentPage} currentPage={currentPage} />
           </ProtectedRoute>
         );
       case 'papertraderai1':
         return (
-          <ProtectedRoute redirectTo="/papertraderai1">
-            <PaperTraderAI1Landing setCurrentPage={setCurrentPage} />
+          <ProtectedRoute redirectTo="/papertraderai1" setCurrentPage={setCurrentPage}>
+            <PaperTraderAI1Landing setCurrentPage={setCurrentPage} currentPage={currentPage} />
           </ProtectedRoute>
         );
       case 'scanai1':
         return (
-          <ProtectedRoute redirectTo="/scanai1">
-            <ScanAI1Landing setCurrentPage={setCurrentPage} />
+          <ProtectedRoute redirectTo="/scanai1" setCurrentPage={setCurrentPage}>
+            <ScanAI1Landing setCurrentPage={setCurrentPage} currentPage={currentPage} />
           </ProtectedRoute>
         );
       case 'products':
         return (
-          <ProtectedRoute redirectTo="/products">
-            <ProductsPage setCurrentPage={setCurrentPage} />
+          <ProtectedRoute redirectTo="/products" setCurrentPage={setCurrentPage}>
+            <ProductsPage setCurrentPage={setCurrentPage} currentPage={currentPage} />
           </ProtectedRoute>
         );
       case 'profile':
         return (
-          <ProtectedRoute redirectTo="/profile">
-            <ProfilePage setCurrentPage={setCurrentPage} />
+          <ProtectedRoute redirectTo="/profile" setCurrentPage={setCurrentPage}>
+            <ProfilePage setCurrentPage={setCurrentPage} currentPage={currentPage} />
           </ProtectedRoute>
         );
       case 'payment':
         return (
-          <ProtectedRoute redirectTo="/payment">
-            <PaymentPage setCurrentPage={setCurrentPage} />
+          <ProtectedRoute redirectTo="/payment" setCurrentPage={setCurrentPage}>
+            <PaymentPage setCurrentPage={setCurrentPage} currentPage={currentPage} />
           </ProtectedRoute>
         );
       default:

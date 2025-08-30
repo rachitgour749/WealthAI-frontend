@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import Login from './Login';
 
-const AuthGuard = ({ children, fallback = null, showLoginModal = true }) => {
+const AuthGuard = ({ children, fallback = null, showLoginModal = true, setCurrentPage = null }) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
@@ -22,7 +22,7 @@ const AuthGuard = ({ children, fallback = null, showLoginModal = true }) => {
     }
     
     if (showLoginModal) {
-      return <Login />;
+      return <Login setCurrentPage={setCurrentPage} />;
     }
     
     return null;

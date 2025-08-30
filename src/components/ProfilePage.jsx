@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Navigation from './Navigation';
 
-const ProfilePage = ({ setCurrentPage }) => {
+const ProfilePage = ({ setCurrentPage, currentPage }) => {
   const { user, updateUserProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -43,7 +43,7 @@ const ProfilePage = ({ setCurrentPage }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation setCurrentPage={setCurrentPage} />
+      <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />
       
       <div className="pt-24 pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
