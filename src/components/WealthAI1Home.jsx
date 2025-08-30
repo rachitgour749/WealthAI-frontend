@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import Navigation from './Navigation';
 import Footer from './Footer';
 import AIAssistant from '../pages/AIAssistant/AIAssistant';
+import Login from './Login';
 
-const WealthAI1Home = ({ setCurrentPage, setIsAuthenticated }) => {
+const WealthAI1Home = ({ setCurrentPage }) => {
   const [isAIPopupOpen, setIsAIPopupOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { isAuthenticated, loading, user } = useAuth();
 
   const products = [
     {
@@ -42,19 +46,57 @@ const WealthAI1Home = ({ setCurrentPage, setIsAuthenticated }) => {
   ];
 
   const handleProductClick = (productId) => {
+    // Wait for authentication to load and check if user is authenticated
+    if (loading) {
+      console.log('Authentication still loading...');
+      return;
+    }
+
+    console.log('Auth check:', { isAuthenticated, user, loading });
+    
+    // Check if user is authenticated for protected features
+    if (!isAuthenticated || !user) {
+      console.log('User not authenticated, showing login modal');
+      setShowLoginModal(true);
+      return;
+    }
+
+    console.log('User authenticated, proceeding to product:', productId);
+
     if (productId === 'chatai1') {
       setIsAIPopupOpen(true);
     } else if (productId === 'marketsai1') {
-      setIsAuthenticated(true);
       setCurrentPage('marketsai1-app');
     } else {
       setCurrentPage(productId);
     }
   };
 
+  const handleTryPlatformClick = () => {
+    // Wait for authentication to load and check if user is authenticated
+    if (loading) {
+      console.log('Authentication still loading...');
+      return;
+    }
+
+    console.log('Try platform auth check:', { isAuthenticated, user, loading });
+    
+    if (!isAuthenticated || !user) {
+      console.log('User not authenticated, showing login modal');
+      setShowLoginModal(true);
+      return;
+    }
+
+    console.log('User authenticated, proceeding to MarketsAI1 app');
+    setCurrentPage('marketsai1-app');
+  };
+
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <Navigation setCurrentPage={setCurrentPage} transparent={true} />
+      {showLoginModal && (
+        <Login onClose={() => setShowLoginModal(false)} />
+      )}
+      <Navigation setCurrentPage={setCurrentPage} transparent={true} showLoginModal={showLoginModal} setShowLoginModal={setShowLoginModal} />
       
       {/* Main Content - Compact Cards */}
       <div className="flex-1 pt-16 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -81,7 +123,7 @@ const WealthAI1Home = ({ setCurrentPage, setIsAuthenticated }) => {
                 
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center mb-4 sm:mb-6">
                   <button
-                    onClick={() => setCurrentPage('marketsai1')}
+                    onClick={handleTryPlatformClick}
                     className="bg-emerald-600 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold hover:bg-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
                   >
                     Try MarketsAI1 Platform
@@ -201,6 +243,11 @@ const WealthAI1Home = ({ setCurrentPage, setIsAuthenticated }) => {
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Login Modal */}
+      {showLoginModal && (
+        <Login onClose={() => setShowLoginModal(false)} />
       )}
       
       <Footer setCurrentPage={setCurrentPage} />

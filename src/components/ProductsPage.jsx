@@ -2,7 +2,7 @@ import React from 'react';
 import Navigation from './Navigation';
 import Footer from './Footer';
 
-const ProductsPage = ({ setCurrentPage, setIsAuthenticated }) => {
+const ProductsPage = ({ setCurrentPage }) => {
   const products = [
     {
       id: 'marketsai1',
@@ -40,7 +40,6 @@ const ProductsPage = ({ setCurrentPage, setIsAuthenticated }) => {
 
   const handleGoogleAuth = (productId) => {
     if (productId === 'marketsai1') {
-      setIsAuthenticated(true);
       setCurrentPage('marketsai1-app');
     }
   };

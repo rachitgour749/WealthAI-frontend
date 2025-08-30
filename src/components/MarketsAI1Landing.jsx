@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import Navigation from './Navigation';
 import Footer from './Footer';
 
-const MarketsAI1Landing = ({ setCurrentPage, setIsAuthenticated }) => {
+const MarketsAI1Landing = ({ setCurrentPage }) => {
   const [isLoading, setIsLoading] = useState(false);
   
   const handleGoogleAuth = () => {
     setIsLoading(true);
     setTimeout(() => {
-      setIsAuthenticated(true);
       setCurrentPage('marketsai1-app');
       setIsLoading(false);
     }, 2000);
