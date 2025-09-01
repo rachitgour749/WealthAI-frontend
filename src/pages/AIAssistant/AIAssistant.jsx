@@ -36,6 +36,18 @@ const AIAssistant = () => {
     autoResizeTextarea();
   }, [input]);
 
+  // Cleanup function to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (typingIntervalRef.current) {
+        clearTimeout(typingIntervalRef.current);
+      }
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
   // Speech Recognition API setup
   const recognitionRef = useRef(null);
   
@@ -59,35 +71,62 @@ const AIAssistant = () => {
 
   // Auto scroll to bottom - during typing and when new message is added
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: "smooth", 
+        block: "end",
+        inline: "nearest"
+      });
+    }
   }, [messages, typingText]);
 
-  // Typewriter effect with ultra-fast timing - 150 words per second
+  // Additional scroll effect for better UX
+  useEffect(() => {
+    const scrollToBottom = () => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ 
+          behavior: "smooth", 
+          block: "end" 
+        });
+      }
+    };
+    
+    // Scroll on new messages
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages.length]);
+
+  // Typewriter effect optimized for 150 words per second
   const typeWriterEffect = (text, messageIndex) => {
     console.log('🎬 Starting typewriter effect for index:', messageIndex, 'with text length:', text.length);
     setIsTyping(true);
     setTypingText("");
     let index = 0;
 
-    // Calculate timing for 150 words per second
+    // Calculate timing for exactly 150 words per second
     const words = text.split(' ').length;
-    const targetDuration = (words / 200) * 1000; // Convert to milliseconds
-    const delay = Math.max(0.02, Math.min(0.5, targetDuration / text.length)); // Between 0.02-0.5ms per character for ultra-fast typing
+    const targetDuration = (words / 150) * 1000; // 150 words per second
+    const delay = Math.max(0.01, Math.min(0.3, targetDuration / text.length)); // Optimized delay range
 
     const type = () => {
       if (index <= text.length) {
         setTypingText(text.substring(0, index));
         index++;
-        typingIntervalRef.current = setTimeout(type, delay);
-      } else {
-        console.log('✅ Typewriter effect completed for index:', messageIndex);
-        setIsTyping(false);
-        setMessages(prev =>
-          prev.map((msg, i) =>
-            i === messageIndex ? { ...msg, isComplete: true } : msg
-          )
-        );
-        setTypingText("");
+        
+        // Use requestAnimationFrame for smoother performance
+        if (index <= text.length) {
+          typingIntervalRef.current = setTimeout(type, delay);
+        } else {
+          console.log('✅ Typewriter effect completed for index:', messageIndex);
+          setIsTyping(false);
+          setMessages(prev =>
+            prev.map((msg, i) =>
+              i === messageIndex ? { ...msg, isComplete: true } : msg
+            )
+          );
+          setTypingText("");
+        }
       }
     };
 
@@ -148,44 +187,44 @@ const AIAssistant = () => {
     }
   }, []);
 
-  // Transform text to enhance ChatGPT-style formatting
+  // Transform text to enhance ChatGPT-style formatting - Optimized for performance
   const transformTextForBoldHeadings = (text) => {
     if (!text) return text;
     
-    let transformedText = text;
-    
-    // Convert emoji headers to proper markdown headers
-    transformedText = transformedText.replace(/^📚\s*DEFINITION\s*:?\s*(.*?)$/gm, '\n## 📚 Definition\n$1');
-    transformedText = transformedText.replace(/^💡\s*KEY\s*POINTS?\s*:?\s*(.*?)$/gm, '\n## 💡 Key Points\n$1');
-    transformedText = transformedText.replace(/^🎯\s*EXAMPLE\s*:?\s*(.*?)$/gm, '\n## 🎯 Example\n$1');
-    transformedText = transformedText.replace(/^✅\s*PRACTICAL\s*TAKEAWAY\s*:?\s*(.*?)$/gm, '\n## ✅ Practical Takeaway\n$1');
-    
-    // Convert bullet points with • to proper markdown
-    transformedText = transformedText.replace(/^•\s*(.*?)$/gm, '- $1');
-    transformedText = transformedText.replace(/^[-*]\s*(.*?)$/gm, '- $1');
-    
-    // Convert numbered lists
-    transformedText = transformedText.replace(/^\d+\.\s*(.*?)$/gm, '1. $1');
-    
-    // Ensure proper spacing around headings
-    transformedText = transformedText.replace(/^(#{1,6}\s)/gm, '\n$1');
-    
-    // Ensure proper spacing around bullet points
-    transformedText = transformedText.replace(/^(\s*[-*+]\s)/gm, '\n$1');
-    
-    // Clean up extra newlines (ChatGPT style - 2 lines max)
-    transformedText = transformedText.replace(/\n{3,}/g, '\n\n');
-    
-    // Add proper spacing after periods in bullet points
-    transformedText = transformedText.replace(/(\.)\n(-)/g, '$1\n\n$2');
-    
-    // Add spacing before bullet points for better readability
-    transformedText = transformedText.replace(/([.!?])\n(-)/g, '$1\n\n$2');
-    
-    // Ensure proper spacing around bold text
-    transformedText = transformedText.replace(/\*\*(.*?)\*\*/g, '**$1**');
-    
-    return transformedText.trim();
+    // Use a single replace operation for better performance
+    return text
+      // Convert emoji headers to proper markdown headers
+      .replace(/^📚\s*DEFINITION\s*:?\s*(.*?)$/gm, '\n## 📚 Definition\n$1')
+      .replace(/^💡\s*KEY\s*POINTS?\s*:?\s*(.*?)$/gm, '\n## 💡 Key Points\n$1')
+      .replace(/^🎯\s*EXAMPLE\s*:?\s*(.*?)$/gm, '\n## 🎯 Example\n$1')
+      .replace(/^✅\s*PRACTICAL\s*TAKEAWAY\s*:?\s*(.*?)$/gm, '\n## ✅ Practical Takeaway\n$1')
+      
+      // Convert bullet points with • to proper markdown
+      .replace(/^•\s*(.*?)$/gm, '- $1')
+      .replace(/^[-*]\s*(.*?)$/gm, '- $1')
+      
+      // Convert numbered lists
+      .replace(/^\d+\.\s*(.*?)$/gm, '1. $1')
+      
+      // Ensure proper spacing around headings
+      .replace(/^(#{1,6}\s)/gm, '\n$1')
+      
+      // Ensure proper spacing around bullet points
+      .replace(/^(\s*[-*+]\s)/gm, '\n$1')
+      
+      // Clean up extra newlines (ChatGPT style - 2 lines max)
+      .replace(/\n{3,}/g, '\n\n')
+      
+      // Add proper spacing after periods in bullet points
+      .replace(/(\.)\n(-)/g, '$1\n\n$2')
+      
+      // Add spacing before bullet points for better readability
+      .replace(/([.!?])\n(-)/g, '$1\n\n$2')
+      
+      // Ensure proper spacing around bold text
+      .replace(/\*\*(.*?)\*\*/g, '**$1**')
+      
+      .trim();
   };
 
   // Copy to clipboard
@@ -250,7 +289,7 @@ const AIAssistant = () => {
     };
     
     return (
-      <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-lg border border-white border-opacity-30 p-3 shadow-lg">
+      <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-lg border border-opacity-30 p-3 shadow-lg">
         {!feedbackSubmitted && traceId && (
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -306,7 +345,7 @@ const AIAssistant = () => {
                  body: JSON.stringify({
            prompt: message,
            system_prompt: 
-           "You are a ChatGPT-style financial expert. FORMAT: Start with 📚 DEFINITION (30 words max), then 💡 KEY POINTS (1 line each), add 🎯 EXAMPLE (1-2 lines), end with ✅ PRACTICAL TAKEAWAY (1 line). Use emojis, bullet points, and clear sections. Keep it concise but engaging like ChatGPT."
+           "You are a ChatGPT-style financial expert. FORMAT: Start with 📚 DEFINITION (30 words max), then 💡 KEY POINTS (1 line each), add 🎯 EXAMPLE (1-2 lines),"
          }),
       });
 
@@ -444,7 +483,7 @@ const AIAssistant = () => {
   };
 
   return (
-    <div className="flex flex-col justify-between h-full">
+    <div className="flex flex-col justify-between h-full min-h-screen">
       <PromptGenerater 
         open={isPromptGeneraterOpen} 
         onClose={() => setIsPromptGeneraterOpen(false)}
@@ -454,7 +493,7 @@ const AIAssistant = () => {
         }}
       />
       
-      <div className="rounded-[10px] flex flex-col h-full justify-between font-sans">
+      <div className="rounded-[10px] flex flex-col justify-between font-sans">
         {/* Header */}
         <div className="relative text-center rounded-t-[20px] border p-5 bg-gradient-to-r from-teal-50 to-blue-50 border-b border-teal-200 flex-shrink-0">
           <h1 className="text-teal-800 text-3xl font-bold">Chat AI</h1>
@@ -462,9 +501,9 @@ const AIAssistant = () => {
         </div>
 
         {/* Chat Container */}
-        <div className="flex flex-col flex-1 max-w-3xl mx-auto w-full px-5">
+        <div className="flex flex-col flex-1 max-w-3xl mx-auto w-full px-5 h-full">
           {/* Messages Area */}
-          <div className="flex-1 py-5 flex flex-col gap-4">
+          <div className="flex-1 py-5 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-300px)] messages-area">
             {messages.length === 0 ? (
               <div className="text-center py-12 px-5 text-gray-800 text-opacity-80 text-lg">
                 <FaRobot className="text-5xl text-teal-600 mb-4 mx-auto" />
@@ -472,7 +511,7 @@ const AIAssistant = () => {
               </div>
             ) : (
               messages.map((message, index) => (
-                <div key={message.id} className="flex flex-col">
+                <div key={`${message.id}-${message.isComplete}`} className="flex flex-col">
                   <div className={`${
                     message.sender === 'user' 
                       ? 'self-end bg-emerald-600 text-white rounded-t-lg rounded-bl-lg rounded-br-sm max-w-[70%]' 
@@ -500,23 +539,23 @@ const AIAssistant = () => {
                              }}>
                           <ReactMarkdown
                             components={{
-                              h1: ({node, ...props}) => <h1 className="text-xl font-bold my-3 text-gray-800" {...props} />,
-                              h2: ({node, ...props}) => <h2 className="text-lg font-semibold my-2 text-gray-800" {...props} />,
-                              h3: ({node, ...props}) => <h3 className="text-base font-semibold my-2 text-gray-800" {...props} />,
-                              h4: ({node, ...props}) => <h4 className="text-sm font-semibold my-1 text-gray-800" {...props} />,
-                              h5: ({node, ...props}) => <h5 className="text-sm font-medium my-1 text-gray-800" {...props} />,
-                              h6: ({node, ...props}) => <h6 className="text-sm font-medium my-1 text-gray-800" {...props} />,
-                              p: ({node, ...props}) => <p className="my-2 leading-relaxed text-gray-700" {...props} />,
-                              ul: ({node, ...props}) => <ul className="list-disc list-outside my-3 ml-6 space-y-2" {...props} />,
-                              ol: ({node, ...props}) => <ol className="list-decimal list-outside my-3 ml-6 space-y-2" {...props} />,
-                              li: ({node, ...props}) => <li className="leading-relaxed text-gray-700 pl-1" {...props} />,
+                              h1: ({node, ...props}) => <h1 className="text-xl font-bold my-3 text-gray-800 leading-tight" {...props} />,
+                              h2: ({node, ...props}) => <h2 className="text-lg font-semibold my-2 text-gray-800 leading-tight" {...props} />,
+                              h3: ({node, ...props}) => <h3 className="text-base font-semibold my-2 text-gray-800 leading-tight" {...props} />,
+                              h4: ({node, ...props}) => <h4 className="text-sm font-semibold my-1 text-gray-800 leading-tight" {...props} />,
+                              h5: ({node, ...props}) => <h5 className="text-sm font-medium my-1 text-gray-800 leading-tight" {...props} />,
+                              h6: ({node, ...props}) => <h6 className="text-sm font-medium my-1 text-gray-800 leading-tight" {...props} />,
+                              p: ({node, ...props}) => <p className="my-2 leading-relaxed text-gray-700 text-sm" {...props} />,
+                              ul: ({node, ...props}) => <ul className="list-disc list-outside my-3 ml-6 space-y-1" {...props} />,
+                              ol: ({node, ...props}) => <ol className="list-decimal list-outside my-3 ml-6 space-y-1" {...props} />,
+                              li: ({node, ...props}) => <li className="leading-relaxed text-gray-700 pl-1 text-sm" {...props} />,
                               strong: ({node, ...props}) => <strong className="font-semibold text-gray-900" {...props} />,
                               em: ({node, ...props}) => <em className="italic" {...props} />,
                               code: ({node, inline, ...props}) => 
                                 inline ? 
-                                  <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-gray-800" {...props} /> :
-                                  <code className="block bg-gray-100 p-2 rounded text-sm font-mono text-gray-800" {...props} />,
-                              blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-emerald-500 pl-4 my-3 italic bg-gray-50 py-2 rounded-r" {...props} />
+                                  <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono text-gray-800" {...props} /> :
+                                  <code className="block bg-gray-100 p-2 rounded text-xs font-mono text-gray-800 my-2" {...props} />,
+                              blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-teal-500 pl-4 my-3 italic bg-gray-50 py-2 rounded-r text-sm" {...props} />
                             }}
                           >
                             {transformTextForBoldHeadings(message.isComplete ? message.text : typingText)}
@@ -583,6 +622,19 @@ const AIAssistant = () => {
             )}
 
             <div ref={messagesEndRef} />
+            
+            {/* Scroll to bottom button */}
+            {messages.length > 3 && (
+              <button
+                onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })}
+                className="fixed bottom-24 right-6 bg-teal-500 hover:bg-teal-600 text-white rounded-full w-10 h-10 shadow-lg transition-all duration-200 flex items-center justify-center z-10"
+                title="Scroll to bottom"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </button>
+            )}
           </div>
 
           {/* Input Area */}
