@@ -99,7 +99,7 @@ const WealthAI1Home = ({ setCurrentPage, currentPage }) => {
       <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} transparent={true} showLoginModal={showLoginModal} setShowLoginModal={setShowLoginModal} />
       
       {/* Main Content - Compact Cards */}
-      <div className="flex-1 pt-16 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <div className="flex-1 pt-20 lg:pt-24 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto h-full">
           <div className="grid lg:grid-cols-2 gap-4 lg:gap-6 h-full">
             
