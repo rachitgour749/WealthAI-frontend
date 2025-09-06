@@ -4,6 +4,8 @@ import Select from 'react-select';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import TradeExecutionTracker from '../components/TradeExecutionTracker';
 import CostsDashboard from '../components/CostsDashboard';
+import { message } from 'antd';
+import { useAuth } from '../context/AuthContext';
 
 const API_BASE_URL = 'http://127.0.0.1:8000' || 'https://api.wealthai1.in';
 
@@ -45,6 +47,16 @@ function ETFStrategy({ onBack }) {
 
   // UI State
   const [activeSetupStep, setActiveSetupStep] = useState(1);
+  
+  // Saved Strategies Dropdown State
+  const [savedStrategies, setSavedStrategies] = useState([]);
+  const [savedStrategiesLoading, setSavedStrategiesLoading] = useState(false);
+  const [showSavedStrategiesDropdown, setShowSavedStrategiesDropdown] = useState(false);
+  const [strategyLoadedMessage, setStrategyLoadedMessage] = useState('');
+
+  const [saveLoading, setSaveLoading] = useState(false);
+  
+  const { user } = useAuth();
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -55,6 +67,155 @@ function ETFStrategy({ onBack }) {
       loadTransactionCosts();
     }
   };
+
+  // Fetch saved strategies on component mount
+  useEffect(() => {
+    if (user && user.email) {
+      fetchSavedStrategies();
+    }
+  }, [user]);
+
+  // Fetch saved strategies
+  const fetchSavedStrategies = async () => {
+    setSavedStrategiesLoading(true);
+    try {
+      // Check if user exists and has email
+      if (!user || !user.email) {
+        console.error('User not found or no email available');
+        setSavedStrategies([]);
+        return;
+      }
+
+      const email = user.email;
+      console.log('Fetching strategies for user:', email); // Debug log
+      
+      const response = await axios.get(`${API_BASE_URL}/api/get-saved-strategies-list/${encodeURIComponent(email)}`);
+      console.log('API Response:', response.data); // Debug log
+      
+      // Ensure we always have an array, handle different response structures
+      let strategies = [];
+      if (response.data) {
+        if (Array.isArray(response.data.strategies)) {
+          strategies = response.data.strategies;
+        } else {
+          // If it's a single object, wrap it in an array
+          strategies = [response.data.strategies];
+        }
+      }
+      console.log(strategies, "++++++++++++++++++++++++++++++++");
+      
+      // Filter to only show ETF rotation strategies
+      strategies = strategies.filter(strategy => 
+        strategy.strategy_type === 'etf_rotation' || 
+        (strategy.tickers && Array.isArray(strategy.tickers))
+      );
+      
+      console.log('Filtered strategies:', strategies); // Debug log
+      setSavedStrategies(strategies);
+    } catch (error) {
+      console.error('Error fetching saved strategies:', error);
+      console.error('Error details:', error.response?.data); // More detailed error logging
+    } finally {
+      setSavedStrategiesLoading(false);
+    }
+  };
+
+  // Load saved strategy
+  const loadSavedStrategy = (strategy) => {
+    console.log('Loading strategy:', strategy);
+    console.log('Available ETFs:', etfs); // Debug log
+    
+    try {
+      // Populate selected ETFs
+      if (strategy.tickers && Array.isArray(strategy.tickers)) {
+        console.log('Setting selected ETFs:', strategy.tickers); // Debug log
+        const etfOptions = strategy.tickers.map(ticker => {
+          // Find the ETF in the available ETFs list
+          const etfOption = etfs.find(etf => etf.value === ticker);
+          if (etfOption) {
+            console.log('Found ETF option:', etfOption); // Debug log
+            return etfOption;
+          }
+          // If not found in the loaded ETFs, create a basic option
+          console.log('Creating basic option for:', ticker); // Debug log
+          return {
+            value: ticker,
+            label: `${ticker} - ${ticker}`
+          };
+        });
+        console.log('Final ETF options:', etfOptions); // Debug log
+        setSelectedEtfs(etfOptions);
+      }
+
+      // Populate date range
+      if (strategy.start_date && strategy.end_date) {
+        setDateRange({
+          start: strategy.start_date,
+          end: strategy.end_date,
+          years: strategy.years || 0
+        });
+        setCustomStartDate(strategy.start_date);
+        setCustomEndDate(strategy.end_date);
+        setUseCustomDates(strategy.use_custom_dates || false);
+      }
+
+      // Populate strategy parameters
+      console.log('Setting strategy parameters:', {
+        capital_per_week: strategy.capital_per_week,
+        accumulation_weeks: strategy.accumulation_weeks,
+        brokerage_percent: strategy.brokerage_percent,
+        risk_free_rate: strategy.risk_free_rate,
+        compounding_enabled: strategy.compounding_enabled
+      }); // Debug log
+      
+      if (strategy.capital_per_week) {
+        setCapitalPerWeek(strategy.capital_per_week);
+      }
+      if (strategy.accumulation_weeks) {
+        setAccumulationWeeks(strategy.accumulation_weeks);
+      }
+      if (strategy.brokerage_percent !== undefined) {
+        setBrokeragePercent(strategy.brokerage_percent);
+      }
+      if (strategy.risk_free_rate) {
+        setRiskFreeRate(strategy.risk_free_rate);
+      }
+      if (strategy.compounding_enabled !== undefined) {
+        setCompoundingEnabled(strategy.compounding_enabled);
+      }
+
+      // Set active step to 4 (ready to execute)
+      setActiveSetupStep(4);
+      
+      // Clear any previous results
+      setShowResults(false);
+      setBacktestResult(null);
+      setError('');
+
+      // Show success message
+      setStrategyLoadedMessage(`Strategy "${strategy.strategy_name || strategy.name || 'ETF Strategy'}" loaded successfully!`);
+      setTimeout(() => setStrategyLoadedMessage(''), 3000);
+
+      console.log('Strategy loaded successfully');
+    } catch (error) {
+      console.error('Error loading strategy:', error);
+      setError('Failed to load strategy parameters');
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showSavedStrategiesDropdown && !event.target.closest('.saved-strategies-dropdown')) {
+        setShowSavedStrategiesDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSavedStrategiesDropdown]);
 
   // Export Functions
   const exportETFPerformanceCSV = () => {
@@ -1072,6 +1233,72 @@ function ETFStrategy({ onBack }) {
     }
   };
 
+  const saveStrategyParameters = async () => {
+    if (selectedEtfs.length === 0) {
+      message.error('Please select Stocks first');
+      return;
+    }
+
+    try {
+      setSaveLoading(true);
+
+      // Use custom dates if enabled, otherwise use calculated date range
+      let startDate = useCustomDates ? customStartDate : dateRange.start;
+      let endDate = useCustomDates ? customEndDate : dateRange.end;
+      
+      if (!startDate || !endDate) {
+        // Fallback to a reasonable date range
+        startDate = '2020-01-01';
+        endDate = '2023-12-31';
+      }
+
+      const strategyParams = {
+        user_id: user.email,
+        strategy_type: 'ETF_rotation',
+        tickers: selectedEtfs.map(etf => etf.value),
+        start_date: startDate,
+        end_date: endDate,
+        capital_per_week: parseFloat(capitalPerWeek),
+        accumulation_weeks: parseInt(accumulationWeeks),
+        brokerage_percent: parseFloat(brokeragePercent),
+        compounding_enabled: Boolean(compoundingEnabled),
+        risk_free_rate: parseFloat(riskFreeRate),
+        use_custom_dates: useCustomDates,
+        strategy_name: `Stock Rotation Strategy - ${selectedEtfs.length} stocks`,
+        created_at: new Date().toISOString()
+      };
+
+      // Add backtest results if available
+      if (backtestResult) {
+        strategyParams.backtest_results = {
+          total_return: backtestResult.stock_metrics?.['Total Return'] || backtestResult.stock_metrics?.['total_return'],
+          cagr: backtestResult.stock_metrics?.['CAGR'] || backtestResult.stock_metrics?.['cagr'],
+          sharpe_ratio: backtestResult.stock_metrics?.['Sharpe Ratio'] || backtestResult.stock_metrics?.['sharpe_ratio'],
+          max_drawdown: backtestResult.stock_metrics?.['Max Drawdown'] || backtestResult.stock_metrics?.['max_drawdown']
+        };
+      }
+
+       
+       // Uncomment this line when backend is ready:
+       const response = await axios.post(`${API_BASE_URL}/api/save-strategy`, strategyParams);
+       if(response.data && response.data.success){
+        message.success('Strategy saved successfully');
+       }else{
+        message.error(response.data.message);
+       }
+
+    } catch (err) {
+      console.error('Save strategy error:', err);
+      if (err.response && err.response.data) {
+        message.error(`Save failed: ${err.response.data.message || JSON.stringify(err.response.data)}`);
+      } else {    
+        message.error('Save failed. Please check your connection and try again.');
+      }
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
   const renderTransactionCosts = () => {
     if (transactionCosts.length === 0) {
       return (
@@ -1129,16 +1356,126 @@ function ETFStrategy({ onBack }) {
         {/* Main Content */}
         <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
           {/* Back Button */}
-          <div className="mb-6">
+          <div className="mb-6 flex justify-between">
             <button
               onClick={() => onBack?.()}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 shadow-sm"
+              className="px-3 py-2 rounded-lg flex shadow-md bg-gray-50 font-semibold items-center justify-center text-[15px] transition-all duration-300 transform hover:scale-105 hover:-translate-y-[4px]"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to Strategies
+              
             </button>
+            {/* Saved Strategies Dropdown */}
+            <div className="relative saved-strategies-dropdown">
+              <button
+                onClick={() => {
+                  console.log('Saved strategies button clicked'); // Debug log
+                  setShowSavedStrategiesDropdown(!showSavedStrategiesDropdown);
+                  if ((!Array.isArray(savedStrategies) || !savedStrategies.length) && !savedStrategiesLoading) {
+                    console.log('Fetching strategies on button click'); // Debug log
+                    fetchSavedStrategies();
+                  }
+                }}
+                className="px-4 py-2 rounded-lg flex shadow-md border bg-gray-50 font-semibold items-center justify-center text-[15px] transition-all duration-300 transform hover:scale-105 hover:-translate-y-[3px]"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+                Saved Strategies
+                {Array.isArray(savedStrategies) && savedStrategies.length > 0 && (
+                  <span className="ml-2 bg-teal-100 text-teal-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                    {savedStrategies.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Dropdown Menu */}
+              {showSavedStrategiesDropdown && (
+                <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                  <div className="p-3 border-b border-gray-200 flex justify-between items-center">
+                    <h3 className="text-sm font-semibold text-gray-900">Saved Strategies</h3>
+                    <button
+                      onClick={fetchSavedStrategies}
+                      className="text-xs text-teal-600 hover:text-teal-800 transition-colors duration-150"
+                      title="Refresh strategies"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  {savedStrategiesLoading ? (
+                    <div className="p-4 text-center">
+                      <div className="inline-flex items-center text-sm text-gray-500">
+                        <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading strategies...
+                      </div>
+                    </div>
+                  ) : (!Array.isArray(savedStrategies) || savedStrategies.length === 0) ? (
+                    <div className="p-4 text-center">
+                      <div className="text-gray-500 text-sm">
+                        <svg className="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <p className="mb-2">No saved strategies found</p>
+                        <p className="text-xs text-gray-400">
+                          Save a strategy first to see it here
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-2">
+                      {Array.isArray(savedStrategies) && savedStrategies.map((strategy, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            loadSavedStrategy(strategy);
+                            setShowSavedStrategiesDropdown(false);
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <h4 className="text-sm font-medium text-gray-900 truncate">
+                                {strategy.strategy_name || strategy.name || `ETF Strategy ${index + 1}`}
+                              </h4>
+                              {strategy.created_at && (
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Created: {new Date(strategy.created_at).toLocaleDateString()}
+                                </p>
+                              )}
+                              {strategy.tickers && Array.isArray(strategy.tickers) && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {strategy.tickers.length} ETFs selected
+                                </p>
+                              )}
+                            </div>
+                            <svg className="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <div className="p-3 border-t border-gray-200 bg-gray-50">
+                    <button
+                      onClick={() => setShowSavedStrategiesDropdown(false)}
+                      className="w-full text-sm text-gray-600 hover:text-gray-900 transition-colors duration-150"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Strategy Configuration */}
@@ -1524,6 +1861,23 @@ function ETFStrategy({ onBack }) {
             </div>
           </div>
 
+          {/* Success Message */}
+          {strategyLoadedMessage && (
+            <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-green-800">Strategy Loaded</h3>
+                  <div className="mt-2 text-sm text-green-700">{strategyLoadedMessage}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Error Display */}
           {error && (
             <div className="mt-6 bg-red-50 border border-red-200 rounded-xl p-4">
@@ -1576,6 +1930,25 @@ function ETFStrategy({ onBack }) {
                 </p>
               </div>
               <div className="flex space-x-4">
+              <button
+                  onClick={saveStrategyParameters}
+                  disabled={saveLoading || selectedEtfs.length === 0}
+                  className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-950 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                  {saveLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4 mr-2 mb-[2px] " fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                      </svg>
+                      Save Strategy
+                    </>
+                  )}
+                </button>
                 <button
                   onClick={() => onBack?.()}
                   className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500"

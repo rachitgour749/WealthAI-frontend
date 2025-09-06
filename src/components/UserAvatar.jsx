@@ -83,7 +83,9 @@ const UserAvatar = ({ setCurrentPage }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
+  const handlePayment = () => {
+    setCurrentPage('payment');
+  }
   const handleLogout = () => {
     logout();
     setIsDropdownOpen(false);
@@ -206,7 +208,7 @@ const UserAvatar = ({ setCurrentPage }) => {
                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                  </svg>
                </div>
-               <span className="font-medium group-hover/item:text-green-900 transition-colors duration-200">Payment</span>
+               <span className="font-medium group-hover/item:text-green-900 transition-colors duration-200" onClick={handlePayment}>Payment</span>
              </button>
 
              <div className="border-t border-gray-100/50 "></div>

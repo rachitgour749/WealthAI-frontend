@@ -5,7 +5,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import TradeExecutionTracker from '../components/TradeExecutionTracker';
 import CostsDashboard from '../components/CostsDashboard';
 import { useAuth } from '../context/AuthContext.jsx';
-import { message } from 'antd';
 
 const API_BASE_URL = 'http://127.0.0.1:8000' || 'https://api.wealthai1.in';
 
@@ -68,13 +67,6 @@ function StockStrategy({ onBack }) {
 
   const {user} = useAuth();
   console.log(user, "++++++++++++++++++++++++++++++++");
-
-  // Fetch saved strategies on component mount
-  useEffect(() => {
-    if (user && user.email) {
-      fetchSavedStrategies();
-    }
-  }, [user]);
   // Main state
   const [showResults, setShowResults] = useState(false);
   const [etfs, setEtfs] = useState([]);
@@ -132,43 +124,26 @@ function StockStrategy({ onBack }) {
     }
   };
 
-  const handleAddAllNifty50 = (checked) => {
-    if (checked) {
-      setSelectedEtfs(nifty50Stocks);
-    } else {
-      // Remove all Nifty 50 stocks from selection
-      setSelectedEtfs(prev => prev.filter(stock => !nifty50Stocks.some(nifty => nifty.value === stock.value)));
+  // Fetch saved strategies on component mount
+  useEffect(() => {
+    if (user && user.email) {
+      fetchSavedStrategies();
     }
-    setActiveSetupStep(Math.max(activeSetupStep, 2));
-  };
+  }, [user]);
 
-  const handleAddTop20Stocks = (checked) => {
-    const top20Stocks = nifty50Stocks.slice(0, 20);
-    if (checked) {
-      setSelectedEtfs(prev => {
-        const existingStocks = prev.filter(stock => !top20Stocks.some(top20 => top20.value === stock.value));
-        return [...existingStocks, ...top20Stocks];
-      });
-    } else {
-      // Remove top 20 stocks from selection
-      setSelectedEtfs(prev => prev.filter(stock => !top20Stocks.some(top20 => top20.value === stock.value)));
-    }
-    setActiveSetupStep(Math.max(activeSetupStep, 2));
-  };
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showSavedStrategiesDropdown && !event.target.closest('.saved-strategies-dropdown')) {
+        setShowSavedStrategiesDropdown(false);
+      }
+    };
 
-  const handleAddTop10Stocks = (checked) => {
-    const top10Stocks = nifty50Stocks.slice(0, 10);
-    if (checked) {
-      setSelectedEtfs(prev => {
-        const existingStocks = prev.filter(stock => !top10Stocks.some(top10 => top10.value === stock.value));
-        return [...existingStocks, ...top10Stocks];
-      });
-    } else {
-      // Remove top 10 stocks from selection
-      setSelectedEtfs(prev => prev.filter(stock => !top10Stocks.some(top10 => top10.value === stock.value)));
-    }
-    setActiveSetupStep(Math.max(activeSetupStep, 2));
-  };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSavedStrategiesDropdown]);
 
   // Fetch saved strategies
   const fetchSavedStrategies = async () => {
@@ -190,14 +165,15 @@ function StockStrategy({ onBack }) {
       // Ensure we always have an array, handle different response structures
       let strategies = [];
       if (response.data) {
-        if (Array.isArray(response.data.strategies)) {
-          strategies = response.data.strategies;
+        if (Array.isArray(response.data.history)) {
+          strategies = response.data.history;
+        } else if (Array.isArray(response.data)) {
+          strategies = response.data;
         } else {
           // If it's a single object, wrap it in an array
-          strategies = [response.data.strategies];
+          strategies = [response.data];
         }
       }
-      console.log(strategies, "++++++++++++++++++++++++++++++++");
       
       // Filter to only show stock rotation strategies
       strategies = strategies.filter(strategy => 
@@ -210,6 +186,23 @@ function StockStrategy({ onBack }) {
     } catch (error) {
       console.error('Error fetching saved strategies:', error);
       console.error('Error details:', error.response?.data); // More detailed error logging
+      
+      // For testing purposes, you can uncomment this to use mock data
+      setSavedStrategies([
+        {
+          strategy_name: "Test Stock Strategy",
+          strategy_type: "stock_rotation",
+          tickers: ["RELIANCE", "TCS", "HDFCBANK"],
+          start_date: "2020-01-01",
+          end_date: "2023-12-31",
+          capital_per_week: 50000,
+          accumulation_weeks: 52,
+          brokerage_percent: 0.0,
+          risk_free_rate: 8.0,
+          compounding_enabled: false,
+          created_at: new Date().toISOString()
+        }
+      ]);
     } finally {
       setSavedStrategiesLoading(false);
     }
@@ -218,7 +211,7 @@ function StockStrategy({ onBack }) {
   // Load saved strategy
   const loadSavedStrategy = (strategy) => {
     console.log('Loading strategy:', strategy);
-    console.log('Available stocks:', etfs); // Debug log
+    console.log('Available stocks (etfs):', etfs); // Debug log
     
     try {
       // Populate selected stocks
@@ -226,7 +219,7 @@ function StockStrategy({ onBack }) {
         console.log('Setting selected stocks:', strategy.tickers); // Debug log
         const stockOptions = strategy.tickers.map(ticker => {
           // Find the stock in the available stocks list
-          const stockOption = etfs.find(stock => stock.value === ticker);
+          const stockOption = etfs.find(etf => etf.value === ticker);
           if (stockOption) {
             console.log('Found stock option:', stockOption); // Debug log
             return stockOption;
@@ -298,19 +291,43 @@ function StockStrategy({ onBack }) {
     }
   };
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showSavedStrategiesDropdown && !event.target.closest('.saved-strategies-dropdown')) {
-        setShowSavedStrategiesDropdown(false);
-      }
-    };
+  const handleAddAllNifty50 = (checked) => {
+    if (checked) {
+      setSelectedEtfs(nifty50Stocks);
+    } else {
+      // Remove all Nifty 50 stocks from selection
+      setSelectedEtfs(prev => prev.filter(stock => !nifty50Stocks.some(nifty => nifty.value === stock.value)));
+    }
+    setActiveSetupStep(Math.max(activeSetupStep, 2));
+  };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showSavedStrategiesDropdown]);
+  const handleAddTop20Stocks = (checked) => {
+    const top20Stocks = nifty50Stocks.slice(0, 20);
+    if (checked) {
+      setSelectedEtfs(prev => {
+        const existingStocks = prev.filter(stock => !top20Stocks.some(top20 => top20.value === stock.value));
+        return [...existingStocks, ...top20Stocks];
+      });
+    } else {
+      // Remove top 20 stocks from selection
+      setSelectedEtfs(prev => prev.filter(stock => !top20Stocks.some(top20 => top20.value === stock.value)));
+    }
+    setActiveSetupStep(Math.max(activeSetupStep, 2));
+  };
+
+  const handleAddTop10Stocks = (checked) => {
+    const top10Stocks = nifty50Stocks.slice(0, 10);
+    if (checked) {
+      setSelectedEtfs(prev => {
+        const existingStocks = prev.filter(stock => !top10Stocks.some(top10 => top10.value === stock.value));
+        return [...existingStocks, ...top10Stocks];
+      });
+    } else {
+      // Remove top 10 stocks from selection
+      setSelectedEtfs(prev => prev.filter(stock => !top10Stocks.some(top10 => top10.value === stock.value)));
+    }
+    setActiveSetupStep(Math.max(activeSetupStep, 2));
+  };
 
   // Export Functions
   const exportETFPerformanceCSV = () => {
@@ -1351,6 +1368,7 @@ function StockStrategy({ onBack }) {
     }
 
     try {
+      console.log("function is called", user.email)
       setSaveLoading(true);
       setSaveError('');
       setSaveSuccess(false);
@@ -1391,25 +1409,35 @@ function StockStrategy({ onBack }) {
         };
       }
 
-      const response = await axios.post(`${API_BASE_URL}/api/stocks/save-strategy`, strategyParams);
-      if(response.data && response.data.success){
-        message.success('Strategy saved successfully');
-        setSaveSuccess(true);
-        // Refresh saved strategies list
-        fetchSavedStrategies();
-      } else {
-        message.error(response.data.message || 'Failed to save strategy');
-        setSaveError(response.data.message || 'Failed to save strategy');
-      }
+             // Temporary mock response for testing - remove this when backend is ready
+       const mockResponse = {
+         data: {
+           success: true,
+           message: "Strategy saved successfully (mock)",
+           strategy_id: "mock-" + Date.now()
+         }
+       };
 
+       console.log(strategyParams, "++++++++++++++++++++++++++++++++");
+       
+       // Uncomment this line when backend is ready:
+       const response = await axios.post(`${API_BASE_URL}/api/stocks/save-strategy`, strategyParams);
+       console.log("save strategy response", strategyParams);
+       
+       //const response = mockResponse;
+      
+      if (response.data && response.data.success) {
+        setSaveSuccess(true);
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => setSaveSuccess(false), 3000);
+      } else {
+        setSaveError('Failed to save strategy parameters');
+      }
     } catch (err) {
       console.error('Save strategy error:', err);
       if (err.response && err.response.data) {
-        const errorMsg = err.response.data.message || JSON.stringify(err.response.data);
-        message.error(`Save failed: ${errorMsg}`);
-        setSaveError(`Save failed: ${errorMsg}`);
+        setSaveError(`Save failed: ${err.response.data.message || JSON.stringify(err.response.data)}`);
       } else {
-        message.error('Save failed. Please check your connection and try again.');
         setSaveError('Save failed. Please check your connection and try again.');
       }
     } finally {
@@ -1424,16 +1452,15 @@ function StockStrategy({ onBack }) {
         {/* Main Content */}
         <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
           {/* Back Button and Saved Strategies */}
-          <div className="mb-6 flex justify-between items-center">
-          <button
+          <div className="mb-6 flex justify-between">
+            <button
               onClick={() => onBack?.()}
-              className="px-3 py-2 rounded-lg flex shadow-md bg-gray-50 font-semibold items-center justify-center text-[15px] transition-all duration-300 transform hover:scale-105 hover:-translate-y-[4px]"
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 shadow-sm"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to Strategies
-              
             </button>
             
             {/* Saved Strategies Dropdown */}
@@ -1447,7 +1474,7 @@ function StockStrategy({ onBack }) {
                     fetchSavedStrategies();
                   }
                 }}
-                className="px-4 py-2 rounded-lg flex shadow-md border bg-gray-50 font-semibold items-center justify-center text-[15px] transition-all duration-300 transform hover:scale-105 hover:-translate-y-[3px]"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 shadow-sm"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -1512,7 +1539,7 @@ function StockStrategy({ onBack }) {
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
                               <h4 className="text-sm font-medium text-gray-900 truncate">
-                                {strategy.strategy_name || `Stock Strategy ${index + 1}`}
+                                {strategy.strategy_name || strategy.name || `Stock Strategy ${index + 1}`}
                               </h4>
                               {strategy.created_at && (
                                 <p className="text-xs text-gray-400 mt-1">
@@ -2048,7 +2075,7 @@ function StockStrategy({ onBack }) {
                 <button
                   onClick={saveStrategyParameters}
                   disabled={saveLoading || selectedEtfs.length === 0}
-                  className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-950 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                 >
                   {saveLoading ? (
                     <>
@@ -2057,10 +2084,10 @@ function StockStrategy({ onBack }) {
                     </>
                   ) : (
                     <>
-                      <svg className="w-4 h-4 mr-2 mb-[2px] " fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                       </svg>
-                      Save Strategy
+                      Save Strategy Parameters
                     </>
                   )}
                 </button>
@@ -2090,6 +2117,25 @@ function StockStrategy({ onBack }) {
             </div>
           </div>
         </div>
+
+        {/* Success/Error Messages */}
+        {saveSuccess && (
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800">Strategy Saved Successfully!</h3>
+                <div className="mt-2 text-sm text-green-700">
+                  Your strategy parameters have been saved and can be accessed later.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {saveError && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">

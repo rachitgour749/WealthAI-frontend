@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import './AIAssistant.css';
 import PromptGenerater from "../../components/PromptGenerater";
 import RatingDisplay from "../../components/RatingDisplay";
+import axios from "axios";
 
 const AIAssistant = () => {
   const [input, setInput] = useState("");
@@ -16,11 +17,27 @@ const AIAssistant = () => {
   // eslint-disable-next-line
   const [isTyping, setIsTyping] = useState(false);
   const [isPromptGeneraterOpen, setIsPromptGeneraterOpen] = useState(false);
+  const [conversationId, setConversationId] = useState(null);
   const messagesEndRef = useRef(null);
   const typingIntervalRef = useRef(null);
   const textareaRef = useRef(null);
 
   console.log(isPromptGeneraterOpen);
+
+  // Generate unique conversation ID
+  const generateConversationId = () => {
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 15);
+    const userId = 'user_' + Math.random().toString(36).substring(2, 8);
+    return `conv_${timestamp}_${randomString}_${userId}`;
+  };
+
+  // Initialize conversation ID on component mount
+  useEffect(() => {
+    if (!conversationId) {
+      setConversationId(generateConversationId());
+    }
+  }, [conversationId]);
 
   // Auto-resize textarea function
   const autoResizeTextarea = () => {
@@ -337,28 +354,47 @@ const AIAssistant = () => {
   // Send message to API
   const sendMessageToAPI = async (message) => {
     try {
-      const response = await fetch('http://localhost:8000/api/chat', {
-        method: 'POST',
+      // Ensure we have a conversation ID
+      const currentConversationId = conversationId || generateConversationId();
+      if (!conversationId) {
+        setConversationId(currentConversationId);
+      }
+
+      // Prepare the request payload according to the required format
+      const requestPayload = {
+        prompt: message,
+        system_prompt: "You are a ChatGPT-style financial expert. FORMAT: Start with 📚 DEFINITION (30 words max), then 💡 KEY POINTS (1 line each), add 🎯 EXAMPLE in 1 lines)",
+        conversation_id: currentConversationId,
+        use_template: "",
+        template_params: {
+          expertise_level: "professional",
+          response_style: "chatgpt",
+          include_examples: true,
+          max_length: "medium"
+        }
+      };
+
+      console.log('🚀 Sending request to API with payload:', requestPayload);
+      console.log('🆔 Using conversation ID:', currentConversationId);
+
+      const response = await axios.post('http://localhost:8000/api/chat', requestPayload, {
         headers: {
           'Content-Type': 'application/json',
         },
-                 body: JSON.stringify({
-           prompt: message,
-           system_prompt: 
-           "You are a ChatGPT-style financial expert. FORMAT: Start with 📚 DEFINITION (30 words max), then 💡 KEY POINTS (1 line each), add 🎯 EXAMPLE (1-2 lines),"
-         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response from AI');
-      }
-
-      const data = await response.json();
+      const data = response.data;
       console.log('🔍 Full API Response:', data);
+      console.log('🔍 Response Status:', response.status);
+      console.log('🔍 Response Headers:', response.headers);
       console.log('📊 Rating received:', data.rating);
       console.log('📊 Rating type:', typeof data.rating);
       console.log('📝 Response text:', data.response);
       console.log('🆔 Response ID:', data.response_id);
+      
+      // Debug: Log all possible response fields
+      console.log('🔍 All response fields:', Object.keys(data));
+      console.log('🔍 Raw response data:', JSON.stringify(data, null, 2));
       
       // Ensure rating is a proper number
       let processedRating = null;
@@ -369,32 +405,85 @@ const AIAssistant = () => {
         }
       }
       
+      // Try multiple possible response field names
+      let answerText = null;
+      const possibleResponseFields = [
+        'response',
+        'answer', 
+        'message',
+        'content',
+        'text',
+        'result',
+        'data'
+      ];
+      
+      for (const field of possibleResponseFields) {
+        if (data[field] && typeof data[field] === 'string' && data[field].trim()) {
+          answerText = data[field];
+          console.log(`✅ Found response in field: ${field}`);
+          break;
+        }
+      }
+      
+      // If no response found, log the issue
+      if (!answerText) {
+        console.error('❌ No response text found in any expected field');
+        console.error('Available fields:', Object.keys(data));
+        console.error('Field values:', Object.values(data));
+      }
+      
       // Return the full response object with new format
       const responseObj = {
-        answer: data.response || data.answer || "Sorry, I couldn't process your request.",
+        answer: answerText || "Sorry, I couldn't process your request. Please check the console for debugging info.",
         rating: processedRating,
         provider: data.provider || null,
         trace_id: data.response_id || data.trace_id || null,
         processing_time: data.processing_time || null,
         timestamp: data.timestamp || null,
         model_used: data.model_used || null,
-        system_prompt_used: data.system_prompt_used || null
+        system_prompt_used: data.system_prompt_used || null,
+        conversation_id: currentConversationId
       };
       
       console.log('📦 Final response object:', responseObj);
       console.log('📝 Answer text:', responseObj.answer);
       
-      console.log('📦 Processed response object:', responseObj);
       return responseObj;
     } catch (error) {
       console.error('API Error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: error.config
+      });
+      
+      // Check if it's a network error or server error
+      let errorMessage = "Sorry, there was an error connecting to the AI service. Please try again.";
+      
+      if (error.response) {
+        // Server responded with error status
+        errorMessage = `Server error (${error.response.status}): ${error.response.statusText}`;
+        if (error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.request) {
+        // Network error
+        errorMessage = "Network error: Unable to connect to the server. Please check your connection.";
+      } else {
+        // Other error
+        errorMessage = `Request error: ${error.message}`;
+      }
+      
       return {
-        answer: "Sorry, there was an error connecting to the AI service. Please try again.",
+        answer: errorMessage,
         rating: null,
         provider: null,
         trace_id: null,
         processing_time: null,
-        timestamp: null
+        timestamp: null,
+        conversation_id: conversationId
       };
     }
   };
@@ -435,12 +524,7 @@ const AIAssistant = () => {
          model_used: apiResponse.model_used,
          system_prompt_used: apiResponse.system_prompt_used
        };
-      
-             console.log('💬 Created AI message object:', aiMessage);
-       console.log('⭐ Message rating value:', aiMessage.rating);
-       console.log('📝 Message text:', aiMessage.text);
-       console.log('🆔 Trace ID for rating:', aiMessage.trace_id);
-       console.log('🤖 Model used:', aiMessage.model_used);
+  
 
       // Add AI message and start typing effect
       setMessages(prev => {
@@ -493,9 +577,9 @@ const AIAssistant = () => {
         }}
       />
       
-      <div className="rounded-[10px] flex flex-col justify-between font-sans">
+      <div className=" flex flex-col justify-between font-sans">
         {/* Header */}
-        <div className="relative text-center rounded-t-[20px] border p-5 bg-gradient-to-r from-teal-50 to-blue-50 border-b border-teal-200 flex-shrink-0">
+        <div className="relative text-center border p-5 bg-gradient-to-r from-teal-50 to-blue-50 border-b border-teal-200 flex-shrink-0">
           <h1 className="text-teal-800 text-3xl font-bold">Chat AI</h1>
           <p className="text-teal-600 m-0 text-base font-normal">Hello, What are you working on?</p>
         </div>
