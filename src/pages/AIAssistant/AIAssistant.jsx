@@ -7,6 +7,7 @@ import './AIAssistant.css';
 import PromptGenerater from "../../components/PromptGenerater";
 import RatingDisplay from "../../components/RatingDisplay";
 import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
 
 const AIAssistant = () => {
   const [input, setInput] = useState("");
@@ -21,6 +22,7 @@ const AIAssistant = () => {
   const messagesEndRef = useRef(null);
   const typingIntervalRef = useRef(null);
   const textareaRef = useRef(null);
+  const { user } = useAuth();
 
   console.log(isPromptGeneraterOpen);
 
@@ -360,11 +362,15 @@ const AIAssistant = () => {
         setConversationId(currentConversationId);
       }
 
+      const user_id = user?.email;
+
+
       // Prepare the request payload according to the required format
       const requestPayload = {
         prompt: message,
         system_prompt: "You are a ChatGPT-style financial expert. FORMAT: Start with 📚 DEFINITION (30 words max), then 💡 KEY POINTS (1 line each), add 🎯 EXAMPLE in 1 lines)",
         conversation_id: currentConversationId,
+        user_id: user?.email,
         use_template: "",
         template_params: {
           expertise_level: "professional",
@@ -374,9 +380,6 @@ const AIAssistant = () => {
         }
       };
 
-      console.log('🚀 Sending request to API with payload:', requestPayload);
-      console.log('🆔 Using conversation ID:', currentConversationId);
-
       const response = await axios.post('http://localhost:8000/api/chat', requestPayload, {
         headers: {
           'Content-Type': 'application/json',
@@ -384,17 +387,6 @@ const AIAssistant = () => {
       });
 
       const data = response.data;
-      console.log('🔍 Full API Response:', data);
-      console.log('🔍 Response Status:', response.status);
-      console.log('🔍 Response Headers:', response.headers);
-      console.log('📊 Rating received:', data.rating);
-      console.log('📊 Rating type:', typeof data.rating);
-      console.log('📝 Response text:', data.response);
-      console.log('🆔 Response ID:', data.response_id);
-      
-      // Debug: Log all possible response fields
-      console.log('🔍 All response fields:', Object.keys(data));
-      console.log('🔍 Raw response data:', JSON.stringify(data, null, 2));
       
       // Ensure rating is a proper number
       let processedRating = null;

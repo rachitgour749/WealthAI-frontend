@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Navigation from './Navigation';
 import Footer from './Footer';
-import AIAssistant from '../pages/AIAssistant/AIAssistant';
+import ChatAI1Landing from './ChatAI1Landing';
 import Login from './Login';
 
 const WealthAI1Home = ({ setCurrentPage, currentPage }) => {
@@ -239,7 +239,7 @@ const WealthAI1Home = ({ setCurrentPage, currentPage }) => {
             
             {/* AI Assistant Component */}
             <div className="w-full h-full overflow-y-auto scrollbar-hide bg-gray-200">
-              <AIAssistant onBack={() => setIsAIPopupOpen(false)} />
+              <ChatAI1Landing setCurrentPage={setCurrentPage} currentPage={currentPage} />
             </div>
           </div>
         </div>
