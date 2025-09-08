@@ -184,7 +184,7 @@ function StockStrategy({ onBack }) {
       const email = user.email;
       console.log('Fetching strategies for user:', email); // Debug log
       
-      const response = await axios.get(`${API_BASE_URL}/api/get-saved-strategies-list/${encodeURIComponent(email)}`);
+      const response = await axios.get(`${API_BASE_URL}/api/stocks/get-saved-strategies-list/${encodeURIComponent(email)}`);
       console.log('API Response:', response.data); // Debug log
       
       // Ensure we always have an array, handle different response structures
@@ -197,7 +197,6 @@ function StockStrategy({ onBack }) {
           strategies = [response.data.strategies];
         }
       }
-      console.log(strategies, "++++++++++++++++++++++++++++++++");
       
       // Filter to only show stock rotation strategies
       strategies = strategies.filter(strategy => 
@@ -214,6 +213,7 @@ function StockStrategy({ onBack }) {
       setSavedStrategiesLoading(false);
     }
   };
+
 
   // Load saved strategy
   const loadSavedStrategy = (strategy) => {
