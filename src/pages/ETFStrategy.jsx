@@ -102,7 +102,7 @@ function ETFStrategy({ onBack }) {
           strategies = [response.data.strategies];
         }
       }
-      console.log(strategies, "++++++++++++++++++++++++++++++++");
+
       
       // Filter to only show ETF rotation strategies
       strategies = strategies.filter(strategy => 
@@ -1264,7 +1264,7 @@ function ETFStrategy({ onBack }) {
         compounding_enabled: Boolean(compoundingEnabled),
         risk_free_rate: parseFloat(riskFreeRate),
         use_custom_dates: useCustomDates,
-        strategy_name: `Stock Rotation Strategy - ${selectedEtfs.length} stocks`,
+        strategy_name: `ETFs Rotation Strategy - ${selectedEtfs.length} ETFs`,
         created_at: new Date().toISOString()
       };
 
