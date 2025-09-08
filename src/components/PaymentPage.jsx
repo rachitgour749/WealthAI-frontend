@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Navigation from './Navigation';
-import PaymentForm from './PaymentForm';
 import PaymentHistory from './PaymentHistory';
 import PaymentAnalytics from './PaymentAnalytics';
+import Subscription from './subscription';
 
 const PaymentPage = ({ setCurrentPage, currentPage }) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('payment');
+
 
 
 
@@ -66,11 +67,8 @@ const PaymentPage = ({ setCurrentPage, currentPage }) => {
           </div>
 
           {/* Tab Content */}
-          
-
-
           {activeTab === 'payment' && (
-            <PaymentForm />
+            <Subscription key="subscription-component" />
           )}
 
           {activeTab === 'history' && (

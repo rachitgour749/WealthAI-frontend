@@ -4,6 +4,7 @@ import Select from 'react-select';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import TradeExecutionTracker from '../components/TradeExecutionTracker';
 import CostsDashboard from '../components/CostsDashboard';
+import WebHook from '../components/WebHook';
 import { useAuth } from '../context/AuthContext.jsx';
 import { message } from 'antd';
 
@@ -115,6 +116,10 @@ function StockStrategy({ onBack }) {
   const [saveLoading, setSaveLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState('');
+
+  // WebHook Modal State
+  const [isWebHookModalOpen, setIsWebHookModalOpen] = useState(false);
+  const [webHookStrategyType, setWebHookStrategyType] = useState('Stock Strategy');
 
   // Saved Strategies Dropdown State
   const [savedStrategies, setSavedStrategies] = useState([]);
@@ -1420,6 +1425,26 @@ function StockStrategy({ onBack }) {
   if (!showResults) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-teal-50 flex flex-col">
+        {isWebHookModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-[850px] h-[350px] max-h-[90vh] overflow-hidden px-[10px] py-[10px]">
+              {/* WebHook Component */}
+              <WebHook
+                onClose={() => setIsWebHookModalOpen(false)}
+                strategyType={webHookStrategyType}
+                userEmail={user?.email || 'test@test.com'}
+                selectedEtfs={selectedEtfs}
+                strategyParams={{
+                  capitalPerWeek,
+                  accumulationWeeks,
+                  brokeragePercent,
+                  riskFreeRate,
+                  compoundingEnabled
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
@@ -1435,9 +1460,24 @@ function StockStrategy({ onBack }) {
               Back to Strategies
               
             </button>
+
+            
             
             {/* Saved Strategies Dropdown */}
-            <div className="relative saved-strategies-dropdown">
+            <div className="relative saved-strategies-dropdown flex gap-[10px]">
+              {/* Deploy Button */}
+            <button
+              onClick={() => {
+                setWebHookStrategyType('Stock Strategy');
+                setIsWebHookModalOpen(true);
+              }}
+              className="px-4 py-1 rounded-lg flex shadow-md bg-gradient-to-r from-blue-800 to-blue-900 text-white font-semibold items-center justify-center text-[15px] transition-all duration-300 transform hover:scale-105 hover:-translate-y-[3px] hover:from-blue-900 hover:to-blue-950"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+              Deploy
+            </button>
               <button
                 onClick={() => {
                   console.log('Saved strategies button clicked'); // Debug log

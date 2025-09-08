@@ -4,6 +4,7 @@ import Select from 'react-select';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import TradeExecutionTracker from '../components/TradeExecutionTracker';
 import CostsDashboard from '../components/CostsDashboard';
+import WebHook from '../components/WebHook';
 import { message } from 'antd';
 import { useAuth } from '../context/AuthContext';
 
@@ -47,7 +48,7 @@ function ETFStrategy({ onBack }) {
 
   // UI State
   const [activeSetupStep, setActiveSetupStep] = useState(1);
-  
+
   // Saved Strategies Dropdown State
   const [savedStrategies, setSavedStrategies] = useState([]);
   const [savedStrategiesLoading, setSavedStrategiesLoading] = useState(false);
@@ -55,12 +56,16 @@ function ETFStrategy({ onBack }) {
   const [strategyLoadedMessage, setStrategyLoadedMessage] = useState('');
 
   const [saveLoading, setSaveLoading] = useState(false);
-  
+
+  // WebHook Modal State
+  const [isWebHookModalOpen, setIsWebHookModalOpen] = useState(false);
+  const [webHookStrategyType, setWebHookStrategyType] = useState('ETF Strategy');
+
   const { user } = useAuth();
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    
+
     // Load transaction data when trade tab is selected
     if (tab === 'trades' && showResults) {
       loadTransactionLog();
@@ -88,10 +93,10 @@ function ETFStrategy({ onBack }) {
 
       const email = user.email;
       console.log('Fetching strategies for user:', email); // Debug log
-      
+
       const response = await axios.get(`${API_BASE_URL}/api/get-saved-strategies-list/${encodeURIComponent(email)}`);
       console.log('API Response:', response.data); // Debug log
-      
+
       // Ensure we always have an array, handle different response structures
       let strategies = [];
       if (response.data) {
@@ -103,13 +108,13 @@ function ETFStrategy({ onBack }) {
         }
       }
 
-      
+
       // Filter to only show ETF rotation strategies
-      strategies = strategies.filter(strategy => 
-        strategy.strategy_type === 'etf_rotation' || 
+      strategies = strategies.filter(strategy =>
+        strategy.strategy_type === 'etf_rotation' ||
         (strategy.tickers && Array.isArray(strategy.tickers))
       );
-      
+
       console.log('Filtered strategies:', strategies); // Debug log
       setSavedStrategies(strategies);
     } catch (error) {
@@ -124,7 +129,7 @@ function ETFStrategy({ onBack }) {
   const loadSavedStrategy = (strategy) => {
     console.log('Loading strategy:', strategy);
     console.log('Available ETFs:', etfs); // Debug log
-    
+
     try {
       // Populate selected ETFs
       if (strategy.tickers && Array.isArray(strategy.tickers)) {
@@ -167,7 +172,7 @@ function ETFStrategy({ onBack }) {
         risk_free_rate: strategy.risk_free_rate,
         compounding_enabled: strategy.compounding_enabled
       }); // Debug log
-      
+
       if (strategy.capital_per_week) {
         setCapitalPerWeek(strategy.capital_per_week);
       }
@@ -186,7 +191,7 @@ function ETFStrategy({ onBack }) {
 
       // Set active step to 4 (ready to execute)
       setActiveSetupStep(4);
-      
+
       // Clear any previous results
       setShowResults(false);
       setBacktestResult(null);
@@ -360,15 +365,15 @@ function ETFStrategy({ onBack }) {
 
   const calculateDateRange = async () => {
     if (selectedEtfs.length === 0) return;
-    
+
     try {
       setDateRangeLoading(true);
       setError(''); // Clear previous errors
-      
+
       const response = await axios.post(`${API_BASE_URL}/api/etfs/date-range`, {
         tickers: selectedEtfs.map(etf => etf.value)
       });
-      
+
       if (response.data && response.data.start_date && response.data.end_date) {
         setDateRange({
           start: response.data.start_date,
@@ -394,14 +399,14 @@ function ETFStrategy({ onBack }) {
 
   const calculateYearsBetweenDates = (startDate, endDate) => {
     if (!startDate || !endDate) return 0;
-    
+
     // Ensure dates are in YYYY-MM-DD format
     const start = new Date(startDate + 'T00:00:00');
     const end = new Date(endDate + 'T00:00:00');
-    
+
     // Check if dates are valid
     if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
-    
+
     const diffTime = Math.abs(end - start);
     const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
     return Math.max(0, diffYears);
@@ -453,7 +458,7 @@ function ETFStrategy({ onBack }) {
       // Use custom dates if enabled, otherwise use calculated date range
       let startDate = useCustomDates ? customStartDate : dateRange.start;
       let endDate = useCustomDates ? customEndDate : dateRange.end;
-      
+
       if (!startDate || !endDate) {
         // Fallback to a reasonable date range
         startDate = '2020-01-01';
@@ -476,7 +481,7 @@ function ETFStrategy({ onBack }) {
       setBacktestResult(response.data);
       setShowResults(true);
       console.log('Backtest result:', response.data);
-      
+
       // Load transaction data after successful backtest
       await loadTransactionLog();
       await loadTransactionCosts();
@@ -525,13 +530,13 @@ function ETFStrategy({ onBack }) {
       };
       return definitions[metricTitle] || 'No definition available for this metric.';
     };
-  
+
     return (
       <div className="group relative bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow duration-200 cursor-pointer">
         <h4 className="text-sm font-medium text-gray-500">{title}</h4>
         <p className="text-2xl font-bold text-gray-900">{value}</p>
         {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
-  
+
         {/* Tooltip: rectangular, single column (title then definition) */}
         <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3
                         opacity-0 group-hover:opacity-100 transition-opacity duration-200
@@ -542,7 +547,7 @@ function ETFStrategy({ onBack }) {
             <div className="text-gray-200 text-xs leading-relaxed">
               {getDefinition(title)}
             </div>
-  
+
             {/* Arrow */}
             <span className="absolute left-[-6px] top-1/2 -translate-y-1/2 w-3 h-3 bg-gray-900 rotate-45"></span>
           </div>
@@ -555,7 +560,7 @@ function ETFStrategy({ onBack }) {
     if (!backtestResult || !backtestResult.performance_data) return null;
 
     const { performance_data } = backtestResult;
-    
+
     // Add comprehensive validation for all required arrays
     if (!performance_data.dates || !Array.isArray(performance_data.dates) || performance_data.dates.length === 0) {
       console.warn('Performance data dates array is missing or empty');
@@ -590,7 +595,7 @@ function ETFStrategy({ onBack }) {
         console.warn(`Invalid date at index ${index}`);
         return null;
       }
-      
+
       return {
         date,
         'ETF Strategy': safeArrayAccess(etfStrategy, index),
@@ -618,8 +623,8 @@ function ETFStrategy({ onBack }) {
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="date" 
+            <XAxis
+              dataKey="date"
               tick={{ fontSize: 12 }}
               angle={-45}
               textAnchor="end"
@@ -638,7 +643,7 @@ function ETFStrategy({ onBack }) {
                 }
               }}
             />
-            <YAxis 
+            <YAxis
               tick={{ fontSize: 12 }}
               tickFormatter={(value) => {
                 try {
@@ -650,7 +655,7 @@ function ETFStrategy({ onBack }) {
                 }
               }}
             />
-            <Tooltip 
+            <Tooltip
               formatter={(value) => {
                 try {
                   if (value === null || value === undefined || isNaN(value)) return ['₹0', 'Value'];
@@ -676,29 +681,29 @@ function ETFStrategy({ onBack }) {
             />
             <Legend />
             {showETFStrategy && (
-              <Line 
-                type="monotone" 
-                dataKey="ETF Strategy" 
-                stroke="#1f77b4" 
+              <Line
+                type="monotone"
+                dataKey="ETF Strategy"
+                stroke="#1f77b4"
                 strokeWidth={3}
                 dot={false}
               />
             )}
             {showETFStrategy && (
-              <Line 
-                type="monotone" 
-                dataKey="Cumulative Investment" 
-                stroke="#ff7f0e" 
+              <Line
+                type="monotone"
+                dataKey="Cumulative Investment"
+                stroke="#ff7f0e"
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 dot={false}
               />
             )}
             {showNiftyBenchmark && (
-              <Line 
-                type="monotone" 
-                dataKey="Nifty50 Buy & Hold" 
-                stroke="#d62728" 
+              <Line
+                type="monotone"
+                dataKey="Nifty50 Buy & Hold"
+                stroke="#d62728"
                 strokeWidth={3}
                 dot={false}
               />
@@ -726,12 +731,12 @@ function ETFStrategy({ onBack }) {
     // Check for alternative key names for metrics data
     const etf_metrics = backtestResult.etf_metrics || backtestResult.etf_metrics_data || {};
     const nifty_metrics = backtestResult.nifty_metrics || backtestResult.nifty50_metrics || backtestResult.benchmark_metrics || backtestResult.nifty_50_metrics || {};
-    
+
     // Debug logging
     console.log('renderMetricsTable - backtestResult keys:', Object.keys(backtestResult));
     console.log('renderMetricsTable - etf_metrics:', etf_metrics);
     console.log('renderMetricsTable - nifty_metrics:', nifty_metrics);
-    
+
     // If no metrics at all, show a message
     if (!etf_metrics || Object.keys(etf_metrics).length === 0) {
       return (
@@ -864,8 +869,8 @@ function ETFStrategy({ onBack }) {
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No Transaction Data Available</h3>
               <p className="text-gray-500 mb-4">
-                {!showResults 
-                  ? "Run a backtest first to see transaction details." 
+                {!showResults
+                  ? "Run a backtest first to see transaction details."
                   : "No trades were executed during the backtest period."
                 }
               </p>
@@ -941,15 +946,15 @@ function ETFStrategy({ onBack }) {
 
       return (
         <div className="space-y-6">
-        {/* Trading Summary */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Monday Trading Summary</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{safeString(validTradingSummary.total_trades) || '0'}</div>
-              <div className="text-sm text-gray-500">Total Trades</div>
-            </div>
-            {/* <div className="text-center">
+          {/* Trading Summary */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Monday Trading Summary</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{safeString(validTradingSummary.total_trades) || '0'}</div>
+                <div className="text-sm text-gray-500">Total Trades</div>
+              </div>
+              {/* <div className="text-center">
               <div className="text-2xl font-bold text-green-600">{safeString(validTradingSummary.buy_trades) || '0'}</div>
               <div className="text-sm text-gray-500">Buy Trades</div>
             </div>
@@ -965,247 +970,246 @@ function ETFStrategy({ onBack }) {
               <div className="text-2xl font-bold text-gray-600">{safeString(validTradingSummary.no_trade_weeks) || '0'}</div>
               <div className="text-sm text-gray-500">No Trade Weeks</div>
             </div> */}
-            {/* <div className="text-center">
+              {/* <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">{safeString(validTradingSummary.trading_frequency) || '0%'}</div>
               <div className="text-sm text-gray-500">Trading Frequency</div>
             </div> */}
+            </div>
           </div>
-        </div>
 
-        {/* Transaction Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">📋 All Monday Trade Transactions</h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Complete list of all Stock trades executed every Monday during the backtest period
-            </p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Week</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Day</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Symbols</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Units</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prices</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Costs</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capital Gains Tax</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Portfolio Value</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {transactionLog.map((log, index) => {
-                  // Comprehensive validation for each log entry
-                  if (!log || typeof log !== 'object') {
-                    console.warn('Invalid log entry at index', index, ':', log);
+          {/* Transaction Table */}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">📋 All Monday Trade Transactions</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Complete list of all Stock trades executed every Monday during the backtest period
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Week</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Day</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Symbols</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Units</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prices</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Costs</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capital Gains Tax</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Portfolio Value</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {transactionLog.map((log, index) => {
+                    // Comprehensive validation for each log entry
+                    if (!log || typeof log !== 'object') {
+                      console.warn('Invalid log entry at index', index, ':', log);
+                      return (
+                        <tr key={`invalid-${index}`}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                              N/A
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                        </tr>
+                      );
+                    }
+
+                    const dateStr = safeString(log.date);
+                    const dayOfWeek = getDayOfWeek(dateStr);
+                    const isMonday = dayOfWeek === 'Mon';
+
                     return (
-                      <tr key={`invalid-${index}`}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                            N/A
+                      <tr key={`trade-${index}`} className={isMonday ? 'bg-blue-50' : ''}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <span className="font-medium">{safeString(log.week)}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {dateStr}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${isMonday ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
+                            }`}>
+                            {dayOfWeek}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {log.action === 'churn' ? (
+                            <div className="flex gap-2">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-200 text-orange-700">
+                                churn
+                              </span>
+
+                            </div>
+                          ) : (
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getActionColor(log.action)}`}>
+                              {safeString(log.action)}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {log.action === 'churn' ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
+                                <span className="font-mono font-medium">{log.churning_details?.sell_transactions[0]?.ticker || 'N/A'}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
+                                <span className="font-mono font-medium">{log?.churning_details?.buy_transaction?.ticker || 'N/A'}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="font-mono font-medium">{safeString(log.ticker)}</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {log.action === 'churn' ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
+                                <span className="font-medium">{log.units_sold?.toLocaleString('en-IN') || '0'}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
+                                <span className="font-medium">{log.units_bought?.toLocaleString('en-IN') || '0'}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            (() => {
+                              try {
+                                const units = parseFloat(safeString(log.units));
+                                return isNaN(units) ? '0' : units.toLocaleString('en-IN');
+                              } catch (error) {
+                                return '0';
+                              }
+                            })()
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {log.action === 'churn' ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
+                                <span>{formatCurrency(log.churning_details?.sell_transactions?.[0]?.price || 0)}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
+                                <span>{formatCurrency(log.churning_details?.buy_transaction?.price || 0)}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            formatCurrency(log.price)
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {log.action === 'churn' ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
+                                <span className="font-medium">{formatCurrency(log.sell_amount || 0)}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
+                                <span className="font-medium">{formatCurrency(log.buy_amount || 0)}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="font-medium">{formatCurrency(log.amount)}</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {log.action === 'churn' ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
+                                <span>{formatCurrency(log.churning_details?.sell_transactions?.[0]?.costs?.total_costs || 0)}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
+                                <span>{formatCurrency(log.churning_details?.buy_transaction?.costs?.total_costs || 0)}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            formatCurrency(log.transaction_costs)
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {log.action === 'churn' ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
+                                <span>{formatCurrency(log.churning_details?.sell_transactions?.[0]?.capital_gains_tax || 0)}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
+                                <span>₹0</span>
+                              </div>
+                            </div>
+                          ) : (
+                            formatCurrency(log.capital_gains_tax)
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <span className="font-semibold">{formatCurrency(log.nav)}</span>
+                        </td>
                       </tr>
                     );
-                  }
-                  
-                  const dateStr = safeString(log.date);
-                  const dayOfWeek = getDayOfWeek(dateStr);
-                  const isMonday = dayOfWeek === 'Mon';
-                  
-                  return (
-                    <tr key={`trade-${index}`} className={isMonday ? 'bg-blue-50' : ''}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <span className="font-medium">{safeString(log.week)}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {dateStr}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          isMonday ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {dayOfWeek}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {log.action === 'churn' ? (
-                          <div className="flex gap-2">
-                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-200 text-orange-700">
-                              churn
-                            </span>
-                           
-                          </div>
-                        ) : (
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getActionColor(log.action)}`}>
-                            {safeString(log.action)}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {log.action === 'churn' ? (
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
-                              <span className="font-mono font-medium">{log.churning_details?.sell_transactions[0]?.ticker || 'N/A'}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
-                              <span className="font-mono font-medium">{log?.churning_details?.buy_transaction?.ticker || 'N/A'}</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="font-mono font-medium">{safeString(log.ticker)}</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {log.action === 'churn' ? (
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
-                              <span className="font-medium">{log.units_sold?.toLocaleString('en-IN') || '0'}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
-                              <span className="font-medium">{log.units_bought?.toLocaleString('en-IN') || '0'}</span>
-                            </div>
-                          </div>
-                        ) : (
-                          (() => {
-                            try {
-                              const units = parseFloat(safeString(log.units));
-                              return isNaN(units) ? '0' : units.toLocaleString('en-IN');
-                            } catch (error) {
-                              return '0';
-                            }
-                          })()
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {log.action === 'churn' ? (
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
-                              <span>{formatCurrency(log.churning_details?.sell_transactions?.[0]?.price || 0)}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
-                              <span>{formatCurrency(log.churning_details?.buy_transaction?.price || 0)}</span>
-                            </div>
-                          </div>
-                        ) : (
-                          formatCurrency(log.price)
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {log.action === 'churn' ? (
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
-                              <span className="font-medium">{formatCurrency(log.sell_amount || 0)}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
-                              <span className="font-medium">{formatCurrency(log.buy_amount || 0)}</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="font-medium">{formatCurrency(log.amount)}</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {log.action === 'churn' ? (
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
-                              <span>{formatCurrency(log.churning_details?.sell_transactions?.[0]?.costs?.total_costs || 0)}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
-                              <span>{formatCurrency(log.churning_details?.buy_transaction?.costs?.total_costs || 0)}</span>
-                            </div>
-                          </div>
-                        ) : (
-                          formatCurrency(log.transaction_costs)
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {log.action === 'churn' ? (
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">S</span>
-                              <span>{formatCurrency(log.churning_details?.sell_transactions?.[0]?.capital_gains_tax || 0)}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">B</span>
-                              <span>₹0</span>
-                            </div>
-                          </div>
-                        ) : (
-                          formatCurrency(log.capital_gains_tax)
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <span className="font-semibold">{formatCurrency(log.nav)}</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          
-          {/* Summary Footer */}
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-            <div className="flex justify-between items-center text-sm text-gray-600">
-              <div>
-                <span className="font-medium">Total Transactions:</span> {transactionLog.length}
-              </div>
-              <div>
-                <span className="font-medium">Monday Trades:</span> {(() => {
-                  try {
-                    return transactionLog.filter(log => {
-                      if (!log || typeof log !== 'object') return false;
-                      const dayOfWeek = getDayOfWeek(safeString(log.date));
-                      return dayOfWeek === 'Mon';
-                    }).length;
-                  } catch (error) {
-                    return 0;
-                  }
-                })()}
-              </div>
-              <div>
-                <span className="font-medium">Total Volume:</span> {(() => {
-                  try {
-                    const totalVolume = transactionLog.reduce((sum, log) => {
-                      if (!log || typeof log !== 'object') return sum;
-                      const amount = parseFloat(log.amount || 0);
-                      return sum + (isNaN(amount) ? 0 : amount);
-                    }, 0);
-                    return formatCurrency(totalVolume);
-                  } catch (error) {
-                    return '₹0';
-                  }
-                })()}
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Summary Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+              <div className="flex justify-between items-center text-sm text-gray-600">
+                <div>
+                  <span className="font-medium">Total Transactions:</span> {transactionLog.length}
+                </div>
+                <div>
+                  <span className="font-medium">Monday Trades:</span> {(() => {
+                    try {
+                      return transactionLog.filter(log => {
+                        if (!log || typeof log !== 'object') return false;
+                        const dayOfWeek = getDayOfWeek(safeString(log.date));
+                        return dayOfWeek === 'Mon';
+                      }).length;
+                    } catch (error) {
+                      return 0;
+                    }
+                  })()}
+                </div>
+                <div>
+                  <span className="font-medium">Total Volume:</span> {(() => {
+                    try {
+                      const totalVolume = transactionLog.reduce((sum, log) => {
+                        if (!log || typeof log !== 'object') return sum;
+                        const amount = parseFloat(log.amount || 0);
+                        return sum + (isNaN(amount) ? 0 : amount);
+                      }, 0);
+                      return formatCurrency(totalVolume);
+                    } catch (error) {
+                      return '₹0';
+                    }
+                  })()}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
       );
     } catch (error) {
       console.error('Error rendering transaction log:', error);
@@ -1245,7 +1249,7 @@ function ETFStrategy({ onBack }) {
       // Use custom dates if enabled, otherwise use calculated date range
       let startDate = useCustomDates ? customStartDate : dateRange.start;
       let endDate = useCustomDates ? customEndDate : dateRange.end;
-      
+
       if (!startDate || !endDate) {
         // Fallback to a reasonable date range
         startDate = '2020-01-01';
@@ -1278,20 +1282,20 @@ function ETFStrategy({ onBack }) {
         };
       }
 
-       
-       // Uncomment this line when backend is ready:
-       const response = await axios.post(`${API_BASE_URL}/api/save-strategy`, strategyParams);
-       if(response.data && response.data.success){
+
+      // Uncomment this line when backend is ready:
+      const response = await axios.post(`${API_BASE_URL}/api/save-strategy`, strategyParams);
+      if (response.data && response.data.success) {
         message.success('Strategy saved successfully');
-       }else{
+      } else {
         message.error(response.data.message);
-       }
+      }
 
     } catch (err) {
       console.error('Save strategy error:', err);
       if (err.response && err.response.data) {
         message.error(`Save failed: ${err.response.data.message || JSON.stringify(err.response.data)}`);
-      } else {    
+      } else {
         message.error('Save failed. Please check your connection and try again.');
       }
     } finally {
@@ -1318,26 +1322,26 @@ function ETFStrategy({ onBack }) {
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={transactionCosts}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="date" 
+              <XAxis
+                dataKey="date"
                 tick={{ fontSize: 12 }}
                 angle={-45}
                 textAnchor="end"
                 height={80}
               />
-              <YAxis 
+              <YAxis
                 tick={{ fontSize: 12 }}
                 tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`}
               />
-              <Tooltip 
+              <Tooltip
                 formatter={(value) => [formatCurrency(value), 'Cost']}
                 labelFormatter={(label) => `Date: ${label}`}
               />
               <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="cumulative_cost" 
-                stroke="#d62728" 
+              <Line
+                type="monotone"
+                dataKey="cumulative_cost"
+                stroke="#d62728"
                 strokeWidth={2}
                 dot={false}
                 name="Cumulative Costs"
@@ -1353,6 +1357,27 @@ function ETFStrategy({ onBack }) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-teal-50 flex flex-col">
 
+        {isWebHookModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-[850px] h-[350px] max-h-[90vh] overflow-hidden px-[10px] py-[10px]">
+              {/* WebHook Component */}
+              <WebHook
+                onClose={() => setIsWebHookModalOpen(false)}
+                strategyType={webHookStrategyType}
+                userEmail={user?.email || 'test@test.com'}
+                selectedEtfs={selectedEtfs}
+                strategyParams={{
+                  capitalPerWeek,
+                  accumulationWeeks,
+                  brokeragePercent,
+                  riskFreeRate,
+                  compoundingEnabled
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Main Content */}
         <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
           {/* Back Button */}
@@ -1365,10 +1390,26 @@ function ETFStrategy({ onBack }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to Strategies
-              
+
             </button>
+            {/* Deploy Button */}
+
+
+
             {/* Saved Strategies Dropdown */}
-            <div className="relative saved-strategies-dropdown">
+            <div className="relative saved-strategies-dropdown flex gap-[10px]">
+              <button
+                onClick={() => {
+                  setWebHookStrategyType('ETF Strategy');
+                  setIsWebHookModalOpen(true);
+                }}
+                className="px-4 py-1 rounded-lg flex shadow-md bg-gradient-to-r from-blue-800 to-blue-900 text-white font-semibold items-center justify-center text-[15px] transition-all duration-300 transform hover:scale-105 hover:-translate-y-[3px] hover:from-blue-900 hover:to-blue-950"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                Deploy
+              </button>
               <button
                 onClick={() => {
                   console.log('Saved strategies button clicked'); // Debug log
@@ -1406,7 +1447,7 @@ function ETFStrategy({ onBack }) {
                       </svg>
                     </button>
                   </div>
-                  
+
                   {savedStrategiesLoading ? (
                     <div className="p-4 text-center">
                       <div className="inline-flex items-center text-sm text-gray-500">
@@ -1464,7 +1505,7 @@ function ETFStrategy({ onBack }) {
                       ))}
                     </div>
                   )}
-                  
+
                   <div className="p-3 border-t border-gray-200 bg-gray-50">
                     <button
                       onClick={() => setShowSavedStrategiesDropdown(false)}
@@ -1503,27 +1544,24 @@ function ETFStrategy({ onBack }) {
                   <React.Fragment key={item.step}>
                     <div className="flex flex-col items-center">
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-                          activeSetupStep >= item.step
-                            ? 'bg-teal-600 text-white shadow-lg'
-                            : 'bg-gray-200 text-gray-600'
-                        }`}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${activeSetupStep >= item.step
+                          ? 'bg-teal-600 text-white shadow-lg'
+                          : 'bg-gray-200 text-gray-600'
+                          }`}
                       >
                         {item.icon}
                       </div>
                       <span
-                        className={`text-xs mt-2 font-medium ${
-                          activeSetupStep >= item.step ? 'text-teal-600' : 'text-gray-500'
-                        }`}
+                        className={`text-xs mt-2 font-medium ${activeSetupStep >= item.step ? 'text-teal-600' : 'text-gray-500'
+                          }`}
                       >
                         {item.title}
                       </span>
                     </div>
                     {index < 3 && (
                       <div
-                        className={`flex-1 h-0.5 mx-4 transition-all duration-300 ${
-                          activeSetupStep > item.step ? 'bg-teal-600' : 'bg-gray-200'
-                        }`}
+                        className={`flex-1 h-0.5 mx-4 transition-all duration-300 ${activeSetupStep > item.step ? 'bg-teal-600' : 'bg-gray-200'
+                          }`}
                       />
                     )}
                   </React.Fragment>
@@ -1569,26 +1607,6 @@ function ETFStrategy({ onBack }) {
                         })
                       }}
                     />
-                    
-                    {/* {selectedEtfs.length > 0 && (
-                      <div className="mt-4 p-3 bg-white rounded-lg border border-teal-200">
-                        <p className="text-sm text-teal-700 font-medium">
-                          ✓ {selectedEtfs.length} ETFs selected
-                        </p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {selectedEtfs.slice(0, 3).map((etf) => (
-                            <span key={etf.value} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
-                              {etf.value}
-                            </span>
-                          ))}
-                          {selectedEtfs.length > 3 && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                              +{selectedEtfs.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )} */}
                   </div>
 
                   {/* Date Range Configuration */}
@@ -1600,14 +1618,14 @@ function ETFStrategy({ onBack }) {
                         </div>
                         <h3 className="text-lg font-bold text-gray-900">Date Range</h3>
                       </div>
-                      
+
                       {dateRangeLoading && (
                         <div className="flex items-center text-sm text-teal-600 mb-4">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-teal-600 mr-2"></div>
                           Calculating optimal date range...
                         </div>
                       )}
-                      
+
                       {dateRange.start && dateRange.end && (
                         <div className="space-y-4">
                           <div className="bg-white p-4 rounded-lg border border-green-200">
@@ -1679,7 +1697,7 @@ function ETFStrategy({ onBack }) {
                         </div>
                         <h3 className="text-lg font-bold text-gray-900">Strategy Parameters</h3>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1773,7 +1791,7 @@ function ETFStrategy({ onBack }) {
                       Available ETFs
                     </h3>
                   </div>
- 
+
                   <div className="bg-white rounded-lg border border-gray-200">
                     {/* Scroll area with hidden scrollbar */}
                     <div className="max-h-96 overflow-y-auto scrollbar-hide">
@@ -1791,7 +1809,7 @@ function ETFStrategy({ onBack }) {
                             </th>
                           </tr>
                         </thead>
- 
+
                         <tbody className="bg-white divide-y divide-gray-200">
                           {etfOverview.length === 0 ? (
                             <tr>
@@ -1930,7 +1948,7 @@ function ETFStrategy({ onBack }) {
                 </p>
               </div>
               <div className="flex space-x-4">
-              <button
+                <button
                   onClick={saveStrategyParameters}
                   disabled={saveLoading || selectedEtfs.length === 0}
                   className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-950 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
@@ -2029,11 +2047,10 @@ function ETFStrategy({ onBack }) {
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -2059,29 +2076,29 @@ function ETFStrategy({ onBack }) {
                 className="flex items-center px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"/>
-                  <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"/>
+                  <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                  <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
                 </svg>
                 ETF Performance CSV
               </button>
-              
+
               <button
                 onClick={exportNifty50DataCSV}
                 className="flex items-center px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                  <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                 </svg>
                 Nifty50 Data CSV
               </button>
-              
+
               <button
                 onClick={exportTransactionCostsCSV}
                 className="flex items-center px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-yellow-500"
               >
                 <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd"/>
+                  <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                 </svg>
                 Transaction Costs CSV
               </button>
@@ -2105,6 +2122,10 @@ function ETFStrategy({ onBack }) {
           </div>
         </footer>
       </div>
+
+
+
+
     </div>
   );
 }
