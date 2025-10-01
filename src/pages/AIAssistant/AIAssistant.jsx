@@ -8,6 +8,7 @@ import PromptGenerater from "../../components/PromptGenerater";
 import RatingDisplay from "../../components/RatingDisplay";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
+import { useApi } from "../../context/ApiContext";
 
 const AIAssistant = () => {
   const [input, setInput] = useState("");
@@ -23,6 +24,7 @@ const AIAssistant = () => {
   const typingIntervalRef = useRef(null);
   const textareaRef = useRef(null);
   const { user } = useAuth();
+  const { buildApiUrl } = useApi();
 
   console.log(isPromptGeneraterOpen);
 
@@ -255,7 +257,7 @@ const AIAssistant = () => {
   // Send feedback to API
   const sendFeedback = async (traceId, rating, comment = "") => {
     try {
-      const response = await fetch('http://localhost:8000/api/rate', {
+      const response = await fetch(buildApiUrl('RATE'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -368,7 +370,7 @@ const AIAssistant = () => {
       // Prepare the request payload according to the required format
       const requestPayload = {
         prompt: message,
-        system_prompt: "You are a ChatGPT-style financial expert. FORMAT: Start with 📚 DEFINITION (30 words max), then 💡 KEY POINTS (1 line each), add 🎯 EXAMPLE in 1 lines)",
+        system_prompt: "You are a ChatGPT-style financial expert. FORMAT: Start with 📚 DEFINITION (30 words max), then 💡 KEY POINTS (1 line each) include example only when user say in prompt",
         conversation_id: currentConversationId,
         user_id: user?.email,
         use_template: "",
@@ -380,7 +382,7 @@ const AIAssistant = () => {
         }
       };
 
-      const response = await axios.post('http://localhost:8000/api/chat', requestPayload, {
+      const response = await axios.post(buildApiUrl('CHAT'), requestPayload, {
         headers: {
           'Content-Type': 'application/json',
         },

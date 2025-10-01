@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { FaStar } from 'react-icons/fa';
+import { useApi } from '../context/ApiContext';
 
 const RatingDisplay = ({ rating, traceId, onFeedbackSubmit }) => {
   const [userRating, setUserRating] = useState(null);
   const [feedbackComment, setFeedbackComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const { buildApiUrl } = useApi();
 
   const sendFeedback = async (traceId, rating, comment = "") => {
     try {
-      const response = await fetch('http://localhost:8000/api/rate', {
+      const response = await fetch(buildApiUrl('RATE'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -6,6 +6,7 @@ import Navigation from './Navigation';
 import PromptGenerater from './PromptGenerater';
 import RatingDisplay from './RatingDisplay';
 import { useAuth } from '../context/AuthContext';
+import { useApi } from '../context/ApiContext';
 import axios from 'axios';
 
 const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
@@ -29,6 +30,7 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
   const textareaRef = useRef(null);
   const recognitionRef = useRef(null);
   const { user } = useAuth();
+  const { buildApiUrl } = useApi();
 
   const user_id = user?.email;
 
@@ -164,7 +166,7 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
   const fetchChatHistory = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:8000/api/user-history?user_id=${user_id}&limit=50`);
+      const response = await axios.get(`${buildApiUrl('USER_HISTORY')}?user_id=${user_id}&limit=50`);
       console.log('Chat history response:', response.data);
       
       if (response.data && response.data.success) {
@@ -183,7 +185,7 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
   // Delete chat function
   const deleteChat = async (chatId) => {
     try {
-      const response = await axios.delete(`http://localhost:8000/api/user-prompts/${user.email}/${chatId}`);
+      const response = await axios.delete(`${buildApiUrl('USER_PROMPTS')}/${user.email}/${chatId}`);
       if (response.status === 200) {
         setChatHistory(chatHistory.filter(chat => chat.conversation_id !== chatId));
         console.log('✅ Chat deleted successfully');
@@ -380,7 +382,7 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
   // Send feedback to API
   const sendFeedback = async (traceId, rating, comment = "") => {
     try {
-      const response = await fetch('http://localhost:8000/api/rate', {
+      const response = await fetch(buildApiUrl('RATE'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -432,7 +434,7 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
         }
       };
 
-      const response = await axios.post('http://localhost:8000/api/chat', requestPayload, {
+      const response = await axios.post(buildApiUrl('CHAT'), requestPayload, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -844,13 +846,13 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
               
               <div className="flex flex-col justify-between font-sans">
                 {/* Header */}
-                <div className="relative text-center border p-5 bg-gradient-to-r from-teal-50 to-blue-50 border-b border-teal-200 flex-shrink-0">
-                  <h1 className="text-teal-800 text-3xl font-bold">Chat AI</h1>
-                  <p className="text-teal-600 m-0 text-base font-normal">Hello, What are you working on?</p>
+                <div className="relative text-center border p-4 sm:p-5 bg-gradient-to-r from-teal-50 to-blue-50 border-b border-teal-200 flex-shrink-0">
+                  <h1 className="text-teal-800 text-2xl sm:text-3xl font-bold">Chat AI</h1>
+                  <p className="text-teal-600 m-0 text-sm sm:text-base font-normal">Hello, What are you working on?</p>
                 </div>
 
                 {/* Chat Container */}
-                <div className="flex flex-col flex-1 max-w-3xl mx-auto w-full px-5 h-full">
+                <div className="flex flex-col flex-1 max-w-3xl mx-auto w-full px-3 sm:px-5 h-full">
                   {/* Messages Area */}
                   <div className="flex-1 py-5 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-300px)] messages-area scrollbar-hide">
                     {messages.length === 0 ? (
@@ -987,22 +989,22 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                   </div>
 
                   {/* Input Area */}
-                  <div className="py-5 border-t border-white border-opacity-20 flex-shrink-0">
-                    <div className="flex items-end bg-white bg-opacity-95 rounded-[50px] px-4 border border-teal-300 py-2 shadow-xl backdrop-blur-sm">
+                  <div className="py-3 sm:py-5 border-t border-white border-opacity-20 flex-shrink-0">
+                    <div className="flex items-end bg-white bg-opacity-95 rounded-[50px] px-3 sm:px-4 border border-teal-300 py-2 shadow-xl backdrop-blur-sm">
                       <textarea
                         ref={textareaRef}
                         placeholder="Type or speak something..."
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        className="flex-1 border-none outline-none text-base py-3 px-4 bg-transparent text-gray-800 resize-none font-inherit min-h-[48px] max-h-[120px] overflow-y-auto"
+                        className="flex-1 border-none outline-none text-sm sm:text-base py-2 sm:py-3 px-2 sm:px-4 bg-transparent text-gray-800 resize-none font-inherit min-h-[44px] sm:min-h-[48px] max-h-[120px] overflow-y-auto"
                         disabled={isLoading}
                         rows={1}
                       />
 
                       <button
                         onClick={handleMic}
-                        className={`border-none bg-transparent text-[23px] cursor-pointer mr-2 p-2 mb-[3px] border border-black rounded-full transition-all duration-200 flex items-center justify-center ${listening ? 'opacity-100' : 'opacity-70'}`}
+                        className={`border-none bg-transparent text-lg sm:text-[23px] cursor-pointer mr-1 sm:mr-2 p-1.5 sm:p-2 mb-[3px] border border-black rounded-full transition-all duration-200 flex items-center justify-center ${listening ? 'opacity-100' : 'opacity-70'}`}
                         disabled={isLoading}
                       >
                         <FaMicrophone color={listening ? "#ff4444" : "#666"} />
@@ -1010,14 +1012,14 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
 
                       <button
                         onClick={handleSend}
-                        className={`border-none bg-teal-500 hover:bg-teal-600 text-white rounded-full w-10 h-10 mb-[3px] cursor-pointer flex justify-center items-center transition-all duration-200 shadow-lg shadow-teal-500/30 ${input.trim() ? 'opacity-100' : 'opacity-50'}`}
+                        className={`border-none bg-teal-500 hover:bg-teal-600 text-white rounded-full w-9 h-9 sm:w-10 sm:h-10 mb-[3px] cursor-pointer flex justify-center items-center transition-all duration-200 shadow-lg shadow-teal-500/30 ${input.trim() ? 'opacity-100' : 'opacity-50'}`}
                         disabled={isLoading || !input.trim()}
                       >
                         <FaPaperPlane />
                       </button>
                       <button
                         onClick={() => setIsPromptGeneraterOpen(true)}
-                        className={`border-none ml-2 bg-blue-800 hover:bg-blue-950 text-white rounded-full w-10 h-10 mb-[3px] cursor-pointer flex justify-center items-center transition-all duration-200 shadow-lg shadow-blue-500/30 opacity-100`}
+                        className={`border-none ml-1 sm:ml-2 bg-blue-800 hover:bg-blue-950 text-white rounded-full w-9 h-9 sm:w-10 sm:h-10 mb-[3px] cursor-pointer flex justify-center items-center transition-all duration-200 shadow-lg shadow-blue-500/30 opacity-100`}
                         disabled={isLoading}
                       >
                         <FaMagic className="size-4"/>

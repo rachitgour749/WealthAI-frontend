@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext';
 import { PaymentProvider } from './context/PaymentContext';
+import { ApiProvider } from './context/ApiContext';
+import { SubscriptionProvider } from './context/SubscriptionContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import WealthAI1Home from './components/WealthAI1Home';
 import MarketsAI1Landing from './components/MarketsAI1Landing';
@@ -91,13 +93,17 @@ const App = () => {
 
   return (
     <GoogleOAuthProvider clientId="971009763113-o9e1t4bn1ckmj7pogam984v3p2uah5ee.apps.googleusercontent.com">
-      <AuthProvider>
-        <PaymentProvider>
-          <div className="h-screen bg-white font-montserrat overflow-hidden">
-            {renderPage()}
-          </div>
-        </PaymentProvider>
-      </AuthProvider>
+      <ApiProvider>
+        <AuthProvider>
+          <SubscriptionProvider>
+            <PaymentProvider>
+              <div className="min-h-screen bg-white font-montserrat overflow-x-hidden">
+                {renderPage()}
+              </div>
+            </PaymentProvider>
+          </SubscriptionProvider>
+        </AuthProvider>
+      </ApiProvider>
     </GoogleOAuthProvider>
   );
 };

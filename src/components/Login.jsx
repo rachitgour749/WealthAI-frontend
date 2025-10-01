@@ -18,47 +18,78 @@ const Login = ({ onClose, redirectTo = null, setCurrentPage = null }) => {
     try {
       const decoded = jwtDecode(credentialResponse.credential);
       
-      // Create user object with Google data
-      const userData = {
-        id: decoded.sub,
-        email: decoded.email,
-        name: decoded.name,
-        picture: decoded.picture,
-        token: credentialResponse.credential,
-        loginTime: new Date().toISOString(),
-        provider: 'google'
-      };
+      // Call backend for Google login with subscription integration
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+      
+      const response = await fetch(`${API_BASE_URL}/api/auth/google-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          token: credentialResponse.credential 
+        })
+      });
 
-      // Store user data
-      login(userData);
-      
-      // Close modal and redirect if needed
-      if (onClose) {
-        onClose();
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.detail || 'Login failed');
       }
-      
-      // Redirect to specified page or dashboard
-      if (setCurrentPage) {
-        // Use setCurrentPage for navigation within the app
-        if (redirectTo) {
-          // Extract the page name from redirectTo if it's a path
-          const pageName = redirectTo.replace('/', '');
-          setCurrentPage(pageName);
+
+      if (result.success) {
+        const { user_info, subscription_status, is_new_user, trial_created, message } = result.data;
+        
+        // Create user object with Google data and backend response
+        const userData = {
+          id: decoded.sub,
+          email: user_info.email,
+          name: user_info.name,
+          picture: decoded.picture,
+          token: credentialResponse.credential,
+          loginTime: new Date().toISOString(),
+          provider: 'google'
+        };
+
+        // Store user data with subscription info
+        login(userData, subscription_status);
+        
+        // Show welcome message
+        if (message) {
+          console.log('Welcome message:', message);
+          // You could show a toast notification here
+        }
+        
+        // Close modal and redirect if needed
+        if (onClose) {
+          onClose();
+        }
+        
+        // Redirect to specified page or dashboard
+        if (setCurrentPage) {
+          // Use setCurrentPage for navigation within the app
+          if (redirectTo) {
+            // Extract the page name from redirectTo if it's a path
+            const pageName = redirectTo.replace('/', '');
+            setCurrentPage(pageName);
+          } else {
+            // Default redirect to MarketsAI1App after successful login
+            setCurrentPage('marketsai1-app');
+          }
+        } else if (redirectTo) {
+          // Fallback to window.location if setCurrentPage is not available
+          window.location.href = redirectTo;
         } else {
           // Default redirect to MarketsAI1App after successful login
-          setCurrentPage('marketsai1-app');
+          window.location.href = '/marketsai1-app';
         }
-      } else if (redirectTo) {
-        // Fallback to window.location if setCurrentPage is not available
-        window.location.href = redirectTo;
       } else {
-        // Default redirect to MarketsAI1App after successful login
-        window.location.href = '/marketsai1-app';
+        throw new Error('Backend authentication failed');
       }
       
     } catch (error) {
       console.error('Login error:', error);
-      setError('Login failed. Please try again.');
+      setError(error.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -92,10 +123,10 @@ const Login = ({ onClose, redirectTo = null, setCurrentPage = null }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full p-8 relative transform transition-all duration-300 ease-out">
-        <div className="flex">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full p-4 sm:p-6 lg:p-8 relative transform transition-all duration-300 ease-out max-h-[90vh] overflow-y-auto">
+        <div className="flex flex-col lg:flex-row">
           {/* Left Column - Social Login */}
-          <div className="flex-1 pr-8">
+          <div className="flex-1 pr-0 lg:pr-8 mb-6 lg:mb-0">
             <div className="space-y-4">
               {/* Google Login */}
               <div className="w-full">
@@ -129,8 +160,8 @@ const Login = ({ onClose, redirectTo = null, setCurrentPage = null }) => {
           </div>
 
           {/* Divider */}
-          <div className="flex flex-col items-center justify-center px-4">
-            <div className="w-px h-full bg-gray-300 relative">
+          <div className="flex flex-row lg:flex-col items-center justify-center px-0 lg:px-4 py-4 lg:py-0">
+            <div className="w-full lg:w-px h-px lg:h-full bg-gray-300 relative">
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-gray-500 text-sm font-medium">
                 OR
               </div>
@@ -138,10 +169,10 @@ const Login = ({ onClose, redirectTo = null, setCurrentPage = null }) => {
           </div>
 
           {/* Right Column - Email Login */}
-          <div className="flex-1 pl-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Sign in with your Email</h2>
+          <div className="flex-1 pl-0 lg:pl-8">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Sign in with your Email</h2>
             
-            <form onSubmit={handleEmailLogin} className="space-y-4">
+            <form onSubmit={handleEmailLogin} className="space-y-3 sm:space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address
@@ -152,7 +183,7 @@ const Login = ({ onClose, redirectTo = null, setCurrentPage = null }) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   required
                 />
               </div>
@@ -167,20 +198,20 @@ const Login = ({ onClose, redirectTo = null, setCurrentPage = null }) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   required
                 />
               </div>
 
               {/* reCAPTCHA */}
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                 <input
                   type="checkbox"
                   id="recaptcha"
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   required
                 />
-                <label htmlFor="recaptcha" className="text-sm text-gray-700">
+                <label htmlFor="recaptcha" className="text-xs sm:text-sm text-gray-700">
                   I'm not a robot
                 </label>
                 <div className="flex items-center space-x-1">
@@ -215,7 +246,7 @@ const Login = ({ onClose, redirectTo = null, setCurrentPage = null }) => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gray-200 text-gray-700 py-3 px-4 rounded-lg border border-gray-300 hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50"
+                className="w-full bg-gray-200 text-gray-700 py-2.5 sm:py-3 px-4 rounded-lg border border-gray-300 hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50 text-sm sm:text-base"
               >
                 {isLoading ? 'Signing in...' : 'Sign in'}
               </button>
@@ -232,11 +263,11 @@ const Login = ({ onClose, redirectTo = null, setCurrentPage = null }) => {
 
               {/* Sign Up Option */}
               <div className="text-center">
-                <span className="text-sm text-gray-600">Don't have an account? </span>
+                <span className="text-xs sm:text-sm text-gray-600">Don't have an account? </span>
                 <button
                   type="button"
                   onClick={() => setIsSignUp(!isSignUp)}
-                  className="text-blue-600 hover:underline text-sm"
+                  className="text-blue-600 hover:underline text-xs sm:text-sm"
                 >
                   Sign up now
                 </button>

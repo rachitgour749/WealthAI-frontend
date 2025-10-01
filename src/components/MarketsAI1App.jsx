@@ -23,17 +23,17 @@ const MarketsAI1App = ({ setCurrentPage, currentPage }) => {
           <div className="min-h-full bg-gradient-to-br from-slate-50 to-teal-50 py-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               {/* Header Section */}
-              <div className="text-center mb-12">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              <div className="text-center mb-8 sm:mb-12">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
                   AI-Powered Trading Strategies
                 </h1>
-                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-4">
                   Choose from our suite of advanced algorithmic trading strategies designed for modern markets
                 </p>
               </div>
 
               {/* Strategy Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
                 {[
                   { 
                     id: 'etf-strategy', 

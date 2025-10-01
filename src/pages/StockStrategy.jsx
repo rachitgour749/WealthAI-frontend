@@ -6,9 +6,8 @@ import TradeExecutionTracker from '../components/TradeExecutionTracker';
 import CostsDashboard from '../components/CostsDashboard';
 import WebHook from '../components/WebHook';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useApi } from '../context/ApiContext';
 import { message } from 'antd';
-
-const API_BASE_URL = 'http://127.0.0.1:8000' || 'https://api.wealthai1.in';
 
 // Define Nifty 50 stocks array (stocks only, no ; symbols without ".NS")
 const nifty50Stocks = [
@@ -66,7 +65,8 @@ const nifty50Stocks = [
 function StockStrategy({ onBack }) {
 
   const {user} = useAuth();
-  console.log(user, "++++++++++++++++++++++++++++++++");
+  const { buildApiUrl } = useApi();
+
 
   // Fetch saved strategies on component mount
   useEffect(() => {
@@ -187,7 +187,7 @@ function StockStrategy({ onBack }) {
       const email = user.email;
       console.log('Fetching strategies for user:', email); // Debug log
       
-      const response = await axios.get(`${API_BASE_URL}/api/stocks/get-saved-strategies-list/${encodeURIComponent(email)}`);
+      const response = await axios.get(`${buildApiUrl('STOCKS_GET_SAVED_STRATEGIES_LIST')}/${encodeURIComponent(email)}`);
       console.log('API Response:', response.data); // Debug log
       
       // Ensure we always have an array, handle different response structures
@@ -421,7 +421,7 @@ function StockStrategy({ onBack }) {
   const loadETFs = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/stocks`);
+      const response = await axios.get(buildApiUrl('STOCKS'));
       console.log(response.data);
       if (response.data && response.data.stocks && response.data.stocks.length > 0) {
         const stocksOptions = response.data.stocks.map(stock => ({
@@ -443,7 +443,7 @@ function StockStrategy({ onBack }) {
 
   const loadETFOverview = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/stocks/overview`);
+      const response = await axios.get(buildApiUrl('STOCKS_OVERVIEW'));
       if (response.data && response.data.stock_overview) {
         setEtfOverview(response.data.stock_overview);
       }
@@ -455,7 +455,7 @@ function StockStrategy({ onBack }) {
   const loadTransactionLog = useCallback(async () => {
     try {
       setTransactionLogLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/stocks/transaction-log`);
+      const response = await axios.get(buildApiUrl('STOCKS_TRANSACTION_LOG'));
       if (response.data && response.data.transaction_log) {
         setTransactionLog(response.data.transaction_log);
       }
@@ -471,7 +471,7 @@ function StockStrategy({ onBack }) {
 
   const loadTransactionCosts = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/stocks/transaction-costs`);
+      const response = await axios.get(buildApiUrl('STOCKS_TRANSACTION_COSTS'));
       if (response.data && response.data.transaction_costs) {
         setTransactionCosts(response.data.transaction_costs);
       }
@@ -487,7 +487,7 @@ function StockStrategy({ onBack }) {
       setDateRangeLoading(true);
       setError(''); // Clear previous errors
       
-      const response = await axios.post(`${API_BASE_URL}/api/stocks/date-range`, {
+      const response = await axios.post(buildApiUrl('STOCKS_DATE_RANGE'), {
         tickers: selectedEtfs.map(etf => etf.value)
       });
       
@@ -580,7 +580,7 @@ function StockStrategy({ onBack }) {
         risk_free_rate: parseFloat(riskFreeRate)
       };
 
-      const response = await axios.post(`${API_BASE_URL}/api/stocks/metrics/`, backtestParams);
+      const response = await axios.post(buildApiUrl('STOCKS_METRICS'), backtestParams);
       let backtestData = response.data;
       console.log("backtestParams", backtestParams);
       console.log("backtestData", backtestData);
@@ -589,7 +589,7 @@ function StockStrategy({ onBack }) {
       if (!backtestData.nifty_metrics && !backtestData.nifty50_metrics && !backtestData.benchmark_metrics) {
         try {
           console.log('Nifty50 metrics not found in main response, fetching separately...');
-          const niftyResponse = await axios.post(`${API_BASE_URL}/api/nifty50-metrics`, {
+          const niftyResponse = await axios.post(buildApiUrl('NIFTY50_METRICS'), {
             start_date: startDate,
             end_date: endDate,
             capital_per_week: parseFloat(capitalPerWeek),
@@ -1394,7 +1394,7 @@ function StockStrategy({ onBack }) {
         };
       }
 
-      const response = await axios.post(`${API_BASE_URL}/api/stocks/save-strategy`, strategyParams);
+      const response = await axios.post(buildApiUrl('STOCKS_SAVE_STRATEGY'), strategyParams);
       if(response.data && response.data.success){
         message.success('Strategy saved successfully');
         setSaveSuccess(true);
@@ -1639,17 +1639,17 @@ function StockStrategy({ onBack }) {
             </div>
 
             {/* Configuration Content */}
-            <div className="p-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="p-4 sm:p-6 lg:p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                 {/* Left Column - Inputs */}
                 <div className="space-y-6">
                   {/* ETF Selection */}
-                  <div className="bg-gradient-to-r from-teal-50 to-cyan-50 p-6 rounded-xl border border-teal-200">
+                  <div className="bg-gradient-to-r from-teal-50 to-cyan-50 p-4 sm:p-6 rounded-xl border border-teal-200">
                     <div className="flex items-center mb-4">
                       <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center text-white text-sm mr-3">
                         📈
                       </div>
-                      <h3 className="text-lg font-bold text-gray-900">Stocks Universe Selection</h3>
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900">Stocks Universe Selection</h3>
                     </div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       Choose Stocks for rotation strategy

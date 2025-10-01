@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { useApi } from './ApiContext';
 
 const PaymentContext = createContext();
 
@@ -16,9 +17,10 @@ export const PaymentProvider = ({ children }) => {
   const [paymentAnalytics, setPaymentAnalytics] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { buildApiUrl } = useApi();
 
-  // API base URL - adjust this to match your backend
-  const API_BASE_URL = 'http://localhost:8000/api/payment/api/payment';
+  // API base URL - using the centralized API context
+  const API_BASE_URL = buildApiUrl('PAYMENT');
 
   // Load payment history
   const loadPaymentHistory = async () => {

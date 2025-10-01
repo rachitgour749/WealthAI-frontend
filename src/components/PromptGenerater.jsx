@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useApi } from '../context/ApiContext';
 
 /* -------------------- CONFIG -------------------- */
 /* Toggle to show/hide the API+Model bar in the UI without deleting it from the code */
@@ -116,9 +117,9 @@ const LS_STATE = "prompt_builder_state_v1";
 const LS_KEY_OPTIN = "pb_api_key_optin";
 
 /* ---------- backend helpers ---------- */
-async function saveCustomToBackend(category, value) {
+async function saveCustomToBackend(category, value, apiUrl) {
   try {
-    await fetch("http://localhost:8000/custom", {
+    await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ category, value })
@@ -252,6 +253,7 @@ function TagPicker({ title, hint, options, selected, setSelected, onAddCustom })
 
 /* -------------------- PROMPT BUILDER (the full UI) -------------------- */
 function PromptBuilder({ onClose, onPromptGenerated }) {
+  const { buildApiUrl } = useApi();
   const [roles, setRoles] = useState(DEFAULTS.roles);
   const [objectives, setObjectives] = useState(DEFAULTS.objectives);
   const [constraints, setConstraints] = useState(DEFAULTS.constraints);
@@ -307,7 +309,7 @@ function PromptBuilder({ onClose, onPromptGenerated }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("http://localhost:8000/custom");
+        const res = await fetch(buildApiUrl('CUSTOM'));
         const { custom } = await res.json();
         if (custom?.roles?.length) setRoles(prev => [...new Set([...prev, ...custom.roles])]);
         if (custom?.objectives?.length) setObjectives(prev => [...new Set([...prev, ...custom.objectives])]);
@@ -334,7 +336,7 @@ function PromptBuilder({ onClose, onPromptGenerated }) {
     if (!val) return;
 
     const catMap = { role: "role", objective: "objective", constraint: "constraint", output: "output", audience: "audience", tone: "tone" };
-    if (catMap[type]) saveCustomToBackend(catMap[type], val);
+    if (catMap[type]) saveCustomToBackend(catMap[type], val, buildApiUrl('CUSTOM'));
 
     if (type === "role") { if (!roles.includes(val)) setRoles([...roles, val]); setSelRole([...new Set([...selRole, val])]); }
     if (type === "objective") { if (!objectives.includes(val)) setObjectives([...objectives, val]); setSelObjective([...new Set([...selObjective, val])]); }
@@ -415,19 +417,19 @@ function PromptBuilder({ onClose, onPromptGenerated }) {
       {/* Content Container */}
       <div className="relative z-10">
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-900 rounded-xl flex items-center justify-center">
-            <span className="text-white text-lg font-bold">🧩</span>
+        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-blue-900 rounded-xl flex items-center justify-center">
+            <span className="text-white text-sm sm:text-lg font-bold">🧩</span>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-teal-900">Prompt Builder</h1>
-            <p className="text-sm text-gray-600">Create powerful AI prompts with precision</p>
+            <h1 className="text-lg sm:text-2xl font-bold text-teal-900">Prompt Builder</h1>
+            <p className="text-xs sm:text-sm text-gray-600">Create powerful AI prompts with precision</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2">
           <button 
-            className="bg-red-100 hover:bg-red-200 shadow-lg shadow-red-300/40 font-semibold text-red-700 rounded-lg px-4 py-2 text-sm transition-colors" 
+            className="bg-red-100 hover:bg-red-200 shadow-lg shadow-red-300/40 font-semibold text-red-700 rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm transition-colors" 
             onClick={onReset}
           >
             Reset
@@ -435,7 +437,7 @@ function PromptBuilder({ onClose, onPromptGenerated }) {
           <button
             aria-label="Close"
             onClick={onClose}
-            className="bg-gray-100 hover:bg-gray-200 border  shadow-lg shadow-gray-400/30 text-gray-700 rounded-lg px-3 py-1 text-[18px] font-semibold transition-colors"
+            className="bg-gray-100 hover:bg-gray-200 border shadow-lg shadow-gray-400/30 text-gray-700 rounded-lg px-2 sm:px-3 py-1 text-sm sm:text-[18px] font-semibold transition-colors"
           >
             x
           </button>
@@ -505,7 +507,7 @@ function Modal({ open, onClose, children }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
       {/* Backdrop with blur */}
       <div className="absolute inset-0 bg-black/20 backdrop-blur-[4px]" onClick={onClose} />
 

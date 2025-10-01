@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSubscription } from '../context/SubscriptionContext';
 import Login from './Login';
 
-const ProtectedRoute = ({ children, redirectTo = null, setCurrentPage = null }) => {
+const ProtectedRoute = ({ children, redirectTo = null, setCurrentPage = null, requireSubscription = true }) => {
   const { isAuthenticated, loading } = useAuth();
+  const { hasAccess, needsUpgrade, subscriptionInfo, loading: subscriptionLoading } = useSubscription();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-  if (loading) {
+  if (loading || subscriptionLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
@@ -33,6 +36,59 @@ const ProtectedRoute = ({ children, redirectTo = null, setCurrentPage = null }) 
               </p>
             </div>
             <Login redirectTo={redirectTo} setCurrentPage={setCurrentPage} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check subscription access for premium features
+  if (requireSubscription && !hasAccess) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-lg shadow-xl p-6 text-center">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Subscription Required</h2>
+              <p className="text-gray-600 mb-4">
+                {needsUpgrade ? 
+                  "Your trial has expired. Please upgrade to continue using premium features." :
+                  "This feature requires an active subscription or trial. Please start your free trial or upgrade your plan."
+                }
+              </p>
+              
+              {subscriptionInfo && (
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-700">
+                    Status: <span className="font-semibold capitalize">{subscriptionInfo.status}</span>
+                  </p>
+                  {subscriptionInfo.message && (
+                    <p className="text-sm text-gray-600 mt-1">{subscriptionInfo.message}</p>
+                  )}
+                </div>
+              )}
+              
+              <div className="space-y-3">
+                <button
+                  onClick={() => setCurrentPage && setCurrentPage('payment')}
+                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  {needsUpgrade ? 'Upgrade Now' : 'Start Free Trial'}
+                </button>
+                
+                <button
+                  onClick={() => setCurrentPage && setCurrentPage('home')}
+                  className="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                >
+                  Go Back Home
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -7,13 +7,13 @@ import CostsDashboard from '../components/CostsDashboard';
 import WebHook from '../components/WebHook';
 import { message } from 'antd';
 import { useAuth } from '../context/AuthContext';
-
-const API_BASE_URL = 'http://127.0.0.1:8000' || 'https://api.wealthai1.in';
+import { useApi } from '../context/ApiContext';
 
 
 function ETFStrategy({ onBack }) {
   // Main state
   const [showResults, setShowResults] = useState(false);
+  const { buildApiUrl } = useApi();
   const [etfs, setEtfs] = useState([]);
   const [selectedEtfs, setSelectedEtfs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +94,7 @@ function ETFStrategy({ onBack }) {
       const email = user.email;
       console.log('Fetching strategies for user:', email); // Debug log
 
-      const response = await axios.get(`${API_BASE_URL}/api/get-saved-strategies-list/${encodeURIComponent(email)}`);
+      const response = await axios.get(`${buildApiUrl('GET_SAVED_STRATEGIES_LIST')}/${encodeURIComponent(email)}`);
       console.log('API Response:', response.data); // Debug log
 
       // Ensure we always have an array, handle different response structures
@@ -305,7 +305,7 @@ function ETFStrategy({ onBack }) {
   const loadETFs = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/etfs`);
+      const response = await axios.get(buildApiUrl('ETFS'));
       if (response.data && response.data.etfs && response.data.etfs.length > 0) {
         const etfOptions = response.data.etfs.map(etf => ({
           value: etf.ticker,
@@ -326,7 +326,7 @@ function ETFStrategy({ onBack }) {
 
   const loadETFOverview = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/etfs/overview`);
+      const response = await axios.get(buildApiUrl('ETFS_OVERVIEW'));
       if (response.data && response.data.etf_overview) {
         setEtfOverview(response.data.etf_overview);
       }
@@ -338,7 +338,7 @@ function ETFStrategy({ onBack }) {
   const loadTransactionLog = async () => {
     try {
       setTransactionLogLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/transaction-log`);
+      const response = await axios.get(buildApiUrl('TRANSACTION_LOG'));
       if (response.data && response.data.transaction_log) {
         setTransactionLog(response.data.transaction_log);
       }
@@ -354,7 +354,7 @@ function ETFStrategy({ onBack }) {
 
   const loadTransactionCosts = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/transaction-costs`);
+      const response = await axios.get(buildApiUrl('TRANSACTION_COSTS'));
       if (response.data && response.data.transaction_costs) {
         setTransactionCosts(response.data.transaction_costs);
       }
@@ -370,7 +370,7 @@ function ETFStrategy({ onBack }) {
       setDateRangeLoading(true);
       setError(''); // Clear previous errors
 
-      const response = await axios.post(`${API_BASE_URL}/api/etfs/date-range`, {
+      const response = await axios.post(buildApiUrl('ETFS_DATE_RANGE'), {
         tickers: selectedEtfs.map(etf => etf.value)
       });
 
@@ -477,7 +477,7 @@ function ETFStrategy({ onBack }) {
         risk_free_rate: parseFloat(riskFreeRate)
       };
 
-      const response = await axios.post(`${API_BASE_URL}/api/metrics`, backtestParams);
+      const response = await axios.post(buildApiUrl('METRICS'), backtestParams);
       setBacktestResult(response.data);
       setShowResults(true);
       console.log('Backtest result:', response.data);
@@ -1284,7 +1284,7 @@ function ETFStrategy({ onBack }) {
 
 
       // Uncomment this line when backend is ready:
-      const response = await axios.post(`${API_BASE_URL}/api/save-strategy`, strategyParams);
+      const response = await axios.post(buildApiUrl('SAVE_STRATEGY'), strategyParams);
       if (response.data && response.data.success) {
         message.success('Strategy saved successfully');
       } else {
@@ -1359,7 +1359,7 @@ function ETFStrategy({ onBack }) {
 
         {isWebHookModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-            <div className="relative bg-white rounded-2xl shadow-2xl w-[850px] h-[350px] max-h-[90vh] overflow-hidden px-[10px] py-[10px]">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[350px] max-h-[90vh] overflow-hidden px-[10px] py-[10px]">
               {/* WebHook Component */}
               <WebHook
                 onClose={() => setIsWebHookModalOpen(false)}
@@ -1379,9 +1379,9 @@ function ETFStrategy({ onBack }) {
         )}
 
         {/* Main Content */}
-        <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 w-full">
           {/* Back Button */}
-          <div className="mb-6 flex justify-between">
+          <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between gap-3">
             <button
               onClick={() => onBack?.()}
               className="px-3 py-2 rounded-lg flex shadow-md bg-gray-50 font-semibold items-center justify-center text-[15px] transition-all duration-300 transform hover:scale-105 hover:-translate-y-[4px]"
@@ -1570,17 +1570,17 @@ function ETFStrategy({ onBack }) {
             </div>
 
             {/* Configuration Content */}
-            <div className="p-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="p-4 sm:p-6 lg:p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                 {/* Left Column - Inputs */}
                 <div className="space-y-6">
                   {/* ETF Selection */}
-                  <div className="bg-gradient-to-r from-teal-50 to-cyan-50 p-6 rounded-xl border border-teal-200">
+                  <div className="bg-gradient-to-r from-teal-50 to-cyan-50 p-4 sm:p-6 rounded-xl border border-teal-200">
                     <div className="flex items-center mb-4">
                       <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center text-white text-sm mr-3">
                         📈
                       </div>
-                      <h3 className="text-lg font-bold text-gray-900">ETF Universe Selection</h3>
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900">ETF Universe Selection</h3>
                     </div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       Choose ETFs for rotation strategy

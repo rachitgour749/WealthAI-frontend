@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
-const API_BASE_URL = 'http://127.0.0.1:8000' || 'https://api.wealthai1.in';
+import { useApi } from '../context/ApiContext';
 
 const TradeExecutionTracker = () => {
+  const { buildApiUrl } = useApi();
   const [tradeStatus, setTradeStatus] = useState(null);
   const [skippedTrades, setSkippedTrades] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +19,7 @@ const TradeExecutionTracker = () => {
       setError('');
 
       // Load trade execution status
-      const statusResponse = await axios.get(`${API_BASE_URL}/api/trade-execution-status`);
+      const statusResponse = await axios.get(buildApiUrl('TRADE_EXECUTION_STATUS'));
       console.log('Trade status response:', statusResponse.data);
       
       // Ensure we have valid data
@@ -27,7 +27,7 @@ const TradeExecutionTracker = () => {
       setTradeStatus(statusData);
 
       // Load skipped trades
-      const skippedResponse = await axios.get(`${API_BASE_URL}/api/skipped-trades`);
+      const skippedResponse = await axios.get(buildApiUrl('SKIPPED_TRADES'));
       console.log('Skipped trades response:', skippedResponse.data);
       
       // Ensure we have a valid array

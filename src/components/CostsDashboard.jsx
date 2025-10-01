@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
-const API_BASE_URL = 'http://127.0.0.1:8000' || 'https://api.wealthai1.in';
+import { useApi } from '../context/ApiContext';
 
 const CostsDashboard = () => {
+  const { buildApiUrl } = useApi();
   const [costsSummary, setCostsSummary] = useState(null);
   const [costsAnalysis, setCostsAnalysis] = useState([]);
   const [costsBreakdown, setCostsBreakdown] = useState({});
@@ -23,17 +23,17 @@ const CostsDashboard = () => {
       setError('');
 
       // Load costs summary
-      const summaryResponse = await axios.get(`${API_BASE_URL}/api/costs/summary`);
+      const summaryResponse = await axios.get(buildApiUrl('COSTS_SUMMARY'));
       console.log('CostsDashboard: Summary response:', summaryResponse.data);
       setCostsSummary(summaryResponse.data);
 
       // Load costs analysis for chart
-      const analysisResponse = await axios.get(`${API_BASE_URL}/api/costs/analysis`);
+      const analysisResponse = await axios.get(buildApiUrl('COSTS_ANALYSIS'));
       console.log('CostsDashboard: Analysis response:', analysisResponse.data);
       setCostsAnalysis(analysisResponse.data.costs_data || []);
 
       // Load costs breakdown
-      const breakdownResponse = await axios.get(`${API_BASE_URL}/api/costs/breakdown`);
+      const breakdownResponse = await axios.get(buildApiUrl('COSTS_BREAKDOWN'));
       console.log('CostsDashboard: Breakdown response:', breakdownResponse.data);
       setCostsBreakdown(breakdownResponse.data.breakdown || {});
 

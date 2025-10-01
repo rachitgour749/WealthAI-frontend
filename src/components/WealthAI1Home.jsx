@@ -1,14 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSubscription } from '../context/SubscriptionContext';
 import Navigation from './Navigation';
 import Footer from './Footer';
 import ChatAI1Landing from './ChatAI1Landing';
 import Login from './Login';
+import TrialExpiryModal from './TrialExpiryModal';
 
 const WealthAI1Home = ({ setCurrentPage, currentPage }) => {
   const [isAIPopupOpen, setIsAIPopupOpen] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showTrialModal, setShowTrialModal] = useState(false);
   const { isAuthenticated, loading, user } = useAuth();
+  const { subscriptionInfo, needsUpgrade, daysRemaining } = useSubscription();
+
+  // Show trial expiry modal when needed
+  useEffect(() => {
+    if (isAuthenticated && subscriptionInfo) {
+      const shouldShowModal = needsUpgrade || (daysRemaining <= 3 && daysRemaining > 0);
+      if (shouldShowModal) {
+        // Show modal after a short delay to avoid interrupting the user experience
+        const timer = setTimeout(() => {
+          setShowTrialModal(true);
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isAuthenticated, subscriptionInfo, needsUpgrade, daysRemaining]);
 
   const products = [
     {
@@ -218,7 +236,7 @@ const WealthAI1Home = ({ setCurrentPage, currentPage }) => {
       
       {/* AI Assistant Popup Modal */}
       {isAIPopupOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 lg:p-8">
           {/* Backdrop with blur */}
           <div 
             className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
@@ -230,9 +248,9 @@ const WealthAI1Home = ({ setCurrentPage, currentPage }) => {
             {/* Close Button */}
             <button
               onClick={() => setIsAIPopupOpen(false)}
-              className="absolute top-4 right-4 z-10 w-8 h-8 bg-white bg-opacity-40 hover:bg-opacity-60 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-7 h-7 sm:w-8 sm:h-8 bg-white bg-opacity-40 hover:bg-opacity-60 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -249,6 +267,21 @@ const WealthAI1Home = ({ setCurrentPage, currentPage }) => {
       {showLoginModal && (
         <Login onClose={() => setShowLoginModal(false)} setCurrentPage={setCurrentPage} />
       )}
+
+      {/* Trial Expiry Modal */}
+      <TrialExpiryModal
+        isOpen={showTrialModal}
+        onClose={() => setShowTrialModal(false)}
+        subscriptionInfo={subscriptionInfo}
+        onUpgrade={() => {
+          setShowTrialModal(false);
+          setCurrentPage('payment');
+        }}
+        onContinueTrial={() => {
+          setShowTrialModal(false);
+          // Could implement trial extension logic here
+        }}
+      />
       
       <Footer setCurrentPage={setCurrentPage} />
     </div>

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { FaTimes, FaUser, FaHistory, FaTrash } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { useApi } from '../context/ApiContext';
 import { HiOutlinePencilAlt } from 'react-icons/hi';
 import axios from 'axios';
 const ChatSidebar = ({ isOpen, onToggle, onNewChat, onSelectChat, currentConversationId, onChatSelected }) => {
     const { user } = useAuth();
+    const { buildApiUrl } = useApi();
     const [chatHistory, setChatHistory] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -14,7 +16,7 @@ const ChatSidebar = ({ isOpen, onToggle, onNewChat, onSelectChat, currentConvers
     const DeleteChat = async (chatId) => {
         try {
             // Use the correct delete endpoint format
-            const response = await axios.delete(`http://localhost:8000/api/user-prompts/${user.email}/${chatId}`);
+            const response = await axios.delete(`${buildApiUrl('USER_PROMPTS')}/${user.email}/${chatId}`);
             if(response.status === 200){
                 setChatHistory(chatHistory.filter(chat => chat.id !== chatId));
                 console.log('✅ Chat deleted successfully');
