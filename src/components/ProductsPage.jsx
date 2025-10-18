@@ -2,7 +2,7 @@ import React from 'react';
 import Navigation from './Navigation';
 import Footer from './Footer';
 
-const ProductsPage = ({ setCurrentPage, currentPage }) => {
+const ProductsPage = ({ setCurrentPage, currentPage, hideHeaderFooter = false }) => {
   const products = [
     {
       id: 'marketsai1',
@@ -55,11 +55,11 @@ const ProductsPage = ({ setCurrentPage, currentPage }) => {
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />
+    <div className={hideHeaderFooter ? "h-full flex flex-col" : "h-screen flex flex-col overflow-hidden"}>
+      {!hideHeaderFooter && <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />}
       
       {/* Main Content - Scrollable with padding for header and footer */}
-      <div className="flex-1 bg-gray-50 pt-16 pb-12 sm:pb-16 overflow-y-auto">
+      <div className={hideHeaderFooter ? "flex-1 bg-gray-50 py-6" : "flex-1 bg-gray-50 pt-16 pb-12 sm:pb-16 overflow-y-auto"}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="text-center mb-4 sm:mb-6">
             <h1 className="text-2xl sm:text-3xl font-bold text-blue-900 mb-2 sm:mb-3">Our Product Ecosystem</h1>
@@ -120,7 +120,7 @@ const ProductsPage = ({ setCurrentPage, currentPage }) => {
         </div>
       </div>
       
-      <Footer setCurrentPage={setCurrentPage} />
+      {!hideHeaderFooter && <Footer setCurrentPage={setCurrentPage} />}
     </div>
   );
 };

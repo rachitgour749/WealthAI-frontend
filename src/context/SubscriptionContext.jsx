@@ -202,15 +202,15 @@ export const SubscriptionProvider = ({ children }) => {
   }, [isAuthenticated, user?.token]);
 
   // Effect to periodically refresh subscription status (every 5 minutes)
-  useEffect(() => {
-    if (!isAuthenticated || !user?.token) return;
+  // useEffect(() => {
+  //   if (!isAuthenticated || !user?.token) return;
 
-    const interval = setInterval(() => {
-      fetchSubscriptionStatus();
-    }, 5 * 60 * 1000); // 5 minutes
+  //   const interval = setInterval(() => {
+  //     fetchSubscriptionStatus();
+  //   }, 60 * 60 * 1000); // 5 minutes
 
-    return () => clearInterval(interval);
-  }, [isAuthenticated, user?.token]);
+  //   return () => clearInterval(interval);
+  // }, [isAuthenticated, user?.token]);
 
   const value = {
     // State

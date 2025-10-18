@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Navigation from './Navigation';
 import Footer from './Footer';
 
-const ServicesPage = ({ setCurrentPage, currentPage }) => {
+const ServicesPage = ({ setCurrentPage, currentPage, hideHeaderFooter = false }) => {
   const [formData, setFormData] = useState({
     requirement: '',
     email: '',
@@ -82,11 +82,11 @@ const ServicesPage = ({ setCurrentPage, currentPage }) => {
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />
+    <div className={hideHeaderFooter ? "h-full flex flex-col" : "h-screen flex flex-col overflow-hidden"}>
+      {!hideHeaderFooter && <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />}
       
       {/* Main Content - Scrollable with padding for header and footer */}
-      <div className="flex-1 bg-gray-50 pt-16 pb-12 sm:pb-16 overflow-y-auto">
+      <div className={hideHeaderFooter ? "flex-1 bg-gray-50 py-6" : "flex-1 bg-gray-50 pt-16 pb-12 sm:pb-16 overflow-y-auto"}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div className="text-center mb-8 sm:mb-12">
             <h1 className="text-3xl sm:text-4xl font-bold text-blue-900 mb-4 sm:mb-6">Custom Development & Services</h1>
@@ -198,7 +198,7 @@ const ServicesPage = ({ setCurrentPage, currentPage }) => {
         </div>
       </div>
       
-      <Footer setCurrentPage={setCurrentPage} />
+      {!hideHeaderFooter && <Footer setCurrentPage={setCurrentPage} />}
     </div>
   );
 };

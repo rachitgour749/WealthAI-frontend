@@ -18,7 +18,7 @@ import {
   FaCheckCircle
 } from 'react-icons/fa';
 
-const PaymentPage = ({ setCurrentPage, currentPage }) => {
+const PaymentPage = ({ setCurrentPage, currentPage, hideHeaderFooter = false }) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('payment');
   const [tabKey, setTabKey] = useState(0);
@@ -86,9 +86,9 @@ const PaymentPage = ({ setCurrentPage, currentPage }) => {
         </div>
       </div>
 
-      <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />
+      {!hideHeaderFooter && <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />}
       
-      <div className="relative pt-16 pb-4 px-3 sm:px-4 lg:px-6 xl:px-8">
+      <div className={hideHeaderFooter ? "relative py-4 px-3 sm:px-4 lg:px-6 xl:px-8" : "relative pt-16 pb-4 px-3 sm:px-4 lg:px-6 xl:px-8"}>
         <div className="max-w-6xl mx-auto mt-[25px]">
           {/* Compact Hero Section */}
           <div className="text-center mb-4">

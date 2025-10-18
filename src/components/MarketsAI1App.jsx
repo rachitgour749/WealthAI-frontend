@@ -2,78 +2,151 @@ import React, { useState } from 'react';
 import ETFStrategy from '../pages/ETFStrategy';
 import StockStrategy from '../pages/StockStrategy';
 import Navigation from './Navigation';
+import RSStrategy from '../pages/RSStrategy';
+import MarketsAI1Logo from '../Assets/MarketAI1Logo.png';
+import MarketsAI from '../Assets/MarketsAI.png';
 
-const MarketsAI1App = ({ setCurrentPage, currentPage }) => {
+import Heading from '../Assets/Heading.png';
+
+const MarketsAI1App = ({ setCurrentPage, currentPage, hideHeaderFooter = false }) => {
   const [activeSection, setActiveSection] = useState('default');
+  const [selectedFilters, setSelectedFilters] = useState([]);
+  const [showMode, setShowMode] = useState('live'); // 'live' or 'all'
 
   const handleLogout = () => {
     setCurrentPage('marketsai1');
   };
 
+  const handleFilterToggle = (filter) => {
+    setSelectedFilters(prev => 
+      prev.includes(filter) 
+        ? prev.filter(f => f !== filter)
+        : [...prev, filter]
+    );
+  };
+
   return (
-    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+    <div className={hideHeaderFooter ? "h-full bg-gray-50 flex flex-col" : "h-screen bg-gray-50 flex flex-col overflow-hidden"}>
       {/* Navigation */}
-      <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />
-
-
+      {!hideHeaderFooter && <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />}
 
       {/* Main Content Area - Now properly sized and scrollable */}
-      <div className="flex-1 overflow-auto pt-16 lg:pt-20">
+      <div className={hideHeaderFooter ? "flex-1 overflow-auto" : "flex-1 overflow-auto pt-16 lg:pt-20"}>
         {activeSection === "default" ? (
-          <div className="min-h-full bg-gradient-to-br from-slate-50 to-teal-50 py-12">
+          <div className="min-h-full py-12 bg-teal-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               {/* Header Section */}
-              <div className="text-center mb-8 sm:mb-12">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-                  AI-Powered Trading Strategies
-                </h1>
-                <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-4">
-                  Choose from our suite of advanced algorithmic trading strategies designed for modern markets
-                </p>
+              <div className='flex justify-center relative items-center h-[100px] mb-[10px] mt-[-30px]'>
+                <img src={MarketsAI1Logo} alt="" className="w-[150px] h-[90px] mb-[30px] absolute top-[0px] left-[10px]" />
+              <div className="flex justify-center flex-col items-center">
+               <img src={MarketsAI} alt="" className="w-[240px] h-[30px] mb-[30px] mt-[25px]" />
+                <h1 className="text-2xl sm:text-3xl lg:text-[15px] font-bold text-teal-700 mb-3 sm:mb-4 mt-[-35px]">
+                  Powered by Wealth<span style={{ color: '#ca8a04', fontFamily: 'Noto Sans Arabic' }} >AI1</span>
+                  {/* <img src={Heading} alt="" className="w-[100px] h-[50px] mb-[30px] mt-[25px]" /> */}
+                  </h1>
+                </div>
+              </div>
+
+              {/* Filter Section */}
+              <div className="mb-6 p-1">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                  {/* Filter Options */}
+                  <div className="flex-1">
+                    <div className="flex flex-wrap gap-3">
+                      {['Mean Reversion', 'Low Volatility', 'Trend Following', 'Momentum'].map(filter => (
+                        <button
+                          key={filter} 
+                          onClick={() => handleFilterToggle(filter)}
+                          className={`px-[5px] py-[2px] rounded-md font-medium border-gray-200 text-xs transition-all duration-300 flex flex-col items-center justify-center backdrop-blur-sm border bg-gray-100
+                            ${selectedFilters.includes(filter)
+                              ? 'bg-teal-500/90 text-white shadow-lg shadow-teal-500/30 border-teal-400/50 scale-105'
+                              : 'bg-white text-gray-700 shadow-lg shadow-gray-200 hover:bg-white/80 hover:shadow-lg hover:shadow-gray-300'
+                          }`}
+                        >
+                          <div className="text-lg mb-1">
+                            {filter === 'Mean Reversion'}
+                            {filter === 'Low Volatility'}
+                            {filter === 'Trend Following'}
+                            {filter === 'Momentum'}
+                          </div>
+                          <span className="text-[10px] leading-tight text-center mb-[3px] mx-[3px]">
+                            {filter.split(' ')[0]}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Toggle Button */}
+                  <div className="flex flex-col items-center lg:items-end">
+                    <div className="relative inline-flex items-center bg-gray-200 rounded-full p-0.5 shadow-inner">
+                      <button
+                        onClick={() => setShowMode('live')}
+                        className={`px-3 py-[3px] rounded-full font-medium text-[14px] transition-all duration-400 transform
+                          ${showMode === 'live'
+                            ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-[0_3px_0_0_rgba(22,163,74,0.4)] translate-y-[-1px]'
+                            : 'text-gray-600 hover:text-gray-800'
+                        }`}
+                      >
+                        Live
+                      </button>
+                      <button
+                        onClick={() => setShowMode('all')}
+                        className={`px-3 py-[3px] rounded-full font-medium text-[14px] transition-all duration-400 transform
+                          ${showMode === 'all'
+                            ? 'bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-[0_3px_0_0_rgba(13,148,136,0.4)] translate-y-[-1px]'
+                            : 'text-gray-600 hover:text-gray-800'
+                        }`}
+                      >
+                        All
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Strategy Cards Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
                 {[
-                  { 
-                    id: 'etf-strategy', 
+                  {
+                    id: 'etf-strategy',
                     name: 'ETF Rotation Strategy',
-                    description: 'Momentum-based ETFs rotation with comprehensive analysis',
-                    icon: '📊',
+                    description: 'Mean Reversion and Low Volatility ETFs rotation with comprehensive analysis',
                     gradient: 'from-emerald-400 via-teal-500 to-cyan-600',
                     borderColor: 'border-emerald-400',
                     available: true,
-                    category: 'Active'
+                    category: 'Active',
+                    tags: ['Momentum']
                   },
-                  { 
-                    id: 'stock-strategy', 
+                  {
+                    id: 'stock-strategy',
                     name: 'Stock Rotation Strategy',
-                    description: 'Momentum-based Stock rotation with comprehensive analysis',
-                    icon: '💹',
+                    description: 'Mean Reversion and Low Volatility Stocks rotation with comprehensive analysis',
                     gradient: 'from-orange-200 to-orange-300',
                     borderColor: 'border-orange-200',
                     available: true,
-                    category: 'Active'
+                    category: 'Active',
+                    tags: ['Momentum']
                   },
-                  { 
-                    id: 'ai-momentum', 
-                    name: 'AI Momentum Alpha',
-                    description: 'Machine learning powered momentum detection system',
-                    icon: '🤖',
+                  {
+                    id: 'RS-strategy',
+                    name: 'RS Momentum Strategy',
+                    description: 'Momentum-based Trend Following System for RS',
                     gradient: 'from-blue-200 to-blue-300',
                     borderColor: 'border-blue-200',
-                    available: false,
-                    category: 'AI-Driven'
+                    available: true,
+                    category: 'Active',
+                    tags: ['Momentum']
                   },
-                  { 
-                    id: 'smart-sector', 
-                    name: 'Smart Sector Rotation',
-                    description: 'Intelligent sector allocation using economic indicators',
-                    icon: '🔄',
+                  {
+                    id: 'SuperTrend Strategy',
+                    name: 'SuperTrend Strategy',
+                    description: 'Momentum-based Trend Following System using SuperTrend indicator',
                     gradient: 'from-purple-200 to-purple-300',
                     borderColor: 'border-purple-200',
-                    available: false,
-                    category: 'Rotation'
+                    available: true,
+                    category: 'Rotation',
+                    tags: ['Momentum', 'Trend Following']
                   },
                   // { 
                   //   id: 'neural-swing', 
@@ -85,67 +158,79 @@ const MarketsAI1App = ({ setCurrentPage, currentPage }) => {
                   //   available: false,
                   //   category: 'AI-Driven'
                   // },
-                  { 
-                    id: 'quantum-mean', 
+                  {
+                    id: 'quantum-mean',
                     name: 'Quantum Mean Reversion',
                     description: 'Advanced statistical arbitrage using quantum algorithms',
-                    icon: '⚛️',
                     gradient: 'from-cyan-200 to-cyan-300',
                     borderColor: 'border-cyan-200',
                     available: false,
-                    category: 'Quantitative'
+                    category: 'Quantitative',
+                    tags: ['Mean Reversion']
                   },
-                  { 
-                    id: 'adaptive-trend', 
+                  {
+                    id: 'adaptive-trend',
                     name: 'Adaptive Trend Following',
                     description: 'Self-adjusting trend identification with ML optimization',
-                    icon: '📈',
                     gradient: 'from-emerald-200 to-emerald-300',
                     borderColor: 'border-emerald-200',
                     available: false,
-                    category: 'Trend'
+                    category: 'Trend',
+                    tags: ['Trend Following', 'Momentum']
                   },
-                  { 
-                    id: 'ml-breakouts', 
+                  {
+                    id: 'ml-breakouts',
                     name: 'ML Breakout Detection',
                     description: 'Machine learning powered breakout pattern recognition',
-                    icon: '🚀',
                     gradient: 'from-amber-200 to-amber-300',
                     borderColor: 'border-amber-200',
                     available: false,
-                    category: 'Pattern'
+                    category: 'Pattern',
+                    tags: ['Momentum']
                   },
-                  { 
-                    id: 'dynamic-risk', 
+                  {
+                    id: 'dynamic-risk',
                     name: 'Dynamic Risk Parity',
                     description: 'Real-time risk allocation using volatility forecasting',
-                    icon: '⚖️',
                     gradient: 'from-indigo-200 to-indigo-300',
                     borderColor: 'border-indigo-200',
                     available: false,
-                    category: 'Risk'
+                    category: 'Risk',
+                    tags: ['Low Volatility']
                   },
-                  { 
-                    id: 'algo-pairs', 
+                  {
+                    id: 'algo-pairs',
                     name: 'Algorithmic Pairs Trading',
                     description: 'Statistical arbitrage with cointegration analysis',
-                    icon: '🔗',
                     gradient: 'from-rose-200 to-rose-300',
                     borderColor: 'border-rose-200',
                     available: false,
-                    category: 'Arbitrage'
+                    category: 'Arbitrage',
+                    tags: ['Mean Reversion']
                   },
-                  { 
-                    id: 'dl-volatility', 
+                  {
+                    id: 'dl-volatility',
                     name: 'Deep Learning Volatility',
                     description: 'Neural networks for volatility trading and hedging',
-                    icon: '⚡',
                     gradient: 'from-violet-200 to-violet-300',
                     borderColor: 'border-violet-200',
                     available: false,
-                    category: 'Volatility'
+                    category: 'Volatility',
+                    tags: ['Low Volatility', 'Mean Reversion']
                   }
-                ].map((strategy) => (
+                ].filter(strategy => {
+                  // Filter by showMode (Live/All)
+                  if (showMode === 'live' && !strategy.available) {
+                    return false;
+                  }
+                  
+                  // Filter by selected tags
+                  if (selectedFilters.length > 0) {
+                    return selectedFilters.some(filter => strategy.tags.includes(filter));
+                  }
+                  
+                  return true;
+                }).map((strategy) => (
                   <div
                     key={strategy.id}
                     className={`group relative ${strategy.available ? 'cursor-pointer' : 'cursor-not-allowed'}`}
@@ -153,19 +238,23 @@ const MarketsAI1App = ({ setCurrentPage, currentPage }) => {
                   >
                     {/* Card */}
                     <div className={`
-                      relative bg-white rounded-xl shadow-md border-2 ${strategy.borderColor} overflow-hidden h-64
+                      relative rounded-xl shadow-md border-2 overflow-hidden h-32
                       transition-all duration-300 ease-out
-                      ${strategy.available 
-                        ? 'hover:shadow-xl hover:-translate-y-1 hover:scale-105 ring-2 ring-emerald-200 ring-opacity-50 shadow-emerald-100' 
-                        : 'opacity-80'
+                      ${strategy.available
+                        ? 'bg-white hover:shadow-xl hover:-translate-y-1 hover:scale-105 ring-2 ring-emerald-200 ring-opacity-50 shadow-emerald-100 ' + strategy.borderColor
+                        : showMode === 'all' 
+                          ? 'bg-gray-100 border-gray-300 opacity-60'
+                          : 'bg-white opacity-80 ' + strategy.borderColor
                       }
                       transform-gpu
                     `}>
-                      
+
                       {/* Coming Soon Badge */}
                       {!strategy.available && (
                         <div className="absolute top-2 right-2 z-10">
-                          <span className="text-xs font-medium text-blue-600 italic bg-white bg-opacity-90 px-2 py-1 rounded-md shadow-sm">
+                          <span className={`text-xs font-medium italic bg-white bg-opacity-90 px-2 py-1 rounded-md shadow-sm ${
+                            showMode === 'all' ? 'text-gray-500' : 'text-blue-600'
+                          }`}>
                             Coming Soon!
                           </span>
                         </div>
@@ -175,8 +264,7 @@ const MarketsAI1App = ({ setCurrentPage, currentPage }) => {
                       {strategy.available && (
                         <div className="absolute top-2 left-2 z-10">
                           <div className="flex items-center">
-                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-1"></div>
-                            <span className="text-xs font-medium text-green-600 bg-white bg-opacity-90 px-2 py-1 rounded-md shadow-sm">
+                            <span className="text-[10px] font-medium text-green-600 bg-white bg-opacity-90 px-2 py-0.5 rounded-[5px] shadow-sm">
                               LIVE
                             </span>
                           </div>
@@ -186,66 +274,49 @@ const MarketsAI1App = ({ setCurrentPage, currentPage }) => {
                       {/* Category Badge - only for non-available strategies */}
                       {!strategy.available && (
                         <div className="absolute top-3 left-3 z-10">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-90 text-gray-700 border">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-90 border ${
+                            showMode === 'all' ? 'text-gray-500 border-gray-400' : 'text-gray-700 border-gray-300'
+                          }`}>
                             {strategy.category}
                           </span>
                         </div>
                       )}
 
                       {/* Header */}
-                      <div className={`h-20 bg-gradient-to-br ${strategy.gradient} relative overflow-hidden ${
-                        strategy.available ? 'shadow-lg' : ''
-                      }`}>
-                        {/* Icon */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className={`w-12 h-12 bg-white bg-opacity-90 rounded-lg flex items-center justify-center text-2xl backdrop-blur-sm border border-white border-opacity-50 shadow-lg ${
-                            strategy.available ? 'transform group-hover:scale-110 transition-transform duration-300' : ''
-                          }`}>
-                            {strategy.icon}
-                          </div>
-                        </div>
+                      <div className={`h-10 relative overflow-hidden ${
+                        strategy.available 
+                          ? `bg-gradient-to-br ${strategy.gradient} shadow-lg`
+                          : showMode === 'all'
+                            ? 'bg-gradient-to-br from-gray-200 to-gray-300'
+                            : `bg-gradient-to-br ${strategy.gradient}`
+                        }`}>
                       </div>
+
+                      
+                      
 
                       {/* Content */}
                       <div className="p-4 text-center">
-                        <h3 className={`text-base font-bold mb-2 transition-colors leading-tight text-center ${
-                          strategy.available 
-                            ? 'text-emerald-700 group-hover:text-emerald-800' 
-                            : 'text-gray-700 group-hover:text-gray-800'
+                        <p className={`text-[12px] leading-relaxed mb-4 line-clamp-3 text-center ${
+                          strategy.available
+                            ? 'text-gray-600'
+                            : showMode === 'all'
+                              ? 'text-gray-400'
+                              : 'text-gray-600'
                         }`}>
-                          {strategy.name}
-                        </h3>
-                        <p className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-3 text-center">
+                          <h1 className='text-[12px] font-bold text-center leading-tight'>{strategy.name}</h1>
                           {strategy.description}
                         </p>
-
-                        {/* Status Indicator */}
-                        <div className="flex items-center justify-center space-x-2">
-                          <div className={`w-2 h-2 rounded-full ${
-                            strategy.available ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'
-                          }`}></div>
-                          <span className={`text-xs ${
-                            strategy.available ? 'text-emerald-600 font-semibold' : 'text-gray-600'
-                          }`}>
-                            {strategy.available ? 'Available' : 'In Development'}
-                          </span>
-                          
-                          {strategy.available && (
-                            <div className="text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-2">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
                       </div>
 
                       {/* Subtle Hover Effect */}
                       <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none ${
-                        strategy.available 
-                          ? 'bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600' 
-                          : `bg-gradient-to-br ${strategy.gradient}`
-                      }`}></div>
+                        strategy.available
+                          ? 'bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600'
+                          : showMode === 'all'
+                            ? 'bg-gradient-to-br from-gray-300 to-gray-400'
+                            : `bg-gradient-to-br ${strategy.gradient}`
+                        }`}></div>
                     </div>
                   </div>
                 ))}
@@ -273,6 +344,9 @@ const MarketsAI1App = ({ setCurrentPage, currentPage }) => {
             )}
             {activeSection === 'stock-strategy' && (
               <StockStrategy onBack={() => setActiveSection("default")} />
+            )}
+            {activeSection === 'RS-strategy' && (
+              <RSStrategy onBack={() => setActiveSection("default")} />
             )}
           </div>
         )}

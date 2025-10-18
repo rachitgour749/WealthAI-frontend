@@ -72,7 +72,7 @@ const ChatSidebar = ({ isOpen, onToggle, onNewChat, onSelectChat, currentConvers
             />
 
             {/* Sidebar */}
-            <div className={`bg-teal-50 fixed left-0 top-0 h-full border-r border-gray-200 shadow-lg z-40 transition-all duration-300 ease-in-out transform ${isOpen ? 'translate-x-0' : '-translate-x-full'
+            <div className={`bg-gradient-to-br from-teal-50 via-blue-50 to-gray-50 fixed left-0 top-0 h-full border-r border-gray-200 shadow-lg z-40 transition-all duration-300 ease-in-out transform ${isOpen ? 'translate-x-0' : '-translate-x-full'
                 } w-80 lg:w-72`} style={{ marginTop: '79px', height: 'calc(100vh - 79px)' }}>
 
                 {/* Header */}

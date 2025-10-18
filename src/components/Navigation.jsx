@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import UserAvatar from './UserAvatar';
 import Login from './Login';
+import logo1 from '../Assets/Logo1.png';
+import heading from '../Assets/Heading.png'
 
 const Navigation = ({ setCurrentPage, currentPage, transparent = false, showLoginModal, setShowLoginModal }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -90,34 +92,48 @@ const Navigation = ({ setCurrentPage, currentPage, transparent = false, showLogi
   console.log('pageTitle', pageTitle);
 
   return (
-    <nav className={`fixed w-full top-0 z-50 transition-all duration-300 ${navBg} border-b border-gray-200`}>
+    <nav className={`fixed w-full top-0 z-50 transition-all duration-300 ${navBg} border-b-2 border-gray-300 shadow-lg`}>
+      {/* Centered site headline (pointer-events-none so it doesn't block nav clicks) */}
+      <div className="absolute inset-x-0 top-0 h-16 lg:h-20 flex items-center justify-center pointer-events-none">
+        <h1 className="text-sm sm:text-lg lg:text-xl font-bold text-blue-900 text-center">
+           {/* <p className='text-5xl font-[800] text-blue-900 mt-[10px] mb-[-8px]'>WEALTH <span className='text-[#ca8a04] ml-[-10px]'>AI1</span></p> */}
+           <img src={heading} alt="WealthAI1" className="w-[270px] h-[45px] mt-[15px]" />
+          <span className="block text-[12px] text-teal-700 mt-[-5px]">AI-Powered Technology for Smarter Markets</span>
+        </h1>
+      </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 lg:h-20">
           {/* Left Side - Brand and Title */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center  space-x-4">
             {/* Mobile Brand */}
             <div className="lg:hidden">
-              <h1 className="font-bold text-lg text-blue-900 hover:opacity-80 transition-opacity cursor-pointer"
+              <div className="flex items-center space-x-2 cursor-pointer"
                 onClick={() => handleNavigation('home')}
               >
-                WealthAI1
-              </h1>
+                <img src={logo1} alt="WealthAI1" className="w-8 h-9 object-contain" />
+                <h1 className="font-bold text-lg text-blue-900 hover:opacity-80 transition-opacity">
+                  WealthAI1
+                </h1>
+              </div>
             </div>
             
             {/* Desktop Page Title */}
-            <div className="hidden lg:block">
-              <h1 className="font-bold text-xl lg:text-2xl text-blue-900 hover:opacity-80 transition-opacity cursor-pointer"
+            <div className="hidden lg:block border-1 border-gray-200">
+              <div className="flex items-center cursor-pointer "
                 onClick={() => handleNavigation('home')}
               >
-                {pageTitle}
-              </h1>
+                <img src={logo1} alt="WealthAI1" className="w-[100px] h-[70px]" />
+                {/* <h1 className="font-bold text-xl ml-[-40px] lg:text-2xl text-blue-900 hover:opacity-80 transition-opacity mt-9 border-1 ">
+                  {pageTitle}
+                </h1> */}
+              </div>
             </div>
           </div>
 
           {/* Right Side - Navigation and User Controls */}
           <div className="flex items-center space-x-2 lg:space-x-4">
             {/* Desktop Navigation Links */}
-            <div className="hidden lg:flex items-center space-x-6">
+            {/* <div className="hidden lg:flex items-center space-x-6">
               <button 
                 onClick={() => handleNavigation('home')} 
                 className="text-gray-600 hover:text-blue-900 transition-colors font-medium text-sm"
@@ -142,7 +158,7 @@ const Navigation = ({ setCurrentPage, currentPage, transparent = false, showLogi
               >
                 Contact
               </button>
-            </div>
+            </div> */}
 
             {/* Desktop Compact Navigation Bar */}
             <div className="hidden lg:flex items-center bg-gradient-to-r from-slate-100 via-gray-50 to-slate-100 rounded-xl p-1 space-x-1 shadow-lg border border-gray-200/50 backdrop-blur-sm">
@@ -239,18 +255,11 @@ const Navigation = ({ setCurrentPage, currentPage, transparent = false, showLogi
               </div>
             )}
 
-            {/* User Avatar */}
-            {isAuthenticated ? (
+            {/* User Avatar - Only show when authenticated */}
+            {isAuthenticated && (
               <div className="flex items-center">
                 <UserAvatar setCurrentPage={setCurrentPage} />
               </div>
-            ) : (
-              <button 
-                onClick={() => setShowLoginModal && setShowLoginModal(true)}
-                className="bg-blue-900 text-white px-3 py-2 lg:px-4 rounded-lg font-semibold hover:bg-blue-800 transition-colors text-sm"
-              >
-                Sign In
-              </button>
             )}
 
             {/* Mobile Menu Button */}
@@ -368,21 +377,14 @@ const Navigation = ({ setCurrentPage, currentPage, transparent = false, showLogi
               </div>
             </div>
 
-            {/* User Section for Mobile */}
-            <div className="px-4 py-4 border-t border-gray-100 bg-gray-50">
-              {isAuthenticated ? (
+            {/* User Section for Mobile - Only show when authenticated */}
+            {isAuthenticated && (
+              <div className="px-4 py-4 border-t border-gray-100 bg-gray-50">
                 <div className="flex items-center justify-center py-2">
                   <UserAvatar setCurrentPage={setCurrentPage} />
                 </div>
-              ) : (
-                <button 
-                  onClick={() => {setShowLoginModal && setShowLoginModal(true); setIsOpen(false);}}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 text-center text-sm shadow-lg"
-                >
-                  🔐 Sign In
-                </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>

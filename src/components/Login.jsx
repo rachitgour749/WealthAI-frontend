@@ -66,23 +66,23 @@ const Login = ({ onClose, redirectTo = null, setCurrentPage = null }) => {
         }
         
         // Redirect to specified page or dashboard
-        if (setCurrentPage) {
-          // Use setCurrentPage for navigation within the app
-          if (redirectTo) {
-            // Extract the page name from redirectTo if it's a path
-            const pageName = redirectTo.replace('/', '');
-            setCurrentPage(pageName);
-          } else {
-            // Default redirect to MarketsAI1App after successful login
-            setCurrentPage('marketsai1-app');
-          }
-        } else if (redirectTo) {
-          // Fallback to window.location if setCurrentPage is not available
-          window.location.href = redirectTo;
-        } else {
-          // Default redirect to MarketsAI1App after successful login
-          window.location.href = '/marketsai1-app';
-        }
+        // if (setCurrentPage) {
+        //   // Use setCurrentPage for navigation within the app
+        //   if (redirectTo) {
+        //     // Extract the page name from redirectTo if it's a path
+        //     const pageName = redirectTo.replace('/', '');
+        //     setCurrentPage(pageName);
+        //   } else {
+        //     // Default redirect to MarketsAI1App after successful login
+            
+        //   }
+        // } else if (redirectTo) {
+        //   // Fallback to window.location if setCurrentPage is not available
+        //   window.location.href = redirectTo;
+        // } else {
+        //   // Default redirect to MarketsAI1App after successful login
+        //   window.location.href = '/marketsai1-app';
+        // }
       } else {
         throw new Error('Backend authentication failed');
       }

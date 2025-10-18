@@ -2,10 +2,10 @@ import React from 'react';
 import Navigation from './Navigation';
 import Footer from './Footer';
 
-const FoundersPage = ({ setCurrentPage, currentPage }) => (
+const FoundersPage = ({ setCurrentPage, currentPage, hideHeaderFooter = false }) => (
   <div>
-    <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />
-    <div className="pt-16 min-h-screen bg-white">
+    {!hideHeaderFooter && <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />}
+    <div className={hideHeaderFooter ? "min-h-full bg-white py-6" : "pt-16 min-h-screen bg-white"}>
       <div className="max-w-7xl mx-auto px-4 py-20">
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-blue-900 mb-6">Meet Our Founders</h1>
@@ -86,7 +86,7 @@ const FoundersPage = ({ setCurrentPage, currentPage }) => (
         </div>
       </div>
     </div>
-    <Footer setCurrentPage={setCurrentPage} />
+    {!hideHeaderFooter && <Footer setCurrentPage={setCurrentPage} />}
   </div>
 );
 

@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext';
 
-const WebHook = ({ 
-  onClose, 
-  strategyType = 'ETF Strategy', 
+const WebHook = ({
+  onClose,
+  strategyType = 'ETF Strategy',
   userEmail = 'test@test.com',
   selectedEtfs = [],
   strategyParams = {}
 }) => {
   const [selectedStrategy, setSelectedStrategy] = useState(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [, setIsModalOpen] = useState(false)
   const [isJsonPopupOpen, setIsJsonPopupOpen] = useState(false)
   const [isSavedJsonOpen, setIsSavedJsonOpen] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [savedJsons, setSavedJsons] = useState([])
-  
+
   // Deployment state management
   const [isDeploying, setIsDeploying] = useState(false)
   const [deploySuccess, setDeploySuccess] = useState(false)
   const [deployError, setDeployError] = useState('')
-  
+
   // Execution state management
   const [isExecuting, setIsExecuting] = useState(false)
   const [executionSuccess, setExecutionSuccess] = useState(false)
@@ -82,7 +82,7 @@ const WebHook = ({
   const { user } = useAuth();
 
   const email = userEmail || user?.email || 'test@test.com'
-  
+
   // Function to get the most recent previous Friday
   const getPreviousFriday = () => {
     const today = new Date()
@@ -92,10 +92,10 @@ const WebHook = ({
     previousFriday.setDate(today.getDate() - daysToSubtract)
     return previousFriday.toISOString().split('T')[0] // Return in YYYY-MM-DD format
   }
-  
+
   // API Configuration
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'
-  
+
   // Get current date for execution
   const getCurrentDate = () => {
     const now = new Date()
@@ -117,25 +117,6 @@ const WebHook = ({
     { id: 2, capital: '₹25,000' },
     { id: 3, capital: '₹50,000' }
   ])
-
-  const strategies = [
-    {
-      id: 1,
-      name: 'ETF Strategy',
-      description: 'Exchange Traded Funds investment strategy',
-      icon: '📈',
-      color: 'from-blue-500 to-purple-600',
-      hoverColor: 'from-blue-600 to-purple-700'
-    },
-    {
-      id: 2,
-      name: 'Stock Strategy',
-      description: 'Individual stock trading strategy',
-      icon: '📊',
-      color: 'from-green-500 to-teal-600',
-      hoverColor: 'from-green-600 to-teal-700'
-    }
-  ]
 
   const handleStrategySelect = (strategy) => {
     setSelectedStrategy(strategy)
@@ -161,7 +142,7 @@ const WebHook = ({
   const fetchSavedStrategyFromDatabase = async () => {
     try {
       console.log('Fetching saved strategy from database for user:', email)
-      
+
       // First try to fetch saved strategies
       const strategiesResponse = await fetch(`${API_BASE_URL}/api/get-saved-strategies-list/${encodeURIComponent(email)}`, {
         method: 'GET',
@@ -173,19 +154,19 @@ const WebHook = ({
       if (strategiesResponse.ok) {
         const strategiesData = await strategiesResponse.json()
         console.log('Fetched saved strategies:', strategiesData)
-        
+
         // Filter for ETF strategies
         let strategies = []
         if (strategiesData && strategiesData.strategies) {
           strategies = Array.isArray(strategiesData.strategies) ? strategiesData.strategies : [strategiesData.strategies]
         }
-        
-        const etfStrategies = strategies.filter(strategy => 
-          strategy.strategy_type === 'etf_rotation' || 
+
+        const etfStrategies = strategies.filter(strategy =>
+          strategy.strategy_type === 'etf_rotation' ||
           strategy.strategy_type === 'ETF_rotation' ||
           (strategy.tickers && Array.isArray(strategy.tickers))
         )
-        
+
         if (etfStrategies.length > 0) {
           // Return the most recent strategy
           const latestStrategy = etfStrategies[0]
@@ -205,7 +186,7 @@ const WebHook = ({
       if (jsonResponse.ok) {
         const jsonData = await jsonResponse.json()
         console.log('Fetched saved JSONs:', jsonData)
-        
+
         let savedJsons = []
         if (jsonData && jsonData.data && Array.isArray(jsonData.data.saved_jsons)) {
           savedJsons = jsonData.data.saved_jsons
@@ -217,7 +198,7 @@ const WebHook = ({
 
         // Filter for current strategy type
         const currentType = String(strategyType || formData.strategyName || 'ETF Strategy').toLowerCase()
-        const matchingJsons = savedJsons.filter(json => 
+        const matchingJsons = savedJsons.filter(json =>
           json.strategy_type && String(json.strategy_type).toLowerCase().includes(currentType)
         )
 
@@ -239,8 +220,16 @@ const WebHook = ({
   const deployToLiveSignal = async (deploymentData) => {
     try {
       console.log('Deploying to live signal API:', deploymentData)
-      
-      const response = await fetch(`${API_BASE_URL}/api/live-signal/deploy`, {
+
+      // Choose endpoint based on strategy type
+      const endpoint = strategyType === 'Stock Strategy'
+        ? `${API_BASE_URL}/api/stocks/deploy`
+        : `${API_BASE_URL}/api/live-signal/deploy`;
+
+      console.log('Using endpoint:', endpoint);
+      console.log('Strategy type:', strategyType);
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -251,7 +240,7 @@ const WebHook = ({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+        throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`)
       }
 
       const result = await response.json()
@@ -263,18 +252,33 @@ const WebHook = ({
     }
   }
 
+  function filterBuyStocks(signals) {
+  if (!Array.isArray(signals)) {
+    console.error("Invalid signals array:", signals);
+    return [];
+  }
+  return signals.filter(signal => signal.side === "BUY");
+}
+
+
   const fetchLiveSignals = async (date = null, side = 'BUY') => {
-    console.log("function run sucessfully")
-    
+    console.log("Fetching live signals for strategy:", strategyType)
+
     // Use dynamic previous Friday date if no date provided
     const targetDate = date || getPreviousFriday()
     console.log('Using date:', targetDate)
 
     try {
       console.log('Fetching live signals from API...')
-      console.log('API URL:', `${API_BASE_URL}/api/live-signals/?date=${targetDate}&side=${side}`)
-      
-      const response = await fetch(`${API_BASE_URL}/api/live-signals/?date=${targetDate}&side=${side}`, {
+
+      // Choose endpoint based on strategy type
+      const endpoint = strategyType === 'Stock Strategy'
+        ? `${API_BASE_URL}/api/stocks/signals/latest`
+        : `${API_BASE_URL}/api/live-signals/?date=${targetDate}&side=${side}`;
+
+      console.log('API URL:', endpoint)
+
+      const response = await fetch(endpoint, {
         method: 'GET',
         headers: {
           'Accept': 'application/json'
@@ -283,15 +287,33 @@ const WebHook = ({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+        console.warn('Failed to fetch signals:', errorData)
+        // Don't throw - use fallback
+        return
       }
 
       const result = await response.json()
       console.log('Live signals fetched successfully:', result)
-      setSignalData(result.data.signals[0])
+
+      // Handle different response formats
+      if (strategyType === 'Stock Strategy') {
+        // Stock strategy returns { success, signals, count, run_id }
+        if (result.signals && result.signals.length > 0) {
+          const buyStocks = filterBuyStocks(result.signals);
+          console.log('Filtered buy stocks:', buyStocks[0]);
+          setSignalData(buyStocks[0]);
+          console.log('Set stock signal data:', buyStocks[0]); // updated this to show filtered first stock
+        }
+      }
+      else {
+        // ETF strategy returns { data: { signals } }
+        if (result.data && result.data.signals && result.data.signals.length > 0) {
+          setSignalData(result.data.signals[0])
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch live signals:', error)
-      throw error
+      // Don't throw - just log
     }
   }
 
@@ -303,7 +325,7 @@ const WebHook = ({
       setShowExecutionPopup(false)
 
       console.log('Executing trade directly via webhook...')
-      
+
       // Get the JSON data to send
       const tradeData = generateJsonData()
       console.log('Sending trade data to webhook:', tradeData)
@@ -325,7 +347,7 @@ const WebHook = ({
         setExecutionSuccess(true)
         setExecutionError('')
         setShowExecutionPopup(true)
-        
+
         // Auto-hide success popup after 3 seconds
         setTimeout(() => {
           setShowExecutionPopup(false)
@@ -337,7 +359,7 @@ const WebHook = ({
         setExecutionSuccess(false)
         setExecutionError(`Execution failed: ${response.status} - ${errorData.error || response.statusText}`)
         setShowExecutionPopup(true)
-        
+
         // Auto-hide error popup after 5 seconds
         setTimeout(() => {
           setShowExecutionPopup(false)
@@ -349,7 +371,7 @@ const WebHook = ({
       setExecutionSuccess(false)
       setExecutionError(`Network error: ${error.message}`)
       setShowExecutionPopup(true)
-      
+
       // Auto-hide error popup after 5 seconds
       setTimeout(() => {
         setShowExecutionPopup(false)
@@ -377,13 +399,13 @@ const WebHook = ({
       // Step 1: Fetch saved data from database
       console.log('Fetching saved strategy data from database...')
       const savedData = await fetchSavedStrategyFromDatabase()
-      
+
       let deploymentData
       let jsonData
 
       if (savedData) {
         console.log('Found saved data in database, using it for deployment:', savedData)
-        
+
         // Use saved data to generate deployment JSON
         if (savedData.json_data) {
           // This is from saved JSONs
@@ -402,7 +424,7 @@ const WebHook = ({
               clients[clientId] = quantity.toString()
             })
           }
-          
+
           jsonData = {
             "exchange": "NSE",
             "symbol": signalData?.symbol || "NIFTY50",
@@ -427,7 +449,7 @@ const WebHook = ({
         }
       } else {
         console.log('No saved data found, using current form data')
-        
+
         // Fallback to current form data if no saved data
         if (!formData.ltp || parseFloat(formData.ltp) <= 0) {
           throw new Error('Please enter a valid LTP (Last Traded Price)')
@@ -461,23 +483,23 @@ const WebHook = ({
       }
 
       console.log('Deploying strategy with data:', deploymentData)
-      
+
       // Deploy to backend
       const result = await deployToLiveSignal(deploymentData)
-      
+
       setDeploySuccess(true)
       console.log('Strategy deployed successfully:', result)
-      
-        // Fetch live signals after successful deployment
-        try {
-          console.log('Fetching live signals after deployment...')
-          const signalsResult = await fetchLiveSignals() // Will automatically use previous Friday date
-          console.log('Live signals fetched:', signalsResult)
-        } catch (signalError) {
-          console.error('Failed to fetch live signals:', signalError)
-          // Don't fail the deployment if signal fetching fails
-        }
-      
+
+      // Fetch live signals after successful deployment
+      try {
+        console.log('Fetching live signals after deployment...')
+        const signalsResult = await fetchLiveSignals() // Will automatically use previous Friday date
+        console.log('Live signals fetched:', signalsResult)
+      } catch (signalError) {
+        console.error('Failed to fetch live signals:', signalError)
+        // Don't fail the deployment if signal fetching fails
+      }
+
       // Close modal after successful deployment
       setTimeout(() => {
         setIsModalOpen(false)
@@ -527,9 +549,9 @@ const WebHook = ({
   const formatRupeeAmount = (value) => {
     // Remove all non-numeric characters
     const numericValue = value.replace(/[^0-9]/g, '')
-    
+
     if (numericValue === '') return ''
-    
+
     // Add rupee symbol and format with commas
     const formattedValue = '₹' + parseInt(numericValue).toLocaleString('en-IN')
     return formattedValue
@@ -554,11 +576,11 @@ const WebHook = ({
   const generateJsonData = () => {
     // Create clients object from clientIds and capitals arrays with individual quantities
     const clients = {}
-    
+
     // Use automatically fetched LTP from signalData, fallback to formData.ltp
     const ltpPrice = signalData?.ltp?.price || parseFloat(formData.ltp) || 0
     console.log('Using LTP for quantity calculation:', ltpPrice)
-    
+
     // Match client IDs with their corresponding capital values
     clientIds.forEach((client, index) => {
       const capital = capitals[index]
@@ -569,9 +591,9 @@ const WebHook = ({
         if (parsedValue > 0) {
           // Calculate individual quantity for this client using fetched LTP
           const clientQuantity = ltpPrice > 0 ? Math.floor(parsedValue / ltpPrice) : 0
-          
+
           console.log(`Client ${client.clientId}: Capital=${parsedValue}, LTP=${ltpPrice}, Quantity=${clientQuantity}`)
-          
+
           // Only store quantity for each client
           clients[client.clientId] = clientQuantity.toString()
         }
@@ -584,7 +606,7 @@ const WebHook = ({
 
     return {
       "exchange": "NSE",
-      "symbol": symbolValue, 
+      "symbol": symbolValue,
       "order_side": "BUY",
       "product_type": "delivery",
       "clients": clients
@@ -610,7 +632,7 @@ const WebHook = ({
       const jsonData = generateJsonData()
       console.log('Saving JSON data:', jsonData)
       console.log('Strategy Type from props:', strategyType)
-      
+
       // Enhanced validation
       if (!email || email === 'test@test.com' || !email.includes('@')) {
         console.warn('Invalid email address:', email)
@@ -633,7 +655,7 @@ const WebHook = ({
         setTimeout(() => setSaveSuccess(false), 3000)
         return
       }
-      
+
       // Try to save to backend
       try {
         // Clean and validate the request payload
@@ -683,18 +705,18 @@ const WebHook = ({
           try {
             errorData = await response.json()
           } catch (parseError) {
-            errorData = { 
+            errorData = {
               error: `Server error: ${response.status} ${response.statusText}`,
               details: 'Could not parse error response'
             }
           }
           console.error('Save failed:', response.status, errorData)
-          
+
           // For 500 errors, show a more informative message
           if (response.status === 500) {
             console.error('Server internal error - this might be a backend issue')
           }
-          
+
           // Cache locally even if backend returns error so user still sees item later
           addToCache({
             user_email: requestPayload.user_email,
@@ -751,9 +773,9 @@ const WebHook = ({
           'Accept': 'application/json'
         }
       })
-      
+
       console.log('Fetch saved JSONs response status:', response.status)
-      
+
       if (response.ok) {
         const data = await response.json()
         console.log('Fetched saved JSONs:', data)
@@ -835,7 +857,7 @@ const WebHook = ({
         })
 
         console.log('Delete saved JSON response status:', response.status)
-        
+
         if (response.ok) {
           console.log('Successfully deleted saved JSON from backend')
           // Refresh the saved JSONs list
@@ -902,7 +924,7 @@ const WebHook = ({
           </div>
         </div>
       </div>
-              
+
       {/* Main Content - Side by Side Layout */}
       <div className="flex-1 grid grid-cols-2 gap-4">
         {/* Left Side - Form Fields */}
@@ -920,7 +942,7 @@ const WebHook = ({
               placeholder="https://webhook.url"
             />
           </div>
-          
+
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
               Reference Capital
@@ -934,7 +956,7 @@ const WebHook = ({
               placeholder="Enter amount (e.g., 100000)"
             />
           </div>
-          
+
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
               LTP (Last Traded Price)
@@ -1135,11 +1157,11 @@ const WebHook = ({
       {isJsonPopupOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={closeJsonPopup}
           ></div>
-          
+
           {/* Popup Content */}
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] transform transition-all duration-300">
             {/* Header */}
@@ -1154,7 +1176,7 @@ const WebHook = ({
                 </svg>
               </button>
             </div>
-            
+
             {/* JSON Content */}
             <div className="p-4">
               <div className="bg-gray-900 rounded-lg p-4 overflow-auto max-h-96">
@@ -1162,17 +1184,16 @@ const WebHook = ({
                   {JSON.stringify(generateJsonData(), null, 2)}
                 </pre>
               </div>
-              
+
               {/* Action Buttons */}
               <div className="flex justify-between items-center mt-4">
                 <div className="flex space-x-3">
                   <button
                     onClick={saveJsonData}
-                    className={`px-4 py-2 rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 font-medium flex items-center space-x-2 ${
-                      saveSuccess 
-                        ? 'bg-green-500 text-white' 
+                    className={`px-4 py-2 rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 font-medium flex items-center space-x-2 ${saveSuccess
+                        ? 'bg-green-500 text-white'
                         : 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
-                    }`}
+                      }`}
                   >
                     {saveSuccess ? (
                       <>
@@ -1188,11 +1209,10 @@ const WebHook = ({
                   <button
                     onClick={executeTrade}
                     disabled={isExecuting}
-                    className={`px-4 py-2 rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 font-medium flex items-center space-x-2 ${
-                      isExecuting 
-                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
+                    className={`px-4 py-2 rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 font-medium flex items-center space-x-2 ${isExecuting
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
                         : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
-                    }`}
+                      }`}
                   >
                     {isExecuting ? (
                       <>
@@ -1233,11 +1253,11 @@ const WebHook = ({
       {isSavedJsonOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={closeSavedJson}
           ></div>
-          
+
           {/* Modal Content */}
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] transform transition-all duration-300 scale-100">
             {/* Header */}
@@ -1252,7 +1272,7 @@ const WebHook = ({
                 </svg>
               </button>
             </div>
-            
+
             {/* Content */}
             <div className="p-6 overflow-auto max-h-96">
               {savedJsons.length === 0 ? (
@@ -1304,7 +1324,7 @@ const WebHook = ({
                 </div>
               )}
             </div>
-            
+
             {/* Footer */}
             <div className="flex justify-end p-6 border-t border-gray-200">
               <button

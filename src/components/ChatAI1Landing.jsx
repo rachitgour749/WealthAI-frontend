@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaTimes, FaUser, FaHistory, FaTrash, FaMicrophone, FaPaperPlane, FaCopy, FaRobot, FaMagic, FaStar } from 'react-icons/fa';
+import { FaTimes, FaUser, FaHistory, FaTrash, FaMicrophone, FaPaperPlane, FaCopy, FaRobot, FaMagic, FaStar, FaPaperclip, FaFile, FaFilePdf, FaFileImage, FaFileWord, FaFileExcel, FaFileAlt } from 'react-icons/fa';
 import { HiOutlinePencilAlt } from 'react-icons/hi';
 import ReactMarkdown from "react-markdown";
 import Navigation from './Navigation';
@@ -24,11 +24,19 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  
-  const messagesEndRef = useRef(null);
+   const [selectedDomain, setSelectedDomain] = useState(null);
+   const [isTransitioning, setIsTransitioning] = useState(false);
+   
+   // File upload states
+   const [attachedFiles, setAttachedFiles] = useState([]);
+   const [uploadProgress, setUploadProgress] = useState({});
+   const [isDragging, setIsDragging] = useState(false);
+   
+   const messagesEndRef = useRef(null);
   const typingIntervalRef = useRef(null);
   const textareaRef = useRef(null);
   const recognitionRef = useRef(null);
+  const fileInputRef = useRef(null);
   const { user } = useAuth();
   const { buildApiUrl } = useApi();
 
@@ -40,6 +48,149 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
     const randomString = Math.random().toString(36).substring(2, 15);
     const userId = 'user_' + Math.random().toString(36).substring(2, 8);
     return `conv_${timestamp}_${randomString}_${userId}`;
+  };
+
+  // File handling functions
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (fileType, fileName = '') => {
+    // Check by MIME type
+    if (fileType.includes('image')) return <FaFileImage className="text-blue-500" />;
+    if (fileType.includes('pdf')) return <FaFilePdf className="text-red-500" />;
+    if (fileType.includes('word') || fileType.includes('document')) return <FaFileWord className="text-blue-600" />;
+    if (fileType.includes('excel') || fileType.includes('spreadsheet')) return <FaFileExcel className="text-green-600" />;
+    if (fileType.includes('text')) return <FaFileAlt className="text-gray-600" />;
+    if (fileType.includes('video')) return <FaFile className="text-purple-500" />;
+    if (fileType.includes('audio')) return <FaFile className="text-pink-500" />;
+    if (fileType.includes('zip') || fileType.includes('compressed')) return <FaFile className="text-yellow-600" />;
+    
+    // Check by file extension if MIME type is generic
+    if (fileName) {
+      const ext = fileName.split('.').pop().toLowerCase();
+      if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return <FaFile className="text-yellow-600" />;
+      if (['mp4', 'avi', 'mov', 'mkv'].includes(ext)) return <FaFile className="text-purple-500" />;
+      if (['mp3', 'wav', 'flac', 'aac'].includes(ext)) return <FaFile className="text-pink-500" />;
+    }
+    
+    return <FaFileAlt className="text-gray-500" />;
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'processing':
+        return <span className="text-xs" title="Processing...">⏳</span>;
+      case 'ready':
+        return <span className="text-xs" title="Ready">✅</span>;
+      case 'failed':
+        return <span className="text-xs" title="Failed">❌</span>;
+      default:
+        return null;
+    }
+  };
+
+  const handleFileSelect = (files) => {
+    const MAX_FILES = 10;
+    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+    
+    if (!files || files.length === 0) return;
+    
+    const filesArray = Array.from(files);
+    
+    // Check file count limit
+    if (attachedFiles.length + filesArray.length > MAX_FILES) {
+      alert(`You can only attach up to ${MAX_FILES} files per message.`);
+      // Reset the file input to allow selecting again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+    
+    // Validate and process files
+    const validFiles = filesArray.filter(file => {
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`File "${file.name}" is too large. Maximum file size is 100 MB.`);
+        return false;
+      }
+      
+      // All file types are now allowed
+      return true;
+    });
+    
+    const newFiles = validFiles.map(file => ({
+      id: Date.now() + Math.random(),
+      file,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      status: 'processing', // processing, ready, failed
+      thumbnail: null
+    }));
+    
+    setAttachedFiles(prev => [...prev, ...newFiles]);
+    
+    // Reset the file input to allow selecting the same file again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    
+    // Generate thumbnails for images
+    newFiles.forEach(fileData => {
+      if (fileData.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setAttachedFiles(prev => prev.map(f => 
+            f.id === fileData.id ? { ...f, thumbnail: e.target.result, status: 'ready' } : f
+          ));
+        };
+        reader.onerror = () => {
+          setAttachedFiles(prev => prev.map(f => 
+            f.id === fileData.id ? { ...f, status: 'failed' } : f
+          ));
+        };
+        reader.readAsDataURL(fileData.file);
+      } else {
+        // For non-images, mark as ready immediately
+        setTimeout(() => {
+          setAttachedFiles(prev => prev.map(f => 
+            f.id === fileData.id ? { ...f, status: 'ready' } : f
+          ));
+        }, 500);
+      }
+    });
+  };
+
+  const removeFile = (fileId) => {
+    setAttachedFiles(prev => prev.filter(f => f.id !== fileId));
+    setUploadProgress(prev => {
+      const newProgress = { ...prev };
+      delete newProgress[fileId];
+      return newProgress;
+    });
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    handleFileSelect(files);
   };
 
   // Initialize conversation ID on component mount
@@ -409,36 +560,42 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
   };
 
   // Send message to API
-  const sendMessageToAPI = async (message) => {
+  const sendMessageToAPI = async (message, filesData = []) => {
     try {
-      // Ensure we have a conversation ID
-      const currentConversationId = conversationId || generateConversationId();
-      if (!conversationId) {
-        setConversationId(currentConversationId);
-      }
 
       const user_id = user?.email;
 
-      // Prepare the request payload according to the required format
-      const requestPayload = {
-        prompt: message,
-        system_prompt: "You are a ChatGPT-style financial expert. FORMAT: Start with 📚 DEFINITION (30 words max), then 💡 KEY POINTS (1 line each), add 🎯 EXAMPLE in 1 lines)",
-        conversation_id: currentConversationId,
-        user_id: user?.email,
-        use_template: "",
-        template_params: {
-          expertise_level: "professional",
-          response_style: "chatgpt",
-          include_examples: true,
-          max_length: "medium"
-        }
-      };
+      let response;
+      
+      // If there are files, use FormData and chat-with-files endpoint
+      if (filesData.length > 0) {
+        const formData = new FormData();
+        formData.append('prompt', message);
+        formData.append('userId', user?.email);
+        
+        // Append files
+        filesData.forEach((fileData) => {
+          formData.append('files', fileData.file);
+        });
 
-      const response = await axios.post(buildApiUrl('CHAT'), requestPayload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+        response = await axios.post(buildApiUrl('CHAT') + '-with-files', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } else {
+        // Regular chat without files
+        const requestPayload = {
+          prompt: message,
+          userId: user?.email,
+        };
+
+        response = await axios.post(buildApiUrl('CHAT'), requestPayload, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      }
 
       const data = response.data;
       
@@ -487,8 +644,6 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
         processing_time: data.processing_time || null,
         timestamp: data.timestamp || null,
         model_used: data.model_used || null,
-        system_prompt_used: data.system_prompt_used || null,
-        conversation_id: currentConversationId
       };
       
       console.log('📦 Final response object:', responseObj);
@@ -535,26 +690,39 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
   };
 
   // Send Button Function
-  const handleSend = async () => {
-    if (input.trim() === "") return;
+  const handleSend = async (messageText = null) => {
+    const textToSend = messageText || input.trim();
+    if (textToSend === "" && attachedFiles.length === 0) return;
+
+    // Keep the domain selected so the "Back to Dashboard" button remains visible
 
     const userMessage = {
       id: Date.now(),
-      text: input.trim(),
+      text: textToSend,
       sender: 'user',
       timestamp: new Date(),
-      isComplete: true
+      isComplete: true,
+      attachedFiles: attachedFiles.map(f => ({
+        id: f.id,
+        name: f.name,
+        size: f.size,
+        type: f.type,
+        status: f.status,
+        thumbnail: f.thumbnail
+      }))
     };
 
     // Add user message
     setMessages(prev => [...prev, userMessage]);
-    const currentInput = input.trim();
-    setInput("");
+    if (!messageText) {
+      setInput("");
+      setAttachedFiles([]); // Clear attached files after sending
+    }
     setIsLoading(true);
 
     try {
-      // Get AI response
-      const apiResponse = await sendMessageToAPI(currentInput);
+      // Get AI response with attached files
+      const apiResponse = await sendMessageToAPI(textToSend, attachedFiles);
 
       const aiMessage = {
         id: Date.now() + 1,
@@ -615,82 +783,96 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
   };
 
   return (
-      <div className="h-screen flex flex-col">
+      <div className="flex flex-col h-screen">
         <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} transparent={false} />
         <div className="flex-1 bg-gradient-to-br from-teal-50 via-blue-50 to-gray-50 flex">
-          {/* Sidebar */}
-          <>
-            {/* Overlay for mobile */}
-            <div
-              className={`fixed inset-0 transition-all duration-300 ease-in-out z-30 lg:hidden ${isSidebarOpen ? 'bg-opacity-50' : 'bg-opacity-0 pointer-events-none'
-                }`}
-              onClick={handleSidebarToggle}
-            />
-
             {/* Sidebar */}
-            <div className={`bg-teal-50 fixed left-0 top-0 h-full border-r border-gray-200 shadow-lg z-40 transition-all duration-300 ease-in-out transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-              } w-80 lg:w-72`} style={{ marginTop: '79px', height: 'calc(100vh - 79px)' }}>
+            <>
+              {/* Overlay for mobile */}
+              <div
+                className={`fixed inset-0 transition-all duration-300 ease-in-out z-30 lg:hidden ${isSidebarOpen ? 'bg-black bg-opacity-50 pointer-events-auto' : 'bg-opacity-0 pointer-events-none'}`}
+                onClick={handleSidebarToggle}
+              />
+
+              {/* Sidebar */}
+              <div className={`bg-teal-50 fixed left-0 top-0 h-full border-r border-gray-200 shadow-lg z-50 transition-all duration-300 ease-in-out transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} w-80 lg:w-80`} style={{ marginTop: '83px', height: 'calc(100vh - 100px)' }}>
 
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-800 ml-[20px]">Easy Access</h2>
-                <button
-                  onClick={handleSidebarToggle}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Close sidebar"
-                >
-                  <FaTimes className="text-gray-600" />
-                </button>
+              <div className="flex items-center justify-between p-1 border-b border-gray-200">
+                {isSidebarOpen ? (
+                  <>
+                    <h2 className="text-sm font-semibold text-gray-800 ml-[5px] mt-[7px]">Easy Access</h2>
+                    <button
+                      onClick={handleSidebarToggle}
+                      className="p-0.5 hover:bg-gray-100 rounded transition-colors"
+                      title="Close sidebar"
+                    >
+                      <FaTimes className="text-gray-600 text-xs" />
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={handleSidebarToggle}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors w-full flex justify-center"
+                    title="Open sidebar"
+                  >
+                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </button>
+                )}
               </div>
 
               {/* User Info */}
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center">
-                    <FaUser className="text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-800 truncate">
-                      {user?.name || user?.email || 'User'}
-                    </p>
-                    <p className="text-sm text-gray-500 truncate">
-                      {user?.email || 'user@example.com'}
-                    </p>
+              {isSidebarOpen && (
+                <div className="px-1 py-2 border-b border-gray-200">
+                  <div className="flex items-center gap-1">
+                    <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-[3px]">
+                      <FaUser className="text-white text-xs " />
+                    </div>
+                    <div className="flex min-w-0 items-center  font-medium text-gray-800 truncate text-xs">
+                       {user?.name || user?.email || 'User'}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* New Chat Button */}
-              <div className="p-4">
-                <button
-                  onClick={handleNewChat}
-                  className="flex gap-[10px] font-[15px] items-center text-gray-800 hover:bg-teal-200 transition-all duration-400 ease-in-out rounded-[15px] p-[10px] w-full pt-[11px] px-[15px]"
-                >
-                  <p className='text-[22px] mb-[3px]'><HiOutlinePencilAlt /></p>
-                  New Chat
-                </button>
-              </div>
+              {isSidebarOpen && (
+                <div className="px-1 py-2">
+                  <button
+                    onClick={handleNewChat}
+                    className="flex gap-[4px] items-center text-gray-800 hover:bg-teal-200 transition-all duration-400 ease-in-out rounded-[8px] p-[6px] w-full pt-[6px] px-[8px]"
+                  >
+                    <p className='text-[14px] mb-[1px]'><HiOutlinePencilAlt /></p>
+                    <span className="text-xs">New Chat</span>
+                  </button>
+                </div>
+              )}
 
               {/* Search Input */}
-              <div className="px-4 pb-4">
-                <input
-                  type="text"
-                  placeholder="Search chat history..."
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    searchChatHistory(e.target.value);
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-                />
-              </div>
+              {isSidebarOpen && (
+                <div className="px-1 pb-1 mb-[5px]">
+                  <input
+                    type="text"
+                    placeholder="Search chat history..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      searchChatHistory(e.target.value);
+                    }}
+                    className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-transparent text-xs"
+                  />
+                </div>
+              )}
 
               {/* Chat History */}
-              <div className="flex-1 overflow-y-auto max-h-[400px]">
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-3 px-[15px]">
-                    <h3 className="text-[18px] font-medium text-gray-800 flex items-center gap-2">
-                      <p className='text-[18px] mb-[2px]'><FaHistory /></p>
+              {isSidebarOpen && (
+                <div className="flex-1 overflow-y-auto max-h-[300px]">
+                <div className="p-1">
+                  <div className="flex items-center justify-between mb-1 px-[5px]">
+                    <h3 className="text-[12px] font-medium text-gray-800 flex items-center gap-1">
+                      <p className='text-[12px] mb-[0px]'><FaHistory /></p>
                       Recent Chats
                     </h3>
                     {Array.isArray(chatHistory) && chatHistory.length > 0 && (
@@ -699,25 +881,25 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                           setChatHistory([]);
                           console.log('Cleared all conversations');
                         }}
-                        className="text-xs text-gray-600 hover:text-teal-200 transition-colors p-1"
+                        className="text-xs text-gray-600 hover:text-teal-200 transition-colors p-0.5"
                         title="Clear all conversations"
                       >
-                        <FaTrash />
+                        <FaTrash className="text-xs" />
                       </button>
                     )}
                   </div>
 
                   {loading ? (
-                    <div className="text-center text-gray-500 text-sm py-4">
+                    <div className="text-center text-gray-500 text-xs py-2">
                       {searchQuery ? 'Searching...' : 'Loading chat history...'}
                     </div>
                   ) : searchQuery && searchResults.length === 0 ? (
-                    <div className="text-center text-gray-500 text-sm py-4">
+                    <div className="text-center text-gray-500 text-xs py-2">
                       No results found for "{searchQuery}"
                     </div>
                   ) : searchQuery && searchResults.length > 0 ? (
-                    <div className="space-y-2">
-                      <div className="text-xs text-gray-500 mb-2">Search Results:</div>
+                    <div className="space-y-1">
+                      <div className="text-xs text-gray-500 mb-1">Search Results:</div>
                       {searchResults.map((chat, index) => {
                         const chatId = chat.conversation_id || index;
                         const isActive = chatId === currentChatId;
@@ -725,8 +907,8 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                         return (
                           <div
                             key={chatId}
-                            className={`p-3 rounded-lg transition-colors relative group cursor-pointer hover:bg-teal-100 ${
-                              isActive ? 'bg-teal-200 border-l-4 border-teal-500' : ''
+                            className={`p-1.5 rounded transition-colors relative group cursor-pointer hover:bg-teal-100 ${
+                              isActive ? 'bg-teal-200 border-l-2 border-teal-500' : ''
                             }`}
                           >
                             <div
@@ -736,12 +918,12 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                               }}
                             >
                               <div className="flex items-center justify-between">
-                                <p className="font-medium truncate flex-1 text-gray-800">
+                                <p className="font-medium truncate flex-1 text-gray-800 text-xs">
                                   {chat.user_prompt ? 
-                                    (chat.user_prompt.length > 40 ? chat.user_prompt.substring(0, 40) + '...' : chat.user_prompt) 
+                                    (chat.user_prompt.length > 30 ? chat.user_prompt.substring(0, 30) + '...' : chat.user_prompt) 
                                     : `Chat ${index + 1}`}
                                 </p>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
                                   <span className="text-xs text-gray-500">
                                     {formatTimestamp(chat.timestamp)}
                                   </span>
@@ -750,7 +932,7 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                                       e.stopPropagation();
                                       deleteChat(chat.conversation_id);
                                     }}
-                                    className="text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100"
+                                    className="text-red-500 transition-colors p-0.5 opacity-0 group-hover:opacity-100"
                                     title="Delete conversation"
                                   >
                                     <FaTrash className="text-xs" />
@@ -763,11 +945,11 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                       })}
                     </div>
                   ) : !Array.isArray(chatHistory) || chatHistory.length === 0 ? (
-                    <div className="text-center text-gray-500 text-sm py-4">
+                    <div className="text-center text-gray-500 text-xs py-2">
                       No conversations yet. Start a new chat!
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       {chatHistory.map((chat, index) => {
                         const chatId = chat.conversation_id || index;
                         const isActive = chatId === currentChatId;
@@ -775,8 +957,8 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                         return (
                           <div
                             key={chatId}
-                            className={`p-3 rounded-lg transition-colors relative group cursor-pointer hover:bg-teal-100 ${
-                              isActive ? 'bg-teal-200 border-l-4 border-teal-500' : ''
+                            className={`p-1.5 rounded transition-colors relative group cursor-pointer hover:bg-teal-100 ${
+                              isActive ? 'bg-teal-200 border-l-2 border-teal-500' : ''
                             }`}
                           >
                             <div
@@ -786,12 +968,12 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                               }}
                             >
                               <div className="flex items-center justify-between">
-                                <p className="font-medium truncate flex-1 text-gray-800">
+                                <p className="font-medium truncate flex-1 text-gray-800 text-xs">
                                   {chat.user_prompt ? 
-                                    (chat.user_prompt.length > 40 ? chat.user_prompt.substring(0, 40) + '...' : chat.user_prompt) 
+                                    (chat.user_prompt.length > 30 ? chat.user_prompt.substring(0, 30) + '...' : chat.user_prompt) 
                                     : `Chat ${index + 1}`}
                                 </p>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
                                   <span className="text-xs text-gray-500">
                                     {formatTimestamp(chat.timestamp)}
                                   </span>
@@ -800,7 +982,7 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                                       e.stopPropagation();
                                       deleteChat(chat.conversation_id);
                                     }}
-                                    className="text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100"
+                                    className="text-red-500 transition-colors p-0.5 opacity-0 group-hover:opacity-100"
                                     title="Delete conversation"
                                   >
                                     <FaTrash className="text-xs" />
@@ -815,26 +997,27 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                   )}
                 </div>
               </div>
+              )}
             </div>
           </>
 
-          {/* Main Chat Area */}
-          <div className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'ml-80 lg:ml-72' : 'ml-0'
-            }`}>
-            {/* Hamburger Menu Button */}
-            {!isSidebarOpen && (
-              <button
-                onClick={handleSidebarToggle}
-                className="fixed top-[95px] left-4 z-50 bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-[50px] transition-all duration-300 shadow-md border border-gray-200"
-                title="Open sidebar"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            )}
+          {/* Hamburger Button - Always visible when sidebar is closed */}
+          {!isSidebarOpen && (
+            <button
+              onClick={handleSidebarToggle}
+              className="fixed top-[95px] left-4 z-[60] bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-[50px] transition-all duration-300 shadow-md border border-gray-200"
+              title="Open sidebar"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
 
-            <div className="pt-20">
+          {/* Main Chat Area */}
+          <div className={`flex-1 transition-all duration-300 ease-in-out h-[calc(100vh-100px)] ${isSidebarOpen ? 'ml-80 lg:ml-80' : 'ml-0'}`}>
+
+            <div className="pt-12">
               <PromptGenerater 
                 open={isPromptGeneraterOpen} 
                 onClose={() => setIsPromptGeneraterOpen(false)}
@@ -844,38 +1027,511 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                 }}
               />
               
-              <div className="flex flex-col justify-between font-sans">
+              <div className="flex flex-col justify-between font-sans mt-[-40px] w-full">
                 {/* Header */}
-                <div className="relative text-center border p-4 sm:p-5 bg-gradient-to-r from-teal-50 to-blue-50 border-b border-teal-200 flex-shrink-0">
-                  <h1 className="text-teal-800 text-2xl sm:text-3xl font-bold">Chat AI</h1>
-                  <p className="text-teal-600 m-0 text-sm sm:text-base font-normal">Hello, What are you working on?</p>
+                <div className="relative text-center border p-1 sm:p-2 bg-gradient-to-r from-teal-50 to-blue-50 border-teal-200 flex-shrink-0">
+                  <h1 className="text-teal-800 text-base sm:text-lg font-bold">Chat AI</h1>
+                  <p className="text-teal-600 mt-[-4px] text-xs font-normal">Hello, What are you working on?</p>
                 </div>
 
                 {/* Chat Container */}
-                <div className="flex flex-col flex-1 max-w-3xl mx-auto w-full px-3 sm:px-5 h-full">
+                <div className="flex flex-col flex-1 w-full px-2 sm:px-3 min-h-0">
                   {/* Messages Area */}
-                  <div className="flex-1 py-5 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-300px)] messages-area scrollbar-hide">
+                  <div className="flex-1 py-2 px-2 sm:px-4 flex flex-col gap-2 overflow-y-auto w-[800px] mx-auto messages-area scrollbar-hide" style={{
+                    scrollbarWidth: 'none', 
+                    msOverflowStyle: 'none',
+                    WebkitScrollbar: 'none'
+                  }}>
+                    
                     {messages.length === 0 ? (
-                      <div className="text-center py-12 px-5 text-gray-800 text-opacity-80 text-lg">
-                        <FaRobot className="text-5xl text-teal-600 mb-4 mx-auto" />
-                        <p>Ask me anything about finance, investments, or any other topic!</p>
+                      <div className="text-center py-1 px-3">
+                        {selectedDomain === 'mutual-fund' ? (
+                          // Mutual Fund Questions View
+                          <div>
+                            {/* Domain Switch Buttons */}
+                            <div className="flex justify-center gap-6 mb-4 py-1">
+                              <button
+                                onClick={() => {
+                                  setIsTransitioning(true);
+                                  setTimeout(() => {
+                                    setSelectedDomain('stock');
+                                    setTimeout(() => {
+                                      setIsTransitioning(false);
+                                    }, 300);
+                                  }, 800);
+                                }}
+                                className="flex items-center justify-center gap-2.5 rounded-lg hover:shadow-md transition-all duration-200"
+                                style={{
+                                  backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                  border: 'none !important',
+                                  width: '180px',
+                                  height: '48px'
+                                }}
+                              >
+                                <span style={{ fontSize: '20px' }}>📊</span>
+                                <span className="text-base font-medium text-gray-700">Stock</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setIsTransitioning(true);
+                                  setTimeout(() => {
+                                    setSelectedDomain('insurance');
+                                    setTimeout(() => {
+                                      setIsTransitioning(false);
+                                    }, 300);
+                                  }, 800);
+                                }}
+                                className="flex items-center justify-center gap-2.5 rounded-lg hover:shadow-md transition-all duration-200"
+                                style={{
+                                  backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                  border: 'none !important',
+                                  width: '180px',
+                                  height: '48px'
+                                }}
+                              >
+                                <span style={{ fontSize: '20px' }}>🛡️</span>
+                                <span className="text-base font-medium text-gray-700">Insurance</span>
+                              </button>
+                            </div>
+                            
+                            <div className="flex items-center justify-center mb-2">
+                              <div style={{ fontSize: '20px', marginRight: '8px' }}>📈</div>
+                              <h2 className="text-lg font-bold text-teal-800">Mutual Fund Questions</h2>
+                            </div>
+                            <div className="max-w-lg mx-auto space-y-1">
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What is a mutual fund?")}
+                              >
+                                What is a mutual fund?
+                              </button>
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What is the meaning of Net Asset Value (NAV) in mutual funds? Give an example")}
+                              >
+                                What is the meaning of Net Asset Value (NAV) in mutual funds? Give an example
+                              </button>
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What is a Systematic Investment Plan (SIP)? Explain with an example.")}
+                              >
+                                What is a Systematic Investment Plan (SIP)? Explain with an example.
+                              </button>
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What are equity and debt mutual funds? Give one example of each.")}
+                              >
+                                What are equity and debt mutual funds? Give one example of each.
+                              </button>
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What is the role of a fund manager in a mutual fund? Give a real-life example.")}
+                              >
+                                What is the role of a fund manager in a mutual fund? Give a real-life example.
+                              </button>
+                            </div>
+                          </div>
+                        ) : selectedDomain === 'stock' ? (
+                          // Stock Questions View
+                          <div>
+                            {/* Domain Switch Buttons */}
+                            <div className="flex justify-center gap-6 mb-4 py-1">
+                              <button
+                                onClick={() => {
+                                  setIsTransitioning(true);
+                                  setTimeout(() => {
+                                    setSelectedDomain('mutual-fund');
+                                    setTimeout(() => {
+                                      setIsTransitioning(false);
+                                    }, 300);
+                                  }, 800);
+                                }}
+                                className="flex items-center justify-center gap-2.5 rounded-lg hover:shadow-md transition-all duration-200"
+                                style={{
+                                  backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                  border: 'none !important',
+                                  width: '180px',
+                                  height: '48px'
+                                }}
+                              >
+                                <span style={{ fontSize: '20px' }}>📈</span>
+                                <span className="text-base font-medium text-gray-700">Mutual Fund</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setIsTransitioning(true);
+                                  setTimeout(() => {
+                                    setSelectedDomain('insurance');
+                                    setTimeout(() => {
+                                      setIsTransitioning(false);
+                                    }, 300);
+                                  }, 800);
+                                }}
+                                className="flex items-center justify-center gap-2.5 rounded-lg hover:shadow-md transition-all duration-200"
+                                style={{
+                                  backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                  border: 'none !important',
+                                  width: '180px',
+                                  height: '48px'
+                                }}
+                              >
+                                <span style={{ fontSize: '20px' }}>🛡️</span>
+                                <span className="text-base font-medium text-gray-700">Insurance</span>
+                              </button>
+                            </div>
+                            
+                            <div className="flex items-center justify-center mb-2">
+                              <div style={{ fontSize: '20px', marginRight: '8px' }}>📊</div>
+                              <h2 className="text-lg font-bold text-teal-800">Stock Questions</h2>
+                            </div>
+                            <div className="max-w-lg mx-auto space-y-1">
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What is a stock or share? Explain with an example.")}
+                              >
+                                What is a stock or share? Explain with an example.
+                              </button>
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What is the difference between common stock and preferred stock? Give an example.")}
+                              >
+                                What is the difference between common stock and preferred stock? Give an example.
+                              </button>
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What is a stock exchange? Explain with an example like NSE or BSE.")}
+                              >
+                                What is a stock exchange? Explain with an example like NSE or BSE.
+                              </button>
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What is a dividend in stocks? Give an example.")}
+                              >
+                                What is a dividend in stocks? Give an example.
+                              </button>
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What is a stock market index? Explain with an example such as Nifty 50 or Sensex.")}
+                              >
+                                What is a stock market index? Explain with an example such as Nifty 50 or Sensex.
+                              </button>
+                            </div>
+                          </div>
+                        ) : selectedDomain === 'insurance' ? (
+                          // Insurance Questions View
+                          <div>
+                            {/* Domain Switch Buttons */}
+                            <div className="flex justify-center gap-6 mb-4 py-1">
+                              <button
+                                onClick={() => {
+                                  setIsTransitioning(true);
+                                  setTimeout(() => {
+                                    setSelectedDomain('mutual-fund');
+                                    setTimeout(() => {
+                                      setIsTransitioning(false);
+                                    }, 300);
+                                  }, 800);
+                                }}
+                                className="flex items-center justify-center gap-2.5 rounded-lg hover:shadow-md transition-all duration-200"
+                                style={{
+                                  backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                  border: 'none !important',
+                                  width: '180px',
+                                  height: '48px'
+                                }}
+                              >
+                                <span style={{ fontSize: '20px' }}>📈</span>
+                                <span className="text-base font-medium text-gray-700">Mutual Fund</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setIsTransitioning(true);
+                                  setTimeout(() => {
+                                    setSelectedDomain('stock');
+                                    setTimeout(() => {
+                                      setIsTransitioning(false);
+                                    }, 300);
+                                  }, 800);
+                                }}
+                                className="flex items-center justify-center gap-2.5 rounded-lg hover:shadow-md transition-all duration-200"
+                                style={{
+                                  backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                  border: 'none !important',
+                                  width: '180px',
+                                  height: '48px'
+                                }}
+                              >
+                                <span style={{ fontSize: '20px' }}>📊</span>
+                                <span className="text-base font-medium text-gray-700">Stock</span>
+                              </button>
+                            </div>
+                            
+                            <div className="flex items-center justify-center mb-2">
+                              <div style={{ fontSize: '20px', marginRight: '8px' }}>🛡️</div>
+                              <h2 className="text-lg font-bold text-teal-800">Insurance Questions</h2>
+                            </div>
+                            <div className="max-w-lg mx-auto space-y-1">
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What is life insurance? Explain with an example.")}
+                              >
+                                What is life insurance? Explain with an example.
+                              </button>
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What is health insurance? Give an example to show how it works.")}
+                              >
+                                What is health insurance? Give an example to show how it works.
+                              </button>
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What is the difference between term insurance and whole life insurance? Explain with examples.")}
+                              >
+                                What is the difference between term insurance and whole life insurance? Explain with examples.
+                              </button>
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What is a premium in an insurance policy? Give an example.")}
+                              >
+                                What is a premium in an insurance policy? Give an example.
+                              </button>
+                              <button 
+                                className="w-full p-1.5 bg-blue-50 rounded-lg border border-blue-100 text-left hover:bg-blue-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 text-xs font-medium text-gray-700"
+                                onClick={() => handleSend("What is a cashless claim in health insurance? Explain with an example.")}
+                              >
+                                What is a cashless claim in health insurance? Explain with an example.
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          // Default Domain Selection View
+                          <div>
+                            <FaRobot className="text-xl text-teal-600 mb-1 mx-auto" />
+                            
+                            {/* Domain Selection Bubbles */}
+                            <div className="flex justify-center gap-3 mb-3 flex-nowrap overflow-x-auto py-2 px-2" style={{scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitScrollbar: 'none'}}>
+                               <button
+                                 onClick={() => {
+                                   setIsTransitioning(true);
+                                   setTimeout(() => {
+                                     setSelectedDomain('mutual-fund');
+                                     setTimeout(() => {
+                                       setIsTransitioning(false);
+                                     }, 300);
+                                   }, 800);
+                                 }}
+                                style={{
+                                  background: selectedDomain === 'mutual-fund' 
+                                    ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(255, 255, 255, 0.98) 100%)' 
+                                    : 'linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(255, 255, 255, 0.99) 100%)',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  padding: '12px 10px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.3s ease',
+                                  boxShadow: selectedDomain === 'mutual-fund' 
+                                    ? '0 4px 12px rgba(59, 130, 246, 0.25), 0 2px 6px rgba(59, 130, 246, 0.15)' 
+                                    : '0 3px 8px rgba(59, 130, 246, 0.1), 0 2px 4px rgba(59, 130, 246, 0.05)',
+                                  minWidth: '120px',
+                                  width: '120px',
+                                  minHeight: '90px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  position: 'relative',
+                                  overflow: 'hidden'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (selectedDomain !== 'mutual-fund') {
+                                    e.target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1)';
+                                    e.target.style.transform = 'translateY(-3px) scale(1.02)';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (selectedDomain !== 'mutual-fund') {
+                                    e.target.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05)';
+                                    e.target.style.transform = 'translateY(0) scale(1)';
+                                  }
+                                }}
+                              >
+                                <div style={{ fontSize: '18px', marginBottom: '4px' }}>📈</div>
+                                <span 
+                                  className="domain-text"
+                                  style={{
+                                    fontSize: '11px',
+                                    fontWeight: selectedDomain === 'mutual-fund' ? '700' : '600',
+                                    color: selectedDomain === 'mutual-fund' ? '#0d9488' : '#374151',
+                                    textAlign: 'center',
+                                    transition: 'all 0.3s ease'
+                                  }}
+                                >
+                                  Mutual Fund
+                                </span>
+                              </button>
+                              
+                               <button
+                                 onClick={() => {
+                                   setIsTransitioning(true);
+                                   setTimeout(() => {
+                                     setSelectedDomain('stock');
+                                     setTimeout(() => {
+                                       setIsTransitioning(false);
+                                     }, 300);
+                                   }, 800);
+                                 }}
+                                style={{
+                                  background: selectedDomain === 'stock' 
+                                    ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(255, 255, 255, 0.98) 100%)' 
+                                    : 'linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(255, 255, 255, 0.99) 100%)',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  padding: '12px 10px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.3s ease',
+                                  boxShadow: selectedDomain === 'stock' 
+                                    ? '0 4px 12px rgba(59, 130, 246, 0.25), 0 2px 6px rgba(59, 130, 246, 0.15)' 
+                                    : '0 3px 8px rgba(59, 130, 246, 0.1), 0 2px 4px rgba(59, 130, 246, 0.05)',
+                                  minWidth: '120px',
+                                  width: '120px',
+                                  minHeight: '90px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  position: 'relative',
+                                  overflow: 'hidden'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (selectedDomain !== 'stock') {
+                                    e.target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1)';
+                                    e.target.style.transform = 'translateY(-3px) scale(1.02)';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (selectedDomain !== 'stock') {
+                                    e.target.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05)';
+                                    e.target.style.transform = 'translateY(0) scale(1)';
+                                  }
+                                }}
+                              >
+                                <div style={{ fontSize: '18px', marginBottom: '4px' }}>📊</div>
+                                <span 
+                                  className="domain-text"
+                                  style={{
+                                    fontSize: '11px',
+                                    fontWeight: selectedDomain === 'stock' ? '700' : '600',
+                                    color: selectedDomain === 'stock' ? '#0d9488' : '#374151',
+                                    textAlign: 'center',
+                                    transition: 'all 0.3s ease'
+                                  }}
+                                >
+                                  Stock
+                                </span>
+                              </button>
+                              
+                               <button
+                                 onClick={() => {
+                                   setIsTransitioning(true);
+                                   setTimeout(() => {
+                                     setSelectedDomain('insurance');
+                                     setTimeout(() => {
+                                       setIsTransitioning(false);
+                                     }, 300);
+                                   }, 800);
+                                 }}
+                                style={{
+                                  background: selectedDomain === 'insurance' 
+                                    ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(255, 255, 255, 0.98) 100%)' 
+                                    : 'linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(255, 255, 255, 0.99) 100%)',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  padding: '12px 10px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.3s ease',
+                                  boxShadow: selectedDomain === 'insurance' 
+                                    ? '0 4px 12px rgba(59, 130, 246, 0.25), 0 2px 6px rgba(59, 130, 246, 0.15)' 
+                                    : '0 3px 8px rgba(59, 130, 246, 0.1), 0 2px 4px rgba(59, 130, 246, 0.05)',
+                                  minWidth: '120px',
+                                  width: '120px',
+                                  minHeight: '90px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  position: 'relative',
+                                  overflow: 'hidden'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (selectedDomain !== 'insurance') {
+                                    e.target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1)';
+                                    e.target.style.transform = 'translateY(-3px) scale(1.02)';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (selectedDomain !== 'insurance') {
+                                    e.target.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05)';
+                                    e.target.style.transform = 'translateY(0) scale(1)';
+                                  }
+                                }}
+                              >
+                                <div style={{ fontSize: '18px', marginBottom: '4px' }}>🛡️</div>
+                                <span 
+                                  className="domain-text"
+                                  style={{
+                                    fontSize: '11px',
+                                    fontWeight: selectedDomain === 'insurance' ? '700' : '600',
+                                    color: selectedDomain === 'insurance' ? '#0d9488' : '#374151',
+                                    textAlign: 'center',
+                                    transition: 'all 0.3s ease'
+                                  }}
+                                >
+                                  Insurance
+                                </span>
+                              </button>
+                             </div>
+                             
+                             {/* Transition animation indicator */}
+                             {isTransitioning && (
+                               <div className="flex items-center justify-center py-8">
+                                 <div className="flex flex-col items-center">
+                                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mb-2"></div>
+                                   <p className="text-sm text-gray-600">
+                                     {selectedDomain === 'mutual-fund' ? 'Loading Mutual Fund Questions...' :
+                                      selectedDomain === 'stock' ? 'Loading Stock Questions...' :
+                                      selectedDomain === 'insurance' ? 'Loading Insurance Questions...' :
+                                      'Loading Questions...'}
+                                   </p>
+                                 </div>
+                               </div>
+                             )}
+                             
+                             {!isTransitioning && (
+                               <p className="text-sm text-gray-600">Ask me anything about finance, investments, or any other topic!</p>
+                             )}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       messages.map((message, index) => (
                         <div key={`${message.id}-${message.isComplete}`} className="flex flex-col">
                           <div className={`${
                             message.sender === 'user' 
-                              ? 'self-end bg-emerald-600 text-white rounded-t-lg rounded-bl-lg rounded-br-sm max-w-[70%]' 
-                              : 'self-start bg-white bg-opacity-95 text-gray-800 rounded-t-lg rounded-br-lg rounded-bl-sm max-w-[85%] relative'
-                          } p-3 break-words shadow-lg`}>
+                              ? 'self-end bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-2xl rounded-br-md max-w-[85%] sm:max-w-[70%] shadow-lg' 
+                              : 'self-start bg-white/90 backdrop-blur-sm text-slate-800 rounded-2xl rounded-bl-md max-w-[95%] sm:max-w-[85%] relative shadow-lg border border-slate-200/60'
+                          } p-3 sm:p-4 break-words`}>
                             {/* Message Header */}
-                            <div className="flex items-center mb-2 gap-2">
+                            <div className="flex items-center mb-3 gap-2">
                               {message.sender === 'user' ? (
-                                <FaUser className="text-white text-opacity-80 text-sm" />
+                                <div className="p-1.5 bg-white/20 rounded-full">
+                                  <FaUser className="text-white text-sm" />
+                                </div>
                               ) : (
-                                <FaRobot className="text-teal-600 text-sm" />
+                                <div className="p-1.5 bg-gradient-to-br from-teal-100 to-teal-200 rounded-full">
+                                  <FaRobot className="text-teal-600 text-sm" />
+                                </div>
                               )}
-                              <span className="font-semibold text-sm opacity-80">
+                              <span className="font-semibold text-sm">
                                 {message.sender === 'user' ? 'You' : 'Chat AI'}
                               </span>
                             </div>
@@ -913,7 +1569,43 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                                   </ReactMarkdown>
                                 </div>
                               ) : (
+                                <div>
                                 <p className="m-0 leading-snug">{message.text}</p>
+                                  {/* Attached Files */}
+                                  {message.attachedFiles && message.attachedFiles.length > 0 && (
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                      {message.attachedFiles.map((file) => (
+                                        <div 
+                                          key={file.id} 
+                                          className="flex items-center gap-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-full px-4 py-2 text-sm"
+                                          title={`${file.name}\nType: ${file.type}\nSize: ${formatFileSize(file.size)}`}
+                                        >
+                                          {/* Thumbnail for images */}
+                                          {file.thumbnail && (
+                                            <img 
+                                              src={file.thumbnail} 
+                                              alt={file.name}
+                                              className="w-8 h-8 rounded-full object-cover"
+                                            />
+                                          )}
+                                          {!file.thumbnail && getFileIcon(file.type, file.name)}
+                                          
+                                          <div className="flex flex-col">
+                                            <div className="flex items-center gap-1">
+                                              <span className="text-white truncate max-w-[120px]">
+                                                {file.name}
+                                              </span>
+                                              {file.status && getStatusBadge(file.status)}
+                                            </div>
+                                            <span className="text-white text-opacity-70 text-xs">
+                                              {formatFileSize(file.size)}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
                               )}
                               
                               {/* Copy Button */}
@@ -989,41 +1681,130 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                   </div>
 
                   {/* Input Area */}
-                  <div className="py-3 sm:py-5 border-t border-white border-opacity-20 flex-shrink-0">
-                    <div className="flex items-end bg-white bg-opacity-95 rounded-[50px] px-3 sm:px-4 border border-teal-300 py-2 shadow-xl backdrop-blur-sm">
+                  <div className="py-4 flex-shrink-0 flex justify-center">
+                    <div 
+                      className={`flex flex-col bg-white/90 backdrop-blur-lg rounded-2xl px-3 sm:px-4 border border-slate-200/60 min-h-[60px] max-h-[300px] justify-center py-3 shadow-xl w-full max-w-3xl mx-2 sm:mx-4 ${isDragging ? 'border-blue-400 bg-blue-50/80' : ''}`}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                    >
+                      {/* File Chips inside input box */}
+                      {attachedFiles.length > 0 && (
+                        <div className="mb-2 flex flex-wrap gap-2">
+                          {attachedFiles.map((file) => (
+                            <div 
+                              key={file.id} 
+                              className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-full px-4 py-2 text-sm relative"
+                              title={`${file.name}\nType: ${file.type}\nSize: ${formatFileSize(file.size)}`}
+                            >
+                              {/* Thumbnail for images */}
+                              {file.thumbnail && (
+                                <img 
+                                  src={file.thumbnail} 
+                                  alt={file.name}
+                                  className="w-8 h-8 rounded-full object-cover"
+                                />
+                              )}
+                              {!file.thumbnail && getFileIcon(file.type, file.name)}
+                              
+                              <div className="flex flex-col">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-gray-700 font-medium text-xs truncate max-w-[150px]">
+                                    {file.name}
+                                  </span>
+                                  {getStatusBadge(file.status)}
+                                </div>
+                                <span className="text-gray-500 text-xs">
+                                  {formatFileSize(file.size)}
+                                </span>
+                              </div>
+                              
+                              {uploadProgress[file.id] !== undefined && (
+                                <div className="w-12 h-1 bg-gray-200 rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-blue-500 transition-all duration-300"
+                                    style={{ width: `${uploadProgress[file.id]}%` }}
+                                  />
+                                </div>
+                              )}
+                              
+                              <button
+                                onClick={() => removeFile(file.id)}
+                                className="text-gray-400 hover:text-red-500 transition-colors ml-1"
+                              >
+                                <FaTimes className="text-xs" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                        <div className="flex items-end gap-2 sm:gap-3">
+                          {/* Hidden file input */}
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            onChange={(e) => handleFileSelect(e.target.files)}
+                            className="hidden"
+                          />
+
+                          {/* Paperclip button */}
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition-all duration-200 flex items-center justify-center text-slate-600 hover:text-slate-800 flex-shrink-0"
+                            disabled={isLoading}
+                            title="Attach files"
+                          >
+                            <FaPaperclip className="text-sm" />
+                          </button>
+
                       <textarea
                         ref={textareaRef}
-                        placeholder="Type or speak something..."
+                            placeholder="Ask anything..."
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        className="flex-1 border-none outline-none text-sm sm:text-base py-2 sm:py-3 px-2 sm:px-4 bg-transparent text-gray-800 resize-none font-inherit min-h-[44px] sm:min-h-[48px] max-h-[120px] overflow-y-auto"
+                        className="flex-1 border-none outline-none text-sm py-2 px-3 bg-transparent text-slate-800 resize-none font-inherit min-h-[40px] max-h-[300px] overflow-y-auto placeholder-slate-500"
                         disabled={isLoading}
                         rows={1}
                       />
 
                       <button
                         onClick={handleMic}
-                        className={`border-none bg-transparent text-lg sm:text-[23px] cursor-pointer mr-1 sm:mr-2 p-1.5 sm:p-2 mb-[3px] border border-black rounded-full transition-all duration-200 flex items-center justify-center ${listening ? 'opacity-100' : 'opacity-70'}`}
+                        className={`p-2 rounded-full transition-all duration-200 flex items-center justify-center flex-shrink-0 ${
+                          listening 
+                            ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
                         disabled={isLoading}
+                        title="Voice input"
                       >
-                        <FaMicrophone color={listening ? "#ff4444" : "#666"} />
+                        <FaMicrophone className="text-sm" />
                       </button>
 
                       <button
                         onClick={handleSend}
-                        className={`border-none bg-teal-500 hover:bg-teal-600 text-white rounded-full w-9 h-9 sm:w-10 sm:h-10 mb-[3px] cursor-pointer flex justify-center items-center transition-all duration-200 shadow-lg shadow-teal-500/30 ${input.trim() ? 'opacity-100' : 'opacity-50'}`}
-                        disabled={isLoading || !input.trim()}
+                        className={`p-2 rounded-full transition-all duration-200 flex items-center justify-center flex-shrink-0 ${
+                          (input.trim() || attachedFiles.length > 0) 
+                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl hover:scale-105' 
+                            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        }`}
+                        disabled={isLoading || (!input.trim() && attachedFiles.length === 0)}
+                        title="Send message"
                       >
-                        <FaPaperPlane />
+                        <FaPaperPlane className="text-sm" />
                       </button>
+                      
                       <button
                         onClick={() => setIsPromptGeneraterOpen(true)}
-                        className={`border-none ml-1 sm:ml-2 bg-blue-800 hover:bg-blue-950 text-white rounded-full w-9 h-9 sm:w-10 sm:h-10 mb-[3px] cursor-pointer flex justify-center items-center transition-all duration-200 shadow-lg shadow-blue-500/30 opacity-100`}
+                        className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white rounded-full transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 flex-shrink-0"
                         disabled={isLoading}
+                        title="AI Prompt Generator"
                       >
-                        <FaMagic className="size-4"/>
+                        <FaMagic className="text-sm"/>
                       </button>
+                        </div>
                     </div>
                   </div>
                 </div>

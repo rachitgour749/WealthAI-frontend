@@ -60,8 +60,6 @@ const nifty50Stocks = [
   { value: 'TATAMOTORS', label: 'Tata Motors Ltd.' },
 ];
 
-
-
 function StockStrategy({ onBack }) {
 
   const {user} = useAuth();

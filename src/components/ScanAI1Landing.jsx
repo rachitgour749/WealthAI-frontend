@@ -2,12 +2,12 @@ import React from 'react';
 import Navigation from './Navigation';
 import Footer from './Footer';
 
-const ScanAI1Landing = ({ setCurrentPage, currentPage }) => {
+const ScanAI1Landing = ({ setCurrentPage, currentPage, hideHeaderFooter = false }) => {
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} transparent={true} />
+    <div className={hideHeaderFooter ? "h-full flex flex-col" : "h-screen flex flex-col overflow-hidden"}>
+      {!hideHeaderFooter && <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} transparent={true} />}
       
-      <section className="relative flex-1 bg-gradient-to-br from-orange-50 via-blue-50 to-gray-50 pt-16 pb-12 sm:pb-16 overflow-y-auto">
+      <section className={hideHeaderFooter ? "relative flex-1 bg-gradient-to-br from-orange-50 via-blue-50 to-gray-50 py-6" : "relative flex-1 bg-gradient-to-br from-orange-50 via-blue-50 to-gray-50 pt-16 pb-12 sm:pb-16 overflow-y-auto"}>
         <div className="absolute inset-0 opacity-30">
           <div className="absolute top-1/4 right-1/4 w-32 h-32 sm:w-64 sm:h-64 lg:w-96 lg:h-96 bg-orange-100 rounded-full"></div>
           <div className="absolute bottom-1/3 left-1/6 w-24 h-24 sm:w-48 sm:h-48 lg:w-80 lg:h-80 bg-blue-100 rounded-full"></div>
@@ -53,7 +53,7 @@ const ScanAI1Landing = ({ setCurrentPage, currentPage }) => {
         </div>
       </section>
       
-      <Footer setCurrentPage={setCurrentPage} />
+      {!hideHeaderFooter && <Footer setCurrentPage={setCurrentPage} />}
     </div>
   );
 };

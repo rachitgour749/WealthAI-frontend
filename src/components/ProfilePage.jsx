@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import Navigation from './Navigation';
 
-const ProfilePage = ({ setCurrentPage, currentPage }) => {
+const ProfilePage = ({ setCurrentPage, currentPage, hideHeaderFooter = false }) => {
   const { user, updateUserProfile } = useAuth();
   const { subscriptionInfo, daysRemaining, needsUpgrade } = useSubscription();
   const [isEditing, setIsEditing] = useState(false);
@@ -44,11 +44,11 @@ const ProfilePage = ({ setCurrentPage, currentPage }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />
+    <div className={hideHeaderFooter ? "min-h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100" : "min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100"}>
+      {!hideHeaderFooter && <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} />}
       
       {/* Hero Section with 3D Background */}
-      <div className="pt-20 lg:pt-24 pb-8 relative overflow-hidden">
+      <div className={hideHeaderFooter ? "py-8 relative overflow-hidden" : "pt-20 lg:pt-24 pb-8 relative overflow-hidden"}>
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
