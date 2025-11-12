@@ -3,6 +3,7 @@ import { FaTimes, FaUser, FaHistory, FaTrash } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useApi } from '../context/ApiContext';
 import { HiOutlinePencilAlt } from 'react-icons/hi';
+import { formatDate } from '../utils/dateFormatter';
 import axios from 'axios';
 const ChatSidebar = ({ isOpen, onToggle, onNewChat, onSelectChat, currentConversationId, onChatSelected }) => {
     const { user } = useAuth();
@@ -58,7 +59,7 @@ const ChatSidebar = ({ isOpen, onToggle, onNewChat, onSelectChat, currentConvers
         } else if (diffInHours < 48) {
             return 'Yesterday';
         } else {
-            return date.toLocaleDateString();
+            return formatDate(date);
         }
     };
 

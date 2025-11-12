@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config/api.js';
 
 const AppContext = createContext();
 
 const initialState = {
   loading: false,
   error: null,
-  strategies: [],
   backtests: [],
-  selectedStrategy: null,
   selectedBacktest: null,
   marketData: {
     nifty500Symbols: [],
@@ -32,34 +32,11 @@ const appReducer = (state, action) => {
     case 'CLEAR_ERROR':
       return { ...state, error: null };
     
-    case 'SET_STRATEGIES':
-      return { ...state, strategies: action.payload };
-    
-    case 'ADD_STRATEGY':
-      return { ...state, strategies: [...state.strategies, action.payload] };
-    
-    case 'UPDATE_STRATEGY':
-      return {
-        ...state,
-        strategies: state.strategies.map(s => 
-          s.id === action.payload.id ? action.payload : s
-        )
-      };
-    
-    case 'DELETE_STRATEGY':
-      return {
-        ...state,
-        strategies: state.strategies.filter(s => s.id !== action.payload)
-      };
-    
     case 'SET_BACKTESTS':
       return { ...state, backtests: action.payload };
     
     case 'ADD_BACKTEST':
       return { ...state, backtests: [action.payload, ...state.backtests] };
-    
-    case 'SELECT_STRATEGY':
-      return { ...state, selectedStrategy: action.payload };
     
     case 'SELECT_BACKTEST':
       return { ...state, selectedBacktest: action.payload };
@@ -83,9 +60,15 @@ const appReducer = (state, action) => {
 
 export const AppProvider = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const { user } = useAuth();
 
-  // API base URL
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/rs-strategy';
+
+  console.log(user);
+
+  // API base URL (use REACT_APP_API_URL if provided; otherwise default to production API)
+  // Note: keep base as root so axios requests using relative paths work across the app
+
+
 
   // Configure axios defaults
   useEffect(() => {
@@ -121,27 +104,21 @@ export const AppProvider = ({ children }) => {
   }, [API_BASE_URL]);
 
   // API functions with useCallback to prevent infinite loops
-  const loadStrategies = useCallback(async () => {
-    try {
-      const response = await axios.get('/configs');
-      dispatch({ type: 'SET_STRATEGIES', payload: response.data });
-    } catch (error) {
-      console.error('Failed to load strategies:', error);
-    }
-  }, []);
-
   const loadBacktests = useCallback(async () => {
+    if (!user?.email) return;
     try {
-      const response = await axios.get('/backtests');
+      const response = await axios.get('/api/rs-strategy/backtests', {
+        params: { user_id: user.email }
+      });
       dispatch({ type: 'SET_BACKTESTS', payload: response.data });
     } catch (error) {
       console.error('Failed to load backtests:', error);
     }
-  }, []);
+  }, [user?.email]);
 
   const loadNifty500Symbols = useCallback(async () => {
     try {
-      const response = await axios.get('/market-data/symbols');
+      const response = await axios.get('/api/rs-strategy/market-data/symbols');
       dispatch({ 
         type: 'SET_MARKET_DATA', 
         payload: { nifty500Symbols: response.data } 
@@ -153,43 +130,17 @@ export const AppProvider = ({ children }) => {
 
   // Load initial data
   useEffect(() => {
-    loadStrategies();
     loadBacktests();
     loadNifty500Symbols();
-  }, [loadStrategies, loadBacktests, loadNifty500Symbols]);
-
-  const createStrategy = async (strategyData) => {
-    try {
-      const response = await axios.post('/configs', strategyData);
-      dispatch({ type: 'ADD_STRATEGY', payload: response.data });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const updateStrategy = async (id, strategyData) => {
-    try {
-      const response = await axios.put(`/configs/${id}`, strategyData);
-      dispatch({ type: 'UPDATE_STRATEGY', payload: response.data });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const deleteStrategy = async (id) => {
-    try {
-      await axios.delete(`/configs/${id}`);
-      dispatch({ type: 'DELETE_STRATEGY', payload: id });
-    } catch (error) {
-      throw error;
-    }
-  };
+  }, [loadBacktests, loadNifty500Symbols]);
 
   const runBacktest = async (backtestData) => {
+    if (!user?.email) throw new Error('User not authenticated');
     try {
-      const response = await axios.post('/backtests/run', backtestData);
+      // BacktestData now contains all config parameters directly (no config_id needed)
+      const response = await axios.post('/api/rs-strategy/backtests/run', backtestData, {
+        params: { user_id: user.email }
+      });
       if (response.data.backtest_id) {
         // Reload backtests to get the new one
         await loadBacktests();
@@ -201,8 +152,11 @@ export const AppProvider = ({ children }) => {
   };
 
   const getBacktestDetails = async (backtestId) => {
+    if (!user?.email) throw new Error('User not authenticated');
     try {
-      const response = await axios.get(`/backtests/${backtestId}`);
+      const response = await axios.get(`/api/rs-strategy/backtests/${backtestId}`, {
+        params: { user_id: user.email }
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -210,8 +164,11 @@ export const AppProvider = ({ children }) => {
   };
 
   const getBacktestTrades = async (backtestId) => {
+    if (!user?.email) throw new Error('User not authenticated');
     try {
-      const response = await axios.get(`/backtests/${backtestId}/trades`);
+      const response = await axios.get(`/api/rs-strategy/backtests/${backtestId}/trades`, {
+        params: { user_id: user.email }
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -219,8 +176,23 @@ export const AppProvider = ({ children }) => {
   };
 
   const getBacktestPortfolio = async (backtestId) => {
+    if (!user?.email) throw new Error('User not authenticated');
     try {
-      const response = await axios.get(`/backtests/${backtestId}/portfolio`);
+      const response = await axios.get(`/api/rs-strategy/backtests/${backtestId}/portfolio`, {
+        params: { user_id: user.email }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getBacktestCosts = async (backtestId) => {
+    if (!user?.email) throw new Error('User not authenticated');
+    try {
+      const response = await axios.get(`/api/rs-strategy/backtests/${backtestId}/costs`, {
+        params: { user_id: user.email }
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -228,9 +200,14 @@ export const AppProvider = ({ children }) => {
   };
 
   const getStockData = async (symbol, startDate, endDate) => {
+    if (!user?.email) throw new Error('User not authenticated');
     try {
-      const response = await axios.get(`/market-data/stock/${symbol}`, {
-        params: { start_date: startDate, end_date: endDate }
+      const response = await axios.get(`/api/rs-strategy/market-data/stock/${symbol}`, {
+        params: { 
+          start_date: startDate, 
+          end_date: endDate,
+          user_id: user.email
+        }
       });
       return response.data;
     } catch (error) {
@@ -239,9 +216,14 @@ export const AppProvider = ({ children }) => {
   };
 
   const getIndexData = async (indexSymbol, startDate, endDate) => {
+    if (!user?.email) throw new Error('User not authenticated');
     try {
-      const response = await axios.get(`/market-data/index/${indexSymbol}`, {
-        params: { start_date: startDate, end_date: endDate }
+      const response = await axios.get(`/api/rs-strategy/market-data/index/${indexSymbol}`, {
+        params: { 
+          start_date: startDate, 
+          end_date: endDate,
+          user_id: user.email
+        }
       });
       return response.data;
     } catch (error) {
@@ -253,10 +235,6 @@ export const AppProvider = ({ children }) => {
     dispatch({ type: 'CLEAR_ERROR' });
   };
 
-  const selectStrategy = (strategy) => {
-    dispatch({ type: 'SELECT_STRATEGY', payload: strategy });
-  };
-
   const selectBacktest = (backtest) => {
     dispatch({ type: 'SELECT_BACKTEST', payload: backtest });
   };
@@ -264,21 +242,17 @@ export const AppProvider = ({ children }) => {
   const value = {
     ...state,
     // API functions
-    loadStrategies,
     loadBacktests,
-    createStrategy,
-    updateStrategy,
-    deleteStrategy,
     runBacktest,
     getBacktestDetails,
     getBacktestTrades,
     getBacktestPortfolio,
+    getBacktestCosts,
     getStockData,
     getIndexData,
     loadNifty500Symbols,
     // Utility functions
     clearError,
-    selectStrategy,
     selectBacktest,
     // Constants
     API_BASE_URL

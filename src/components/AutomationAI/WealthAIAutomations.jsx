@@ -2,13 +2,20 @@ import React, { useState, useEffect } from 'react';
 import './WealthAIAutomations.css'; // Import the CSS separately or use styled-components
 import AutomationAI from '../../Assets/AutomationAI.png';
 import AutomationAI1Logo from '../../Assets/AutomationAI1Logo.png';
+// import Logo1 from '../../Assets/Logo1.png';
 import Whatsapp from '../SocialmediaIcon/Whatsapp';
+import Facebook from '../SocialmediaIcon/Facebook';
+import Linkedin from '../SocialmediaIcon/Linkedin';
+import Telegram from '../SocialmediaIcon/Telegram';
+import Insta from '../SocialmediaIcon/Insta';
+import { useAuth } from '../../context/AuthContext';
 
 
-const WealthAIAutomations = () => {
+const WealthAIAutomations = ({ setCurrentPage, currentPage, hideHeaderFooter = false }) => {
   const [activeModal, setActiveModal] = useState(null);
   const [expandedAccordions, setExpandedAccordions] = useState({});
-
+  const [commonPopup, setCommonPopup] = useState(false)
+  const { user } = useAuth();
   // Modal management
   const openModal = (modalId) => {
     setActiveModal(modalId);
@@ -29,6 +36,8 @@ const WealthAIAutomations = () => {
     }));
   };
 
+  const validMail = 'wealthwisersfinancialservices@gmail.com' || 'rachit.gour749@gmail.com' || 'iamshourya007@gmail.com' || 'rm1.tradeai1@gmail.com' || 'mohitsharma7258@gmail.com';
+
   // Close modal on ESC key or outside click
   useEffect(() => {
     const handleEscape = (e) => {
@@ -47,17 +56,24 @@ const WealthAIAutomations = () => {
 
   return (
     <div className="wealthai-automations">
+      {commonPopup ? <div clasName="border-2 border-black">True</div> : <></>}
       {/* Main Content */}
       <main className="main-content">
         <div className="container">
-          <section className="automations-section">
-            <div className='flex justify-center relative items-center h-[100px] '>
-              <img src={AutomationAI1Logo} alt="AutomationAI1Logo" className="w-[120px] h-[80px] mb-[30px] absolute top-[0px] left-[10px]" />
-              <img src={AutomationAI} alt="AutomationAI" className="w-[300px] h-[40px] mb-[30px] mt-[25px]" />
-              <div className="flex flex-wrap gap-3 absolute top-[35px] right-[10px]">
-                      <button className="px-[6px] py-[3px] shadow-md shadow-gray-200 rounded-md font-medium border-gray-200 text-[13px] transition-all duration-300 flex flex-col items-center justify-center backdrop-blur-sm border bg-white">Get Started</button>
-                      <button className="px-[6px] py-[3px] shadow-md shadow-gray-200 rounded-md font-medium border-gray-200 text-[13px] transition-all duration-300 flex flex-col items-center justify-center backdrop-blur-sm border bg-white">Samples</button>
-                      <button className="px-[6px] py-[3px] shadow-md shadow-gray-200 rounded-md font-medium border-gray-200 text-[13px] transition-all duration-300 flex flex-col items-center justify-center backdrop-blur-sm border bg-white">Contact Us</button>
+          <section className="automations-section mt-[-20px]">
+            <div className='flex justify-center relative items-center h-[40px]'>
+              <div className="flex flex-wrap gap-3 absolute right-[10px]">
+                {/* <button
+                  onClick={() => setCurrentPage('home')}
+                  className="px-[6px] py-[3px] shadow-md shadow-gray-200 rounded-md font-medium border-gray-200 text-[13px] transition-all duration-300 flex flex-col items-center justify-center backdrop-blur-sm border bg-white hover:bg-gray-50"
+                >
+                  <span className="mr-1">← Back</span>
+                 
+
+                </button> */}
+                <button onClick={() => openModal('get-started')} className="px-[6px] py-[3px] shadow-md shadow-gray-200 rounded-md font-medium border-gray-200 text-[13px] transition-all duration-300 flex flex-col items-center justify-center backdrop-blur-sm border bg-white hover:bg-gray-50">Get Started</button>
+                <button onClick={() => openModal('samples')} className="px-[6px] py-[3px] shadow-md shadow-gray-200 rounded-md font-medium border-gray-200 text-[13px] transition-all duration-300 flex flex-col items-center justify-center backdrop-blur-sm border bg-white hover:bg-gray-50">Samples</button>
+                {/* <button onClick={() => openModal('contact')} className="px-[6px] py-[3px] shadow-md shadow-gray-200 rounded-md font-medium border-gray-200 text-[13px] transition-all duration-300 flex flex-col items-center justify-center backdrop-blur-sm border bg-white hover:bg-gray-50">Contact Us</button> */}
               </div>
             </div>
 
@@ -68,12 +84,12 @@ const WealthAIAutomations = () => {
                   <div className="card-icon">📱</div>
                   <div className="card-text">
                     <h3 className="card-title">Posting</h3>
-                    <p className="card-subtitle">Schedule and automate your market content across social platforms</p>
+                    <p className="card-subtitle">Scheduled or triggered Intelligent Posts</p>
                     <div className="card-platforms">
                       <Whatsapp />
-                      <span className="platform-tag">Facebook</span>
-                      <span className="platform-tag">LinkedIn</span>
-                      <span className="platform-tag">Telegram</span>
+                      <Facebook />
+                      <Linkedin />
+                      <Telegram />
                     </div>
                   </div>
                   <div className="card-arrow">→</div>
@@ -86,10 +102,10 @@ const WealthAIAutomations = () => {
                   <div className="card-icon">💬</div>
                   <div className="card-text">
                     <h3 className="card-title">Engagement</h3>
-                    <p className="card-subtitle">Smart AI responses for social media engagement</p>
+                    <p className="card-subtitle">Automated Intelligent Responses to comments</p>
                     <div className="card-platforms">
-                      <span className="platform-tag">Instagram</span>
-                      <span className="platform-tag">Facebook Pages</span>
+                      <Insta />
+                      <Facebook />
                     </div>
                   </div>
                   <div className="card-arrow">→</div>
@@ -101,12 +117,12 @@ const WealthAIAutomations = () => {
                 <div className="card-content">
                   <div className="card-icon">📊</div>
                   <div className="card-text">
-                    <h3 className="card-title">More...</h3>
-                    <p className="card-subtitle">Triggered posts based on your market analysis</p>
+                    <h3 className="card-title">More... <span className='text-[13px] border-gray-300 border px-3 py-1 ml-[5px] mt-[-15px] rounded-[7px] bg-teal-600/30 font-bold text-teal-800'>Customized</span></h3>
+                    <p className="card-subtitle">More social media and digital engagement service</p>
                     <div className="card-platforms">
-                      <span className="platform-tag">Instagram</span>
-                      <span className="platform-tag">Facebook</span>
-                      <span className="platform-tag">Custom Plan Only</span>
+                      <Insta />
+                      <Facebook />
+                      {/* <span className='text-[13px] border-gray-300 border px-3 py-2 rounded-[7px] bg-teal-600/30 font-bold text-teal-800'>Custom Plan Only</span> */}
                     </div>
                   </div>
                   <div className="card-arrow">→</div>
@@ -126,6 +142,9 @@ const WealthAIAutomations = () => {
                   <div className="card-arrow">→</div>
                 </div>
               </div>
+              <div className='flex justify-center items-center'>
+                {user?.email == validMail ? <button className='bg-teal-600 text-white text-center mt-5 px-4 py-2 rounded-md hover:bg-teal-700 transition-colors'><a target='_blank' href="https://forms.zohopublic.in/wealthwisersfinancialservices1/form/SOCIALMEDIAAUTOMATIONREQUIREMENTS/formperma/OxOcFYdW2oC0S06bKiFFUxHOA83hFCDIP5R_Q7GRT1o"> On Boarding Form</a></button> : <></>}
+              </div>
             </div>
           </section>
         </div>
@@ -141,6 +160,9 @@ const WealthAIAutomations = () => {
             {activeModal === 'replying' && <ReplyingModal expandedAccordions={expandedAccordions} toggleAccordion={toggleAccordion} />}
             {activeModal === 'social' && <SocialModal expandedAccordions={expandedAccordions} toggleAccordion={toggleAccordion} />}
             {activeModal === 'faq' && <FAQModal />}
+            {activeModal === 'get-started' && <GetStartedModal />}
+            {activeModal === 'samples' && <SamplesModal />}
+            {activeModal === 'contact' && <ContactModal />}
           </div>
         </div>
       )}
@@ -151,23 +173,11 @@ const WealthAIAutomations = () => {
 // Modal Components
 const PostingModal = ({ expandedAccordions, toggleAccordion }) => (
   <div className="modal-content">
-    <h2 className="modal-title">AUTOMATED POSTING</h2>
+    <h2 className="modal-title">POSTING</h2>
     <div className="modal-body">
       <p className="modal-overview">Schedule and automate your market content distribution across multiple social media platforms with AI-powered timing and content optimization.</p>
 
-      <AccordionItem
-        id="posting-platforms"
-        title="Supported Platforms"
-        isExpanded={expandedAccordions['posting-platforms']}
-        onToggle={() => toggleAccordion('posting-platforms')}
-      >
-        <ul>
-          <li>Instagram - Stories, posts, and reels</li>
-          <li>Facebook - Pages and business profiles</li>
-          <li>LinkedIn - Company pages and personal profiles</li>
-          <li>Telegram - Groups and channels</li>
-        </ul>
-      </AccordionItem>
+
 
       <AccordionItem
         id="posting-daily"
@@ -251,21 +261,10 @@ const PostingModal = ({ expandedAccordions, toggleAccordion }) => (
 
 const ReplyingModal = ({ expandedAccordions, toggleAccordion }) => (
   <div className="modal-content">
-    <h2 className="modal-title">AUTOMATED REPLYING</h2>
+    <h2 className="modal-title">ENGAGEMENT</h2>
     <div className="modal-body">
       <p className="modal-overview">Intelligent AI-powered response system that classifies user intent and provides contextually appropriate replies while maintaining brand consistency and filtering inappropriate content.</p>
 
-      <AccordionItem
-        id="replying-platforms"
-        title="Platform Support"
-        isExpanded={expandedAccordions['replying-platforms']}
-        onToggle={() => toggleAccordion('replying-platforms')}
-      >
-        <ul>
-          <li>Instagram - Comments, direct messages, and story replies</li>
-          <li>Facebook Pages - Comments, messages, and post interactions</li>
-        </ul>
-      </AccordionItem>
 
       <AccordionItem
         id="replying-engagement"
@@ -277,6 +276,7 @@ const ReplyingModal = ({ expandedAccordions, toggleAccordion }) => (
           <li>Constructive feedback replies with personalized responses</li>
           <li>Appreciation responses for positive comments</li>
           <li>Question answering with accurate information</li>
+          <li>Context-aware replies based on intent analysis</li>
         </ul>
       </AccordionItem>
 
@@ -289,7 +289,9 @@ const ReplyingModal = ({ expandedAccordions, toggleAccordion }) => (
         <ul>
           <li>Abuse detection with automatic no-response protocol</li>
           <li>Spam filtering with advanced pattern recognition</li>
-          <li>Context-aware replies based on sentiment analysis</li>
+          <li>Comment coalition with intent recognition</li>
+          <li>Spam classification based on prompts</li>
+
         </ul>
       </AccordionItem>
     </div>
@@ -298,21 +300,10 @@ const ReplyingModal = ({ expandedAccordions, toggleAccordion }) => (
 
 const SocialModal = ({ expandedAccordions, toggleAccordion }) => (
   <div className="modal-content">
-    <h2 className="modal-title">SOCIAL AUTOMATIONS</h2>
+    <h2 className="modal-title">MORE...</h2>
     <div className="modal-body">
-      <p className="modal-overview">Advanced triggered posting system based on your personal market analysis and trading strategies. Generate content automatically when specific market conditions are met.</p>
+      <p className="modal-overview">More social media and digital engagement service.</p>
 
-      <AccordionItem
-        id="social-platforms"
-        title="Platform Support"
-        isExpanded={expandedAccordions['social-platforms']}
-        onToggle={() => toggleAccordion('social-platforms')}
-      >
-        <ul>
-          <li>Instagram - Automated posts and stories</li>
-          <li>Facebook - Page posts and updates</li>
-        </ul>
-      </AccordionItem>
 
       <AccordionItem
         id="social-plan"
@@ -324,16 +315,51 @@ const SocialModal = ({ expandedAccordions, toggleAccordion }) => (
       </AccordionItem>
 
       <AccordionItem
-        id="social-insights"
-        title="Daily Market Insights"
-        isExpanded={expandedAccordions['social-insights']}
-        onToggle={() => toggleAccordion('social-insights')}
+        id="social-video"
+        title="Video Creation"
+        isExpanded={expandedAccordions['social-video']}
+        onToggle={() => toggleAccordion('social-video')}
+      >
+        <ul>
+          <li>video creation based on avatars(eg. Heygen)</li>
+          <li>Video script using LLM</li>
+        </ul>
+      </AccordionItem>
+
+      <AccordionItem
+        id="social-messages"
+        title="Custom Messages/Reminder"
+        isExpanded={expandedAccordions['social-messages']}
+        onToggle={() => toggleAccordion('social-messages')}
       >
         <ul>
           <li>Support and resistance level identification with real-time updates</li>
           <li>Breakout stock alerts based on technical indicators</li>
           <li>Custom technical analysis posts generated from your strategies</li>
           <li>Personal trading insights and market commentary</li>
+        </ul>
+      </AccordionItem>
+
+      <AccordionItem
+        id="social-corporate"
+        title="Corporate Announcements"
+        isExpanded={expandedAccordions['social-corporate']}
+        onToggle={() => toggleAccordion('social-corporate')}
+      >
+        <ul>
+          <li>Filtered Corporate Announcements from BSE, NSE delivered to whatsapp</li>
+        </ul>
+      </AccordionItem>
+
+      <AccordionItem
+        id="social-website"
+        title="Website and SEO"
+        isExpanded={expandedAccordions['social-website']}
+        onToggle={() => toggleAccordion('social-website')}
+      >
+        <ul>
+          <li>Website Development and maintenance</li>
+          <li>Search Engine Optimization</li>
         </ul>
       </AccordionItem>
     </div>
@@ -348,12 +374,12 @@ const FAQModal = () => {
     },
     {
       q: "How does your advanced automated replying system work with AI-powered intent classification and response generation?",
-      a: "Our AI system uses sophisticated intent classification to identify positive interactions, constructive feedback, and genuine questions, providing contextually appropriate responses while filtering out abusive content."
+      a: "Our AI system uses sophisticated intent classification to identify positive interactions, constructive feedback, and genuine questions, providing contextually appropriate responses while filtering out abusive content (in custom plans). Please note, this feature utilizes publicly available Large Language Models (LLMs) which, like any AI, can sometimes make mistakes or generate unexpected responses."
     },
-    {
-      q: "What specific features and tools are included in your custom market analysis and trading insights package?",
-      a: "Custom analysis includes real-time support and resistance level identification, breakout stock alerts, personalized technical analysis based on your trading strategies, and market sentiment indicators."
-    },
+    // {
+    //   q: "What specific features and tools are included in your custom market analysis and trading insights package?",
+    //   a: "Custom analysis includes real-time support and resistance level identification, breakout stock alerts, personalized technical analysis based on your trading strategies, and market sentiment indicators."
+    // },
     {
       q: "Can I fully customize and configure the automated posting schedule to match my specific content strategy and timing preferences?",
       a: "Yes, you have complete control over scheduling with options for daily, weekly, monthly, quarterly, yearly, and completely custom intervals that align with your content strategy and audience engagement patterns."
@@ -362,10 +388,10 @@ const FAQModal = () => {
       q: "Are there any restrictions or limits on the number of automated posts, replies, and social media interactions per day or month?",
       a: "Posting and interaction limits vary depending on your subscription plan. We offer flexible options including unlimited posting packages. Contact our team for detailed information about plan limits and upgrades."
     },
-    {
-      q: "How accurate and reliable is your AI-powered sentiment analysis system for market trends and trading signals?",
-      a: "Our advanced AI sentiment analysis system utilizes cutting-edge natural language processing technology and achieves over 90% accuracy in identifying market sentiment patterns, trend predictions, and trading signal generation."
-    }
+    // {
+    //   q: "How accurate and reliable is your AI-powered sentiment analysis system for market trends and trading signals?",
+    //   a: "Our advanced AI sentiment analysis system utilizes cutting-edge natural language processing technology and achieves over 90% accuracy in identifying market sentiment patterns, trend predictions, and trading signal generation."
+    // }
   ];
 
   return (
@@ -374,14 +400,175 @@ const FAQModal = () => {
       <div className="modal-body faq-list">
         {faqs.map((faq, index) => (
           <div key={index} className="faq-item">
-            <h3 className="faq-question">{faq.q}</h3>
-            <p className="faq-answer">{faq.a}</p>
+            <h3 className="faq-question"><span>Q. </span>{faq.q}</h3>
+            <p className="faq-answer"><span>A. </span>{faq.a}</p>
           </div>
         ))}
       </div>
     </div>
   );
 };
+
+// New Modal Components
+const GetStartedModal = () => (
+  <div className="modal-content">
+    <h2 className="modal-title">GET STARTED</h2>
+    <div className="modal-body">
+      <p className="modal-overview">Welcome to AutomationAI1! Let's get you set up with our intelligent automation services.</p>
+
+      <div className="space-y-4">
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h3 className="font-semibold text-blue-800 mb-2">🚀 Quick Start Options</h3>
+          <ul className="space-y-2 text-sm">
+            <li>• Start with our Free Trial (7 days)</li>
+            <li>• Choose from Basic, Premium, or Custom plans</li>
+            <li>• Get personalized setup assistance</li>
+          </ul>
+        </div>
+
+        <div className="bg-green-50 p-4 rounded-lg">
+          <h3 className="font-semibold text-green-800 mb-2">📋 Setup Process</h3>
+          <ol className="space-y-1 text-sm list-decimal list-inside">
+            <li>Select your automation preferences</li>
+            <li>Connect your social media accounts</li>
+            <li>Configure posting schedules</li>
+            <li>Test with sample content</li>
+            <li>Go live with your automation</li>
+          </ol>
+        </div>
+
+        {/* <div className="flex gap-3 mt-6">
+          <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            Start Free Trial
+          </button>
+          <button className="border border-blue-600 text-blue-600 px-6 py-2 rounded-lg hover:bg-blue-50 transition-colors">
+            View Plans
+          </button>
+        </div> */}
+      </div>
+    </div>
+  </div>
+);
+
+const SamplesModal = () => (
+  <div className="modal-content">
+    <h2 className="modal-title">SAMPLES</h2>
+    <div className="modal-body">
+      <p className="modal-overview">Explore our automation capabilities with real examples and live demonstrations.</p>
+
+      <div className="space-y-4">
+        <div className="bg-purple-50 p-4 rounded-lg">
+          <h3 className="font-semibold text-purple-800 mb-2">📱 Automated Posts Examples</h3>
+          <div className="space-y-2 text-sm">
+            <div className="bg-white p-3 rounded border-l-4 border-purple-400">
+              <strong>Market Open Summary:</strong> "📈 Market opens bullish with Nifty at 19,250. Key resistance at 19,400. Watch for breakout above 19,500."
+            </div>
+            <div className="bg-white p-3 rounded border-l-4 border-green-400">
+              <strong>Stock Alert:</strong> "🚨 RELIANCE breaks above ₹2,450 resistance. Volume surge indicates strong momentum. Target: ₹2,500"
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-orange-50 p-4 rounded-lg">
+          <h3 className="font-semibold text-orange-800 mb-2">💬 Engagement Responses</h3>
+          <div className="space-y-2 text-sm">
+            <div className="bg-white p-3 rounded">
+              <strong>User:</strong> "Great analysis!"<br />
+              <strong>AI Response:</strong> "Thank you! Our AI continuously monitors market patterns to provide accurate insights. 📊"
+            </div>
+          </div>
+        </div>
+
+        {/* <div className="flex gap-3 mt-6">
+          <button className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+            View Live Demo
+          </button>
+          <button className="border border-purple-600 text-purple-600 px-6 py-2 rounded-lg hover:bg-purple-50 transition-colors">
+            Download Samples
+          </button>
+        </div> */}
+      </div>
+    </div>
+  </div>
+);
+
+const ContactModal = () => (
+  <div className="modal-content">
+    <h2 className="modal-title">CONTACT US</h2>
+    <div className="modal-body">
+      <p className="modal-overview">Get in touch with our team for personalized assistance and support.</p>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-blue-800 mb-2">📞 Direct Contact</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center">
+                <span className="w-4 h-4 mr-2">📧</span>
+                <span>support@wealthai1.in</span>
+              </div>
+              <div className="flex items-center">
+                <span className="w-4 h-4 mr-2">📱</span>
+                <span>+91 98765 43210</span>
+              </div>
+              <div className="flex items-center">
+                <span className="w-4 h-4 mr-2">💬</span>
+                <span>WhatsApp: +91 98765 43210</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-green-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-green-800 mb-2">🕒 Business Hours</h3>
+            <div className="text-sm space-y-1">
+              <div>Monday - Friday: 9:00 AM - 6:00 PM</div>
+              <div>Saturday: 10:00 AM - 4:00 PM</div>
+              <div>Sunday: Closed</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-gray-800 mb-2">📝 Quick Contact Form</h3>
+            <form className="space-y-3">
+              <input
+                type="text"
+                placeholder="Your Name"
+                className="w-full p-2 border rounded text-sm"
+              />
+              <input
+                type="email"
+                placeholder="Email Address"
+                className="w-full p-2 border rounded text-sm"
+              />
+              <textarea
+                placeholder="Your Message"
+                rows="3"
+                className="w-full p-2 border rounded text-sm"
+              ></textarea>
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors"
+              >
+                Send Message
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 flex gap-3">
+        <button className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors">
+          Schedule a Call
+        </button>
+        <button className="border border-blue-600 text-blue-600 px-6 py-2 rounded-lg hover:bg-blue-50 transition-colors">
+          Live Chat
+        </button>
+      </div>
+    </div>
+  </div>
+);
 
 // Reusable Accordion Component
 const AccordionItem = ({ id, title, children, isExpanded, onToggle }) => (

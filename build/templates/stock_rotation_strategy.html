@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Rotation Strategy | MarketsAI1 - Powered by WealthAI1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8f4f8 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(22, 160, 133, 0.3);
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            max-width: 800px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            color: #1e3a5f;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-bottom: 3px solid #16a085;
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: #2c5282;
+            font-size: 1.3rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #f0fdfa 0%, #e6f7f5 100%);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #16a085;
+        }
+
+        .summary-card h4 {
+            color: #16a085;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card p {
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .accordion {
+            margin: 1.5rem 0;
+        }
+
+        .accordion-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .accordion-item:hover {
+            box-shadow: 0 3px 15px rgba(22, 160, 133, 0.15);
+        }
+
+        .accordion-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f0f4f8 100%);
+            padding: 1.2rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .accordion-header:hover {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d5e8ee 100%);
+        }
+
+        .accordion-header.active {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            color: white;
+        }
+
+        .accordion-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c5282;
+        }
+
+        .accordion-header.active .accordion-title {
+            color: white;
+        }
+
+        .accordion-icon {
+            font-size: 1.3rem;
+            transition: transform 0.3s ease;
+        }
+
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .accordion-content-inner {
+            padding: 1.5rem;
+        }
+
+        .phase-box {
+            background: linear-gradient(135deg, #fff8e6 0%, #fef3d9 100%);
+            border-left: 4px solid #f59e0b;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+
+        .phase-box h4 {
+            color: #f59e0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .metrics-table th {
+            background: linear-gradient(135deg, #2c5282 0%, #1e3a5f 100%);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .metrics-table td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .metrics-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #e6f7f5 0%, #d1f2eb 100%);
+            border: 2px solid #16a085;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box strong {
+            color: #16a085;
+        }
+
+        .comparison-box {
+            background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .comparison-box strong {
+            color: #ea580c;
+        }
+
+        .disclaimer {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+            border-left: 4px solid #e53e3e;
+            padding: 1.5rem;
+            border-radius: 5px;
+            margin-top: 3rem;
+        }
+
+        .disclaimer h3 {
+            color: #e53e3e;
+            margin-bottom: 0.5rem;
+        }
+
+        .disclaimer p {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        ul {
+            margin: 1rem 0 1rem 2rem;
+        }
+
+        li {
+            margin: 0.5rem 0;
+            color: #555;
+        }
+
+        .cost-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .cost-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid #16a085;
+        }
+
+        .cost-item strong {
+            color: #2c5282;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        .stock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .stock-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #16a085;
+            transition: all 0.3s ease;
+        }
+
+        .stock-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(22, 160, 133, 0.2);
+        }
+
+        .stock-item strong {
+            color: #16a085;
+            font-size: 1rem;
+        }
+
+        .stock-item .sector {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cost-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .hero {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>Stock Rotation Strategy</h1>
+            <p>A mean reversion-based investment approach applied to individual stocks, systematically rotating capital from stocks near 52-week highs to those near 52-week lows. While transaction costs are higher than ETFs, carefully selected stock combinations can potentially deliver superior returns with increased volatility.</p>
+        </div>
+
+        <div class="card">
+            <h2>Executive Summary</h2>
+            <p>The Stock Rotation Strategy applies the same <strong>mean reversion principle</strong> used in ETF rotation but to individual stocks, offering the potential for higher returns in exchange for higher transaction costs and increased volatility. By selecting fundamentally strong stocks across diverse sectors and rotating between them based on 52-week price positioning, this strategy aims to capture significant price normalization opportunities.</p>
+
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h4>Higher Return Potential</h4>
+                    <p>Individual stocks can exhibit stronger mean reversion patterns than diversified ETFs, potentially generating higher compound annual growth rates for well-selected stock combinations.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>Increased Transaction Costs</h4>
+                    <p>Stocks incur higher Securities Transaction Tax (STT) and other charges compared to ETFs. The strategy accounts for these costs in performance calculations to provide realistic expectations.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>Greater Volatility</h4>
+                    <p>Individual stocks experience higher price fluctuations than index ETFs, leading to larger drawdowns but also bigger potential gains. Risk-adjusted metrics help evaluate if higher returns justify the volatility.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>Stock Selection Importance</h4>
+                    <p>Success depends significantly on choosing fundamentally sound, liquid stocks with established track records. Diversification across sectors reduces single-stock risk while maintaining rotation benefits.</p>
+                </div>
+            </div>
+
+            <div class="comparison-box">
+                <strong>Key Difference from ETF Strategy:</strong> While ETFs provide built-in diversification and lower costs, stocks offer direct exposure to individual company performance. Historical backtests show that despite higher transaction costs (STT of 0.025% on stocks vs 0.001% on ETFs), carefully selected stock combinations can deliver significantly higher returns, albeit with increased volatility and risk.
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Strategy Overview</h2>
+            
+            <h3>Identical Two-Phase Framework</h3>
+            <p>The Stock Rotation Strategy follows the same operational framework as the ETF strategy:</p>
+            
+            <div class="phase-box">
+                <h4>Phase 1: Accumulation (Weeks 1-52)</h4>
+                <p><strong>Objective:</strong> Build a diversified stock portfolio foundation</p>
+                <ul>
+                    <li>Weekly investment of a fixed capital amount</li>
+                    <li>Purchase the stock closest to its 52-week low each week</li>
+                    <li>Gradual position building across multiple stocks</li>
+                    <li>Lower average entry prices by buying during weakness</li>
+                </ul>
+            </div>
+
+            <div class="phase-box">
+                <h4>Phase 2: Churning (Week 53 onwards)</h4>
+                <p><strong>Objective:</strong> Active rotation to capture mean reversion</p>
+                <ul>
+                    <li>Sell stocks approaching their 52-week highs</li>
+                    <li>Redeploy proceeds into stocks near 52-week lows</li>
+                    <li>Continuous portfolio optimization through rotation</li>
+                    <li>Lock in gains and reinvest in undervalued positions</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Example:</strong> Suppose you invest ₹50,000 weekly with 8 stocks in your universe. In week 1, if Reliance is closest to its 52-week low, you buy Reliance. In week 2, if ICICI Bank is now closest to its low, you buy ICICI Bank. After 52 weeks, you've built positions across all stocks. From week 53, you actively rotate: selling stocks that have appreciated significantly and are near their highs, and buying those experiencing temporary weakness near their lows.
+            </div>
+        </div>
+
+        <div class="accordion">
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">52-Week Range Analysis & Selection Criteria</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>Identical Calculation Framework</h3>
+                        <p>The stock strategy uses the exact same 252-trading-day window to identify mean reversion opportunities:</p>
+
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>52-Week High</strong>
+                                Maximum closing price in the last 252 trading days
+                            </div>
+                            <div class="cost-item">
+                                <strong>52-Week Low</strong>
+                                Minimum closing price in the last 252 trading days
+                            </div>
+                            <div class="cost-item">
+                                <strong>Distance from Low</strong>
+                                (Current Price - 52W Low) / 52W Low × 100
+                            </div>
+                            <div class="cost-item">
+                                <strong>Distance from High</strong>
+                                (52W High - Current Price) / 52W High × 100
+                            </div>
+                        </div>
+
+                        <h3>Signal Generation Timeline</h3>
+                        <ul>
+                            <li><strong>Signal Date:</strong> Friday of each week (or nearest trading day)</li>
+                            <li><strong>Execution Date:</strong> Monday of the following week (or nearest trading day)</li>
+                            <li><strong>Price Used:</strong> Monday opening price for all transactions</li>
+                        </ul>
+
+                        <div class="highlight-box">
+                            <strong>Selection Logic:</strong> During accumulation, the stock with the smallest "distance from 52-week low" is purchased. During churning, stocks are ranked by "distance from 52-week high" and sold in descending order until target capital is raised, then redeployed into the stock closest to its 52-week low.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Transaction Costs & Taxes (Higher for Stocks)</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>Indian Market Cost Structure for Stocks</h3>
+                        <p>Stocks incur <strong>higher transaction costs</strong> than ETFs, particularly in Securities Transaction Tax:</p>
+
+                        <table class="metrics-table">
+                            <thead>
+                                <tr>
+                                    <th>Cost Component</th>
+                                    <th>Rate</th>
+                                    <th>Applied On</th>
+                                    <th>When</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Brokerage</td>
+                                    <td>User-defined %</td>
+                                    <td>Transaction Value</td>
+                                    <td>Buy & Sell</td>
+                                </tr>
+                                <tr style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">
+                                    <td><strong>STT (Securities Transaction Tax)</strong></td>
+                                    <td><strong>0.025%</strong></td>
+                                    <td>Transaction Value</td>
+                                    <td><strong>Sell Only</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Stamp Duty</td>
+                                    <td>0.015%</td>
+                                    <td>Transaction Value</td>
+                                    <td>Buy Only</td>
+                                </tr>
+                                <tr>
+                                    <td>Exchange Charges</td>
+                                    <td>0.00345%</td>
+                                    <td>Transaction Value</td>
+                                    <td>Buy & Sell</td>
+                                </tr>
+                                <tr>
+                                    <td>SEBI Charges</td>
+                                    <td>0.0001%</td>
+                                    <td>Transaction Value</td>
+                                    <td>Buy & Sell</td>
+                                </tr>
+                                <tr>
+                                    <td>GST</td>
+                                    <td>18%</td>
+                                    <td>Brokerage Amount</td>
+                                    <td>Buy & Sell</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="comparison-box">
+                            <strong>Cost Comparison:</strong> The STT for stocks (0.025%) is <strong>25 times higher</strong> than for ETFs (0.001%). Additionally, stamp duty is 3x higher (0.015% vs 0.005%). For a ₹10 lakh sell transaction, ETF STT would be ₹100, while stock STT would be ₹2,500 - a significant difference that impacts net returns.
+                        </div>
+
+                        <h3>Capital Gains Tax Implementation</h3>
+                        <p>Identical <strong>FIFO (First-In-First-Out)</strong> methodology as ETF strategy, with 12.5% tax on long-term capital gains:</p>
+
+                        <div class="highlight-box">
+                            <strong>FIFO Example:</strong><br>
+                            Purchase History for Reliance:<br>
+                            • Batch 1: 50 shares @ ₹2,000 on Jan 1<br>
+                            • Batch 2: 40 shares @ ₹2,200 on Mar 1<br>
+                            • Batch 3: 60 shares @ ₹2,400 on May 1<br><br>
+
+                            When selling 70 shares @ ₹2,600:<br>
+                            • First 50 shares use ₹2,000 cost basis: Profit = (2,600-2,000) × 50 = ₹30,000<br>
+                            • Next 20 shares use ₹2,200 cost basis: Profit = (2,600-2,200) × 20 = ₹8,000<br>
+                            • Total Profit = ₹38,000<br>
+                            • Capital Gains Tax = ₹38,000 × 12.5% = ₹4,750
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Performance Metrics & Risk Analysis</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>Return Measurements</h3>
+                        
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>Total Return</strong>
+                                (Final NAV - Total Investment) / Total Investment × 100
+                            </div>
+                            <div class="cost-item">
+                                <strong>CAGR</strong>
+                                Compound Annual Growth Rate over investment period
+                            </div>
+                            <div class="cost-item">
+                                <strong>XIRR</strong>
+                                Extended IRR with exact cash flow timing
+                            </div>
+                        </div>
+
+                        <h3>Risk Metrics (Especially Important for Stocks)</h3>
+                        
+                        <table class="metrics-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Description</th>
+                                    <th>Stock Strategy Context</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Volatility</td>
+                                    <td>Annualized standard deviation of weekly returns</td>
+                                    <td>Typically 1.5-2x higher than ETF strategy</td>
+                                </tr>
+                                <tr>
+                                    <td>Maximum Drawdown</td>
+                                    <td>Largest peak-to-trough decline</td>
+                                    <td>Can be significantly deeper than ETFs</td>
+                                </tr>
+                                <tr>
+                                    <td>Sharpe Ratio</td>
+                                    <td>(CAGR - Risk Free Rate) / Volatility</td>
+                                    <td>May be lower despite higher returns</td>
+                                </tr>
+                                <tr>
+                                    <td>Treynor Ratio</td>
+                                    <td>(CAGR - Risk Free Rate) / Beta</td>
+                                    <td>Evaluates market risk compensation</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="comparison-box">
+                            <strong>Risk-Return Tradeoff:</strong> Stock rotation strategies typically exhibit higher volatility and deeper drawdowns than ETF strategies. An ETF strategy might have 15-20% maximum drawdown with 15% CAGR, while a stock strategy could have 35-40% drawdown with 25-30% CAGR. Investors must evaluate whether the higher potential returns justify the increased risk exposure.
+                        </div>
+
+                        <h3>Benchmark Comparison</h3>
+                        <p>Compared against both:</p>
+                        <ul>
+                            <li><strong>Nifty50 Buy-and-Hold:</strong> Broad market benchmark</li>
+                            <li><strong>Equal-Weight Buy-and-Hold:</strong> Buying and holding the same stocks with equal allocation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Stock Selection Guidelines</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>Critical Selection Criteria</h3>
+                        <p>Success in stock rotation heavily depends on selecting appropriate stocks:</p>
+
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>Market Capitalization</strong>
+                                Focus on large-cap stocks (₹50,000 Cr+) for adequate liquidity
+                            </div>
+                            <div class="cost-item">
+                                <strong>Liquidity</strong>
+                                Daily trading volume should support position sizes without slippage
+                            </div>
+                            <div class="cost-item">
+                                <strong>Track Record</strong>
+                                Minimum 10+ years of trading history for reliable mean reversion patterns
+                            </div>
+                            <div class="cost-item">
+                                <strong>Fundamental Strength</strong>
+                                Sound business models, consistent profitability, strong balance sheets
+                            </div>
+                            <div class="cost-item">
+                                <strong>Sector Diversification</strong>
+                                Spread across banking, IT, pharma, FMCG, energy, telecom, etc.
+                            </div>
+                            <div class="cost-item">
+                                <strong>Avoid Speculative Stocks</strong>
+                                Exclude penny stocks, small-caps, or highly volatile speculative names
+                            </div>
+                        </div>
+
+                        <div class="highlight-box">
+                            <strong>Example Universe:</strong> A well-diversified stock rotation universe might include blue-chip names like Reliance (Energy), ICICI Bank (Banking), TCS (IT), Hindustan Unilever (FMCG), Bharti Airtel (Telecom), Cipla (Pharma), Bajaj Finance (NBFC), and Britannia (Consumer). These represent established leaders with long track records and sufficient liquidity.
+                        </div>
+
+                        <h3>Stocks to Avoid</h3>
+                        <ul>
+                            <li><strong>Small/Mid-caps:</strong> Higher risk of non-recovery from lows</li>
+                            <li><strong>Low Liquidity:</strong> Execution slippage can erode strategy returns</li>
+                            <li><strong>Cyclical Extremes:</strong> Stocks in structurally declining industries</li>
+                            <li><strong>High Debt:</strong> Companies with weak financial health</li>
+                            <li><strong>Regulatory Issues:</strong> Stocks facing legal or compliance problems</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Advantages, Risks & Considerations</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>Key Advantages</h3>
+                        <ul>
+                            <li><strong>Higher Return Potential:</strong> Well-selected stock combinations can significantly outperform broad market indices</li>
+                            <li><strong>Stronger Mean Reversion:</strong> Individual stocks often exhibit more pronounced price normalization than diversified ETFs</li>
+                            <li><strong>Sector-Specific Opportunities:</strong> Ability to capture sector rotation dynamics</li>
+                            <li><strong>Direct Company Exposure:</strong> Benefit from individual company performance and growth</li>
+                            <li><strong>Systematic Discipline:</strong> Rules-based approach prevents emotional stock picking</li>
+                        </ul>
+
+                        <h3>Important Risks</h3>
+                        <ul>
+                            <li><strong>Higher Volatility:</strong> Expect larger portfolio value fluctuations and deeper drawdowns</li>
+                            <li><strong>Increased Costs:</strong> Higher STT and other charges reduce net returns compared to ETFs</li>
+                            <li><strong>Company-Specific Risk:</strong> Individual stocks can face business disruption, management issues, or sector headwinds</li>
+                            <li><strong>Liquidity Risk:</strong> Some stocks may have insufficient liquidity during market stress</li>
+                            <li><strong>Selection Risk:</strong> Poor stock selection can lead to permanently impaired capital</li>
+                            <li><strong>Concentration Risk:</strong> Smaller universe means less diversification than broad index ETFs</li>
+                        </ul>
+
+                        <h3>When to Prefer Stock Rotation</h3>
+                        <div class="highlight-box">
+                            Consider stock rotation if you:<br>
+                            • Have higher risk tolerance and can withstand 30-40%+ drawdowns<br>
+                            • Seek higher returns and are willing to accept increased volatility<br>
+                            • Have the discipline to stick with the strategy during difficult periods<br>
+                            • Understand individual company fundamentals and sector dynamics<br>
+                            • Have sufficient capital to maintain diversification across 6-10 stocks<br>
+                            • Can monitor portfolio regularly for any structural changes in companies
+                        </div>
+
+                        <h3>When to Prefer ETF Rotation</h3>
+                        <div class="comparison-box">
+                            Stick with ETF rotation if you:<br>
+                            • Prefer lower volatility and smaller drawdowns<br>
+                            • Want built-in diversification with lower costs<br>
+                            • Have limited time for stock-specific research<br>
+                            • Seek steadier, more predictable returns<br>
+                            • Are relatively new to systematic rotation strategies
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Illustrative Backtest Example</h2>
+            <p style="background: linear-gradient(135deg, #fff8e6 0%, #fef3d9 100%); border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 5px; margin-bottom: 1.5rem;">
+                <strong>Educational Purpose Only:</strong> The following backtest results are provided solely for educational illustration to demonstrate how the stock rotation strategy operates with historical data. This is NOT investment advice or a recommendation to invest in these specific stocks. Past performance does not guarantee future results.
+            </p>
+
+            <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 2rem; border-radius: 10px; border: 2px solid #16a085;">
+                <h3 style="color: #16a085; margin-top: 0;">Sample Configuration & Results</h3>
+                
+                <div class="cost-grid" style="margin: 1.5rem 0;">
+                    <div class="cost-item">
+                        <strong>Total Capital Deployed</strong>
+                        ₹26,00,000 (26 Lakhs)
+                    </div>
+                    <div class="cost-item">
+                        <strong>Weekly Investment</strong>
+                        ₹50,000
+                    </div>
+                    <div class="cost-item">
+                        <strong>Accumulation Period</strong>
+                        52 weeks (1 year)
+                    </div>
+                    <div class="cost-item">
+                        <strong>Brokerage Rate</strong>
+                        0.1% per transaction
+                    </div>
+                </div>
+
+                <h4 style="color: #2c5282; margin: 1.5rem 0 1rem;">Stock Combination Used</h4>
+                <div class="stock-grid">
+                    <div class="stock-item">
+                        <strong>Reliance Industries</strong>
+                        <div class="sector">Energy & Petrochemicals</div>
+                    </div>
+                    <div class="stock-item">
+                        <strong>Bharti Airtel</strong>
+                        <div class="sector">Telecommunications</div>
+                    </div>
+                    <div class="stock-item">
+                        <strong>TCS</strong>
+                        <div class="sector">Information Technology</div>
+                    </div>
+                    <div class="stock-item">
+                        <strong>ICICI Bank</strong>
+                        <div class="sector">Banking & Financial</div>
+                    </div>
+                    <div class="stock-item">
+                        <strong>Hindustan Unilever</strong>
+                        <div class="sector">FMCG</div>
+                    </div>
+                    <div class="stock-item">
+                        <strong>Britannia</strong>
+                        <div class="sector">Food Products</div>
+                    </div>
+                    <div class="stock-item">
+                        <strong>Bajaj Finance</strong>
+                        <div class="sector">NBFC</div>
+                    </div>
+                    <div class="stock-item">
+                        <strong>Cipla</strong>
+                        <div class="sector">Pharmaceuticals</div>
+                    </div>
+                </div>
+
+                <h4 style="color: #2c5282; margin: 1.5rem 0 1rem;">Backtest Period & Results</h4>
+                <table class="metrics-table" style="margin: 1rem 0;">
+                    <tbody>
+                        <tr>
+                            <td style="width: 50%;"><strong>Backtest Period</strong></td>
+                            <td>20 August 2007 to 20 August 2025 (18 years)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stop Loss</strong></td>
+                            <td>None</td>
+                        </tr>
+                        <tr style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">
+                            <td><strong>Achieved CAGR</strong></td>
+                            <td style="font-size: 1.5rem; font-weight: bold; color: #059669;">34.30%</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="comparison-box" style="margin-top: 1.5rem;">
+                    <strong>Exceptional Performance:</strong> This stock combination delivered a CAGR of 34.30% over 18 years - significantly higher than typical ETF rotation strategies (15-20% CAGR). This demonstrates that despite higher transaction costs, carefully selected blue-chip stocks can generate superior long-term returns. The 18-year period includes multiple market cycles, the 2008 financial crisis, and various sectoral rotations, providing a robust test of the strategy's resilience.
+                </div>
+
+                <div class="highlight-box" style="margin-top: 1.5rem;">
+                    <strong>What This Means:</strong> An investment of ₹26 lakhs (₹50,000 weekly for 52 weeks) following this stock rotation strategy with these 8 stocks would have grown substantially over 18 years at 34.30% CAGR, after accounting for all transaction costs (including higher STT for stocks), taxes, and charges. This return is approximately <strong>1.8-2x higher</strong> than typical ETF rotation CAGRs, though it would have come with proportionally higher volatility and deeper drawdowns during market corrections.
+                </div>
+
+                <div class="comparison-box" style="margin-top: 1.5rem;">
+                    <strong>Cost Impact Analysis:</strong> Despite stocks having 25x higher STT than ETFs (0.025% vs 0.001%), the strategy still delivered exceptional returns. This proves that <strong>stock selection quality and mean reversion strength can more than compensate for higher transaction costs</strong>. The weekly rotation captured numerous price cycles across these blue-chip stocks over 18 years.
+                </div>
+
+                <div style="background: #fff5f5; border-left: 4px solid #e53e3e; padding: 1rem; border-radius: 5px; margin-top: 1.5rem;">
+                    <strong style="color: #e53e3e;">Important Disclaimers:</strong>
+                    <ul style="margin: 0.5rem 0 0 1.5rem; color: #666;">
+                        <li>This is a <strong>historical backtest</strong> covering 18 years and does not predict future performance</li>
+                        <li>The 34.30% CAGR came with significantly higher volatility and drawdowns than ETF strategies</li>
+                        <li>Different stock combinations, time periods, or market conditions will produce vastly different results</li>
+                        <li>Individual stock risk is substantially higher than diversified ETF risk</li>
+                        <li>This example assumes perfect execution without slippage or market impact</li>
+                        <li>Company fundamentals can change; past winners may not remain winners</li>
+                        <li>This is for <strong>educational demonstration only</strong> - not a recommendation to invest in these stocks</li>
+                        <li><strong>Consult qualified financial advisors before implementing any stock rotation strategy</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Getting Started with MarketsAI1</h2>
+            
+            <h3>Configuration Parameters</h3>
+            <p>When setting up the Stock Rotation Strategy on MarketsAI1, you'll configure:</p>
+
+            <div class="cost-grid">
+                <div class="cost-item">
+                    <strong>Stock Universe</strong>
+                    Select 6-10 large-cap stocks across diverse sectors
+                </div>
+                <div class="cost-item">
+                    <strong>Weekly Capital</strong>
+                    Fixed amount to invest each week during accumulation
+                </div>
+                <div class="cost-item">
+                    <strong>Accumulation Period</strong>
+                    Number of weeks for accumulation phase (default: 52)
+                </div>
+                <div class="cost-item">
+                    <strong>Brokerage Rate</strong>
+                    Your broker's commission percentage
+                </div>
+                <div class="cost-item">
+                    <strong>Backtest Period</strong>
+                    Historical date range (longer periods = more reliable insights)
+                </div>
+                <div class="cost-item">
+                    <strong>Risk-Free Rate</strong>
+                    For Sharpe and Treynor ratio calculations
+                </div>
+            </div>
+
+            <h3>Backtest & Optimization Workflow</h3>
+            <ol>
+                <li><strong>Stock Research:</strong> Identify 6-10 fundamentally strong, liquid large-cap stocks</li>
+                <li><strong>Initial Backtest:</strong> Run strategy with selected stocks over longest available period</li>
+                <li><strong>Risk Analysis:</strong> Evaluate volatility, maximum drawdown, and risk-adjusted returns</li>
+                <li><strong>Optimization:</strong> Test different stock combinations to find optimal risk-return balance</li>
+                <li><strong>Comparison:</strong> Compare against buy-and-hold and ETF rotation strategies</li>
+                <li><strong>Paper Trading:</strong> Validate strategy with paper trading before live deployment</li>
+            </ol>
+
+            <div class="highlight-box">
+                <strong>Important:</strong> Stock rotation requires more active monitoring than ETF rotation. Regularly review if selected stocks maintain their fundamental strength, liquidity, and suitability for the strategy. Be prepared to replace stocks that undergo structural business changes or lose their market position.
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            <h3>SEBI Compliance & Regulatory Disclosure</h3>
+            <p><strong>Educational Purpose Only:</strong> The information provided in this document is for educational and informational purposes only. It is not intended as, and should not be construed as, investment advice, recommendation, or an offer to buy or sell any securities.</p>
+            
+            <p><strong>Not Investment Advice:</strong> This strategy explanation does not constitute financial, investment, trading, or any other type of professional advice. Past performance, including the illustrative backtest showing 34.30% CAGR, is not indicative of future results. All investments involve risk, including the potential loss of principal.</p>
+            
+            <p><strong>Higher Risk Warning:</strong> Stock rotation strategies involve substantially higher risk than diversified index investing or ETF strategies. Individual stocks can decline significantly, experience business failures, or face permanent capital impairment. The higher potential returns come with proportionally higher volatility, deeper drawdowns, and increased risk of loss.</p>
+            
+            <p><strong>Consult Professionals:</strong> Before implementing any stock rotation strategy, you must consult with qualified financial advisors, tax consultants, and legal professionals to understand the suitability for your specific financial situation, goals, and risk tolerance.</p>
+            
+            <p><strong>SEBI Registration:</strong> WealthAI1 and MarketsAI1 are technology platforms that provide tools for strategy backtesting and analysis. We are not SEBI registered investment advisors or portfolio managers. We do not provide personalized investment recommendations or manage client portfolios.</p>
+            
+            <p><strong>Transaction Cost Accuracy:</strong> While we implement comprehensive cost calculations including higher STT for stocks, actual costs may vary based on broker, exchange, and regulatory changes. Always verify costs with your broker.</p>
+            
+            <p><strong>Stock-Specific Risks:</strong> Individual stocks carry risks including business risk, management risk, sector risk, liquidity risk, and company-specific events that can materially impact stock prices. Diversification across stocks does not eliminate these risks.</p>
+            
+            <p><strong>Market Conditions:</strong> Strategy performance varies significantly with market conditions. Results during trending markets differ from range-bound markets. Historical backtests may not reflect future market environments.</p>
+            
+            <p><strong>Data & Calculation Accuracy:</strong> While we strive for accuracy, we cannot guarantee error-free operation. Users should independently verify all information, perform due diligence on selected stocks, and validate backtesting results before making investment decisions.</p>
+            
+            <p><strong>No Guarantee of Returns:</strong> The illustrative example showing 34.30% CAGR is historical and specific to that particular stock combination and time period. There is no guarantee that this or any strategy will generate positive returns. You could lose some or all of your invested capital.</p>
+            
+            <p><strong>Regulatory Compliance:</strong> This document complies with SEBI guidelines on investment education and disclosure. For official regulatory information and investor protection, please visit www.sebi.gov.in</p>
+        </div>
+    </div>
+
+    <script>
+        // Accordion functionality
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const item = this.parentElement;
+                const content = this.nextElementSibling;
+                const isActive = this.classList.contains('active');
+
+                // Close all accordions
+                document.querySelectorAll('.accordion-header').forEach(h => {
+                    h.classList.remove('active');
+                    h.nextElementSibling.style.maxHeight = null;
+                });
+
+                // Open clicked accordion if it wasn't active
+                if (!isActive) {
+                    this.classList.add('active');
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        });
+
+        // Smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Adjust accordion heights on window resize
+        window.addEventListener('resize', function() {
+            document.querySelectorAll('.accordion-header.active').forEach(header => {
+                const content = header.nextElementSibling;
+                content.style.maxHeight = content.scrollHeight + "px";
+            });
+        });
+    </script>
+</body>
+</html>

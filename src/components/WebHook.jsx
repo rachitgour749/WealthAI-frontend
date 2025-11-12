@@ -1,19 +1,27 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config/api.js';
+import { formatDate, formatDateTime } from '../utils/dateFormatter';
+import * as XLSX from 'xlsx';
+import { RiDeleteBinLine } from "react-icons/ri";
 
 const WebHook = ({
   onClose,
-  strategyType = 'ETF Strategy',
+  strategyType = 'ETF Rotation Strategy',
   userEmail = 'test@test.com',
   selectedEtfs = [],
-  strategyParams = {}
+  selectedStrategy = null,
+  strategyParams = {},
+  onDeploymentSuccess = null,
+  setShowResults = null
 }) => {
-  const [selectedStrategy, setSelectedStrategy] = useState(null)
   const [, setIsModalOpen] = useState(false)
   const [isJsonPopupOpen, setIsJsonPopupOpen] = useState(false)
   const [isSavedJsonOpen, setIsSavedJsonOpen] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [savedJsons, setSavedJsons] = useState([])
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+  const [clientPendingDelete, setClientPendingDelete] = useState(null)
 
   // Deployment state management
   const [isDeploying, setIsDeploying] = useState(false)
@@ -25,6 +33,10 @@ const WebHook = ({
   const [executionSuccess, setExecutionSuccess] = useState(false)
   const [executionError, setExecutionError] = useState('')
   const [showExecutionPopup, setShowExecutionPopup] = useState(false)
+
+  // Save deployment state management
+  const [saveDeploymentLoading, setSaveDeploymentLoading] = useState(false)
+  const [saveDeploymentSuccess, setSaveDeploymentSuccess] = useState(false)
   // Local persistence for saved JSONs (fallback/optimistic cache)
   const STORAGE_KEY = 'wealthai_saved_jsons'
 
@@ -71,12 +83,11 @@ const WebHook = ({
 
   const [formData, setFormData] = useState({
     strategyName: '',
-    webhook: 'http://tradeai1.wealthwisers.in/websoket/tradeView-data/ec1674b527fc/',
+    webhook: '',
     referenceCapital: '₹1,00,000',
   })
 
   const [newClientId, setNewClientId] = useState('')
-  const [newCapital, setNewCapital] = useState('')
   const [signalData, setSignalData] = useState([])
 
   const { user } = useAuth();
@@ -94,32 +105,18 @@ const WebHook = ({
   }
 
   // API Configuration
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'
+
 
   // Get current date for execution
   const getCurrentDate = () => {
     const now = new Date()
-    return now.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
+    return formatDate(now)
   }
 
-  const [clientIds, setClientIds] = useState([
-    { id: 1, clientId: 'CLI001' },
-    { id: 2, clientId: 'CLI002' },
-    { id: 3, clientId: 'CLI003' }
-  ])
+  const [clients, setClients] = useState([])
 
-  const [capitals, setCapitals] = useState([
-    { id: 1, capital: '₹10,000' },
-    { id: 2, capital: '₹25,000' },
-    { id: 3, capital: '₹50,000' }
-  ])
 
   const handleStrategySelect = (strategy) => {
-    setSelectedStrategy(strategy)
     setIsModalOpen(true)
     setFormData(prev => ({
       ...prev,
@@ -133,10 +130,28 @@ const WebHook = ({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
+    
+    if (name === 'referenceCapital') {
+      // Format reference capital with rupee symbol and commas
+      const numericValue = value.replace(/[^0-9]/g, '')
+      if (numericValue === '') {
+        setFormData(prev => ({
+          ...prev,
+          [name]: ''
+        }))
+      } else {
+        const formattedValue = '₹' + parseInt(numericValue).toLocaleString('en-IN')
+        setFormData(prev => ({
+          ...prev,
+          [name]: formattedValue
+        }))
+      }
+    } else {
     setFormData(prev => ({
       ...prev,
       [name]: value
     }))
+    }
   }
 
   const fetchSavedStrategyFromDatabase = async () => {
@@ -197,7 +212,7 @@ const WebHook = ({
         }
 
         // Filter for current strategy type
-        const currentType = String(strategyType || formData.strategyName || 'ETF Strategy').toLowerCase()
+        const currentType = String(strategyType || formData.strategyName || 'ETF Rotation Strategy').toLowerCase()
         const matchingJsons = savedJsons.filter(json =>
           json.strategy_type && String(json.strategy_type).toLowerCase().includes(currentType)
         )
@@ -222,8 +237,10 @@ const WebHook = ({
       console.log('Deploying to live signal API:', deploymentData)
 
       // Choose endpoint based on strategy type
-      const endpoint = strategyType === 'Stock Strategy'
+      const endpoint = strategyType === 'Stock Rotation Strategy'
         ? `${API_BASE_URL}/api/stocks/deploy`
+        : strategyType === 'RS Strategy'
+        ? `${API_BASE_URL}/api/rs-strategy/deploy`
         : `${API_BASE_URL}/api/live-signal/deploy`;
 
       console.log('Using endpoint:', endpoint);
@@ -272,8 +289,10 @@ const WebHook = ({
       console.log('Fetching live signals from API...')
 
       // Choose endpoint based on strategy type
-      const endpoint = strategyType === 'Stock Strategy'
+      const endpoint = strategyType === 'Stock Rotation Strategy'
         ? `${API_BASE_URL}/api/stocks/signals/latest`
+        : strategyType === 'RS Strategy'
+        ? `${API_BASE_URL}/api/rs-strategy/signals/latest`
         : `${API_BASE_URL}/api/live-signals/?date=${targetDate}&side=${side}`;
 
       console.log('API URL:', endpoint)
@@ -296,7 +315,7 @@ const WebHook = ({
       console.log('Live signals fetched successfully:', result)
 
       // Handle different response formats
-      if (strategyType === 'Stock Strategy') {
+      if (strategyType === 'Stock Rotation Strategy') {
         // Stock strategy returns { success, signals, count, run_id }
         if (result.signals && result.signals.length > 0) {
           const buyStocks = filterBuyStocks(result.signals);
@@ -437,8 +456,8 @@ const WebHook = ({
         // Create deployment data using saved information
         deploymentData = {
           user_email: email,
-          strategy_name: savedData.strategy_name || formData.strategyName || selectedStrategy?.name || 'ETF Strategy',
-          strategy_type: savedData.strategy_type || strategyType || 'ETF Strategy',
+          strategy_name: savedData.strategy_name || formData.strategyName || selectedStrategy?.name || 'ETF Rotation Strategy',
+          strategy_type: savedData.strategy_type || strategyType || 'ETF Rotation Strategy',
           deployment_data: jsonData,
           webhook_url: formData.webhook || '',
           reference_capital: savedData.capital_per_week?.toString() || formData.referenceCapital || '',
@@ -455,23 +474,15 @@ const WebHook = ({
           throw new Error('Please enter a valid LTP (Last Traded Price)')
         }
 
-        if (clientIds.length === 0) {
+        if (clients.length === 0) {
           throw new Error('Please add at least one client ID')
-        }
-
-        if (capitals.length === 0) {
-          throw new Error('Please add at least one capital amount')
-        }
-
-        if (clientIds.length !== capitals.length) {
-          throw new Error('Number of client IDs must match number of capital amounts')
         }
 
         // Generate deployment data from current form
         deploymentData = {
           user_email: email,
-          strategy_name: formData.strategyName || selectedStrategy?.name || 'ETF Strategy',
-          strategy_type: strategyType || 'ETF Strategy',
+          strategy_name: formData.strategyName || selectedStrategy?.name || 'ETF Rotation Strategy',
+          strategy_type: strategyType || 'ETF Rotation Strategy',
           deployment_data: generateJsonData(),
           webhook_url: formData.webhook || '',
           reference_capital: formData.referenceCapital || '',
@@ -524,7 +535,6 @@ const WebHook = ({
       ltp: ''
     })
     setIsModalOpen(false)
-    setSelectedStrategy(null)
     if (onClose) {
       onClose()
     }
@@ -532,73 +542,238 @@ const WebHook = ({
 
   const closeModal = () => {
     setIsModalOpen(false)
-    setSelectedStrategy(null)
     if (onClose) {
       onClose()
     }
   }
 
-  const addClientId = () => {
+  const addClient = () => {
     if (newClientId.trim()) {
-      const newId = Math.max(...clientIds.map(c => c.id)) + 1
-      setClientIds([...clientIds, { id: newId, clientId: newClientId.trim() }])
+      const upperCaseClientId = newClientId.trim().toUpperCase()
+      // Check if client ID already exists (case-insensitive)
+      const existingClientIds = clients.map(c => c.clientId.toUpperCase())
+      if (existingClientIds.includes(upperCaseClientId)) {
+        alert(`Client ID "${upperCaseClientId}" already exists`)
+        return
+      }
+      const newId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) + 1 : 1
+      setClients([...clients, { 
+        id: newId, 
+        clientId: upperCaseClientId, 
+        multiple: 1  // Default multiple
+      }])
       setNewClientId('')
     }
   }
 
-  const formatRupeeAmount = (value) => {
-    // Remove all non-numeric characters
-    const numericValue = value.replace(/[^0-9]/g, '')
-
-    if (numericValue === '') return ''
-
-    // Add rupee symbol and format with commas
-    const formattedValue = '₹' + parseInt(numericValue).toLocaleString('en-IN')
-    return formattedValue
+  const openDeleteConfirm = (client) => {
+    setClientPendingDelete(client)
+    setIsDeleteConfirmOpen(true)
   }
 
-  const addCapital = () => {
-    if (newCapital.trim()) {
-      const newId = Math.max(...capitals.map(c => c.id)) + 1
-      setCapitals([...capitals, { id: newId, capital: newCapital.trim() }])
-      setNewCapital('')
+  const closeDeleteConfirm = () => {
+    setIsDeleteConfirmOpen(false)
+    setClientPendingDelete(null)
+  }
+
+  const deleteClient = (clientId) => {
+    setClients(prevClients => prevClients.filter(client => client.id !== clientId))
+    setClientPendingDelete(null)
+    setIsDeleteConfirmOpen(false)
+  }
+
+  const handleConfirmDelete = () => {
+    if (clientPendingDelete) {
+      deleteClient(clientPendingDelete.id)
     }
   }
 
-  const removeClientId = (id) => {
-    setClientIds(clientIds.filter(client => client.id !== id))
+  // Excel file upload handler
+  const fileInputRef = useRef(null);
+  const [uploadingExcel, setUploadingExcel] = useState(false);
+
+  const handleExcelUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploadingExcel(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          
+          // Get the first sheet
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          
+          // Convert to JSON
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          
+          if (jsonData.length === 0) {
+            alert('Excel file is empty');
+            setUploadingExcel(false);
+            return;
+          }
+
+          // Find the Client ID column index
+          const headerRow = jsonData[0];
+          let clientIdColumnIndex = -1;
+          
+          // Try to find "Client ID" column (case insensitive, handles variations)
+          for (let i = 0; i < headerRow.length; i++) {
+            const header = String(headerRow[i] || '').toLowerCase().trim();
+            if (header.includes('client') && header.includes('id')) {
+              clientIdColumnIndex = i;
+              break;
+            }
+          }
+
+          // If not found, try first column
+          if (clientIdColumnIndex === -1) {
+            clientIdColumnIndex = 0;
+          }
+
+          // Extract Client IDs from the column (skip header row)
+          const clientIds = [];
+          for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (row && row[clientIdColumnIndex]) {
+              const clientId = String(row[clientIdColumnIndex]).trim();
+              if (clientId && clientId.length > 0) {
+                clientIds.push(clientId);
+              }
+            }
+          }
+
+          if (clientIds.length === 0) {
+            alert('No Client IDs found in the Excel file');
+            setUploadingExcel(false);
+            return;
+          }
+
+          // Add all Client IDs as clients (normalized to uppercase for comparison)
+          const existingClientIds = new Set(clients.map(c => c.clientId.toUpperCase()));
+          const newClients = [];
+          let currentMaxId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) : 0;
+
+          clientIds.forEach((clientId) => {
+            // Convert to uppercase and allow only alphanumeric characters
+            const upperCaseClientId = clientId.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            // Skip if client already exists or if invalid (empty after filtering)
+            if (upperCaseClientId && !existingClientIds.has(upperCaseClientId)) {
+              currentMaxId++;
+              newClients.push({
+                id: currentMaxId,
+                clientId: upperCaseClientId,
+                multiple: 1  // Default multiple
+              });
+              existingClientIds.add(upperCaseClientId); // Track added IDs to avoid duplicates in same upload
+            }
+          });
+
+          if (newClients.length === 0) {
+            alert('All Client IDs from the Excel file already exist');
+            setUploadingExcel(false);
+            return;
+          }
+
+          // Add new clients
+          setClients([...clients, ...newClients]);
+          alert(`Successfully added ${newClients.length} client(s) from Excel file`);
+          
+        } catch (error) {
+          console.error('Error parsing Excel file:', error);
+          alert('Error parsing Excel file. Please ensure it is a valid Excel file.');
+        } finally {
+          setUploadingExcel(false);
+          // Reset file input
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        }
+      };
+
+      reader.onerror = () => {
+        alert('Error reading file');
+        setUploadingExcel(false);
+      };
+
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      console.error('Error uploading Excel file:', error);
+      alert('Error uploading Excel file');
+      setUploadingExcel(false);
+    }
+  };
+
+  const triggerExcelUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+
+  const updateClientMultiple = (clientId, inputValue) => {
+    // Allow empty string for deletion
+    if (inputValue === '' || inputValue === null || inputValue === undefined) {
+      setClients(clients.map(client => 
+        client.id === clientId 
+          ? { ...client, multiple: '' }
+          : client
+      ));
+      return;
+    }
+    
+    // Parse the input value
+    const numValue = parseInt(inputValue.toString().replace(/[^0-9]/g, ''), 10);
+    
+    // If valid number, update with constraints
+    if (!isNaN(numValue)) {
+      const constrainedValue = Math.max(1, Math.min(20, numValue));
+      setClients(clients.map(client => 
+        client.id === clientId 
+          ? { ...client, multiple: constrainedValue }
+          : client
+      ));
+    } else {
+      // If invalid, keep the raw input (for typing purposes)
+      setClients(clients.map(client => 
+        client.id === clientId 
+          ? { ...client, multiple: inputValue }
+          : client
+      ));
+    }
   }
 
-  const removeCapital = (id) => {
-    setCapitals(capitals.filter(capital => capital.id !== id))
-  }
 
   const generateJsonData = () => {
-    // Create clients object from clientIds and capitals arrays with individual quantities
-    const clients = {}
-
-    // Use automatically fetched LTP from signalData, fallback to formData.ltp
+    const clientsData = {}
     const ltpPrice = signalData?.ltp?.price || parseFloat(formData.ltp) || 0
     console.log('Using LTP for quantity calculation:', ltpPrice)
 
-    // Match client IDs with their corresponding capital values
-    clientIds.forEach((client, index) => {
-      const capital = capitals[index]
-      if (capital && client.clientId) {
-        // Extract numeric value from capital string (remove ₹ and commas)
-        const numericValue = capital.capital.replace(/[₹,]/g, '').trim()
-        const parsedValue = parseFloat(numericValue) || 0
-        if (parsedValue > 0) {
-          // Calculate individual quantity for this client using fetched LTP
-          const clientQuantity = ltpPrice > 0 ? Math.floor(parsedValue / ltpPrice) : 0
-
-          console.log(`Client ${client.clientId}: Capital=${parsedValue}, LTP=${ltpPrice}, Quantity=${clientQuantity}`)
-
-          // Only store quantity for each client
-          clients[client.clientId] = clientQuantity.toString()
+    // Calculate final capital for quantity calculation using individual client multiples
+    const rawReferenceCapital = parseFloat(formData.referenceCapital.replace(/[^0-9.]/g, ''));
+    
+    clients.forEach((client) => {
+      if (client.clientId) {
+        // Ensure client ID is uppercase
+        const upperCaseClientId = client.clientId.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (upperCaseClientId) {
+          // Calculate final capital using individual client multiple
+          const multipleValue = client.multiple === '' || client.multiple === null || client.multiple === undefined ? 1 : client.multiple;
+          const finalCapitalNumeric = (rawReferenceCapital * multipleValue) / 52;
+          
+          // Calculate quantity using individual final capital
+          const clientQuantity = ltpPrice > 0 ? Math.floor(finalCapitalNumeric / ltpPrice) : 0;
+          
+          console.log(`Client ${upperCaseClientId}: Multiple=${client.multiple}, Final Capital=${finalCapitalNumeric}, LTP=${ltpPrice}, Quantity=${clientQuantity}`);
+          
+          clientsData[upperCaseClientId] = clientQuantity.toString();
         }
       }
-    })
+    });
 
     // Use automatically fetched symbol from signalData, fallback to hardcoded value
     const symbolValue = signalData?.symbol || "NIFTY50"
@@ -609,7 +784,7 @@ const WebHook = ({
       "symbol": symbolValue,
       "order_side": "BUY",
       "product_type": "delivery",
-      "clients": clients
+      "clients": clientsData
     }
   }
 
@@ -669,7 +844,7 @@ const WebHook = ({
             quantity: parseInt(jsonData.quantity) || 0
           },
           strategy_name: (formData.strategyName || 'Saved Strategy').trim(),
-          strategy_type: strategyType || formData.strategyName || 'ETF Strategy',
+          strategy_type: strategyType || formData.strategyName || 'ETF Rotation Strategy',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
@@ -682,7 +857,7 @@ const WebHook = ({
 
         console.log('Request payload:', cleanPayload)
 
-        const response = await fetch('http://localhost:8000/api/save-json', {
+        const response = await fetch('https://api.wealthai1.in/api/save-json', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -736,7 +911,7 @@ const WebHook = ({
         addToCache({
           user_email: email.trim(),
           strategy_name: (formData.strategyName || 'Saved Strategy').trim(),
-          strategy_type: strategyType || formData.strategyName || 'ETF Strategy',
+          strategy_type: strategyType || formData.strategyName || 'ETF Rotation Strategy',
           json_data: jsonData,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -767,7 +942,7 @@ const WebHook = ({
         return
       }
 
-      const response = await fetch(`http://localhost:8000/api/saved-json/${encodeURIComponent(email)}`, {
+      const response = await fetch(`/api/saved-json/${encodeURIComponent(email)}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json'
@@ -790,7 +965,7 @@ const WebHook = ({
         }
 
         const currentEmail = String((email || '').trim()).toLowerCase()
-        const desiredType = String(strategyType || formData.strategyName || 'ETF Strategy').toLowerCase()
+        const desiredType = String(strategyType || formData.strategyName || 'ETF Rotation Strategy').toLowerCase()
 
         // Merge backend list with cached items, then filter and de-duplicate by id
         const cached = loadFromCacheFiltered(currentEmail, desiredType)
@@ -815,7 +990,7 @@ const WebHook = ({
         console.error('Fetch saved JSONs failed:', response.status, errorData)
         // Fallback to cache
         const currentEmail = String((email || '').trim()).toLowerCase()
-        const desiredType = String(strategyType || formData.strategyName || 'ETF Strategy').toLowerCase()
+        const desiredType = String(strategyType || formData.strategyName || 'ETF Rotation Strategy').toLowerCase()
         setSavedJsons(loadFromCacheFiltered(currentEmail, desiredType))
       }
     } catch (error) {
@@ -845,7 +1020,7 @@ const WebHook = ({
 
       // Try backend delete first
       try {
-        const response = await fetch(`http://localhost:8000/api/delete-json/${jsonId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/delete-json/${jsonId}`, {
           method: 'DELETE',
           headers: {
             'Accept': 'application/json',
@@ -886,6 +1061,132 @@ const WebHook = ({
     }
   }
 
+  const handleSaveDeployment = async () => {
+    setSaveDeploymentLoading(true);
+    setSaveDeploymentSuccess(false);
+    setShowResults(false);
+    try {
+      // ✅ USE ACTUAL STRATEGY NAME FROM SELECTED STRATEGY
+      const strategyName = selectedStrategy?.strategy_name || selectedStrategy?.name || strategyType;
+      const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      const timestamp = Date.now(); // Add timestamp for uniqueness
+      const runId = `run_${strategyName.replace(/\s+/g, '_').toLowerCase()}_${currentDate}_${timestamp}`;
+      
+      console.log('🔍 WebHook selectedStrategy prop:', selectedStrategy); // Added debug
+      console.log('🔍 Strategy name being used:', strategyName); // Added debug
+      console.log('🔍 Fallback strategyType:', strategyType); // Added debug
+      console.log('🔍 Saving deployment with strategy name:', strategyName);
+      console.log('🔍 Selected strategy object:', selectedStrategy);
+      console.log('🔍 Execution date:', currentDate);
+      
+      // 1. Parse Reference Capital
+      const rawReferenceCapital = parseFloat(formData.referenceCapital.replace(/[^0-9.]/g, ''));
+      if (isNaN(rawReferenceCapital)) {
+        throw new Error('Invalid Reference Capital');
+      }
+      
+      // 2. Calculate Final Capital using new formula (will be calculated per client)
+      // Note: Individual client calculations are done in the clientInformationJson section below
+      
+      // 3. Create Client Information JSON with individual multiples
+      const clientInformationJson = {};
+      clients.forEach(client => {
+        // Ensure client ID is uppercase
+        const upperCaseClientId = client.clientId.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (upperCaseClientId) {
+          const multipleValue = client.multiple === '' || client.multiple === null || client.multiple === undefined ? 1 : client.multiple;
+          const clientFinalCapitalNumeric = (rawReferenceCapital * multipleValue) / 52;
+          const clientFinalCapitalFormatted = `₹${clientFinalCapitalNumeric.toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })}`;
+          clientInformationJson[upperCaseClientId] = clientFinalCapitalFormatted;
+        }
+      });
+      
+      console.log('🔍 Individual client calculations completed');
+      console.log('🔍 Client Info JSON:', clientInformationJson);
+      console.log('🔍 Clients:', clients);
+      
+      // Prepare deployment data
+      const deploymentData = {
+        user_email: email,
+        strategy_name: strategyName, // ✅ THIS USES THE ACTUAL STRATEGY NAME
+        strategy_type: strategyType,
+        run_id: runId,
+        webhook_url: formData.webhook || '',
+        reference_capital: formData.referenceCapital || '',
+        ltp: signalData?.ltp?.price || parseFloat(formData.ltp) || 0,
+        execution_date: currentDate, // YYYY-MM-DD format
+        // REMOVE client_ids and capitals
+        // client_ids: clientIds.map(client => client.clientId),
+        // capitals: capitals.map(capital => capital.capital),  
+        // ADD new client_information_json
+        client_information_json: JSON.stringify(clientInformationJson),
+        etf_count: clients.length || 0,
+        etf_names: selectedStrategy?.tickers || selectedEtfs || [],
+        deployment_data: generateJsonData(),
+        created_at: new Date().toISOString()
+      };  
+      
+      console.log('📤 Sending deployment data:', deploymentData);
+      
+      // Call backend API - Choose endpoint based on strategy type
+      const endpoint = strategyType === 'RS Strategy'
+        ? `${API_BASE_URL}/api/save-rs-deployment`
+        : `${API_BASE_URL}/api/live-signals/save-deployment`;
+      
+      console.log('Using deployment endpoint:', endpoint);
+      console.log('Strategy type:', strategyType);
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(deploymentData)
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        setSaveDeploymentSuccess(true);
+        console.log('✅ Deployment saved successfully:', result);
+        
+        // Call the callback to refresh parent component
+        if (onDeploymentSuccess) {
+          onDeploymentSuccess();
+        }
+        
+        // Auto-close modal immediately after successful response
+        setTimeout(() => {
+          if (onClose) {
+            onClose();
+          }
+        }, 300); // Small delay to ensure state updates are visible
+      } else if (response.ok && !result.success && result.message?.includes('already exists')) {
+        // Handle case where deployment already exists
+        setSaveDeploymentSuccess(true);
+        console.log('⚠️ Deployment already exists:', result.message);
+        
+        // Auto-close modal even if deployment already exists
+        setTimeout(() => {
+          if (onClose) {
+            onClose();
+          }
+        }, 100); // Small delay to ensure state updates are visible
+      } else {
+        throw new Error(result.detail || result.message || 'Failed to save deployment');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error saving deployment:', error);
+      // You can add error state handling here
+    } finally {
+      setSaveDeploymentLoading(false);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* Execution Success/Error Popup */}
@@ -915,12 +1216,15 @@ const WebHook = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-4 px-[10px]">
         <h1 className="text-xl font-bold text-gray-800">
-          {strategyType}
+          {selectedStrategy?.strategy_name || selectedStrategy?.name || 
+           (strategyType === 'Stock Rotation Strategy' ? 'Stock Rotation Strategy' : 
+            strategyType === 'ETF Rotation Strategy' || strategyType === 'ETF Strategy' ? 'ETF Rotation Strategy' :
+            strategyType)}
         </h1>
         <div className="flex items-center space-x-3">
           <div className="text-xs text-gray-600">
             <div className="font-medium">Email: {email}</div>
-            <div className="text-xs text-gray-500">Execution Date: {getCurrentDate()}</div>
+            <div className="text-xs text-gray-500">Deployment Date: {getCurrentDate()}</div>
           </div>
         </div>
       </div>
@@ -937,8 +1241,8 @@ const WebHook = ({
               type="text"
               name="webhook"
               value={formData.webhook}
-              readOnly
-              className="w-full px-2 py-1.5 border border-gray-300 rounded bg-gray-50 text-blue-600 cursor-not-allowed text-xs"
+              onChange={handleInputChange}
+              className="w-full px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent transition-all text-xs text-gray-400 bg-white"
               placeholder="https://webhook.url"
             />
           </div>
@@ -951,147 +1255,152 @@ const WebHook = ({
               type="text"
               name="referenceCapital"
               value={formData.referenceCapital}
-              readOnly
-              className="w-full px-2 py-1.5 border border-gray-300 rounded bg-gray-50 cursor-not-allowed text-xs"
-              placeholder="Enter amount (e.g., 100000)"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              LTP (Last Traded Price)
-            </label>
-            <input
-              type="number"
-              name="ltp"
-              value={signalData?.ltp?.price.toFixed(2)}
               onChange={handleInputChange}
               className="w-full px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent transition-all text-xs"
-              placeholder="Enter LTP (e.g., 1500)"
-              step="0.01"
-              min="0"
+              placeholder="Enter amount (e.g., ₹1,00,000)"
             />
           </div>
+
         </div>
 
-        {/* Right Side - Tables Side by Side */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Right Side - Full Width Client Table */}
+        <div className="w-full">
           {/* Client ID Table */}
-          <div>
+          <div className="w-full">
             <h3 className="text-xs font-semibold text-gray-800 mb-1">Client ID</h3>
             <div className="mb-2 flex gap-1">
               <input
                 type="text"
                 value={newClientId}
-                onChange={(e) => setNewClientId(e.target.value)}
+                onChange={(e) => {
+                  // Convert to uppercase and allow only alphanumeric characters
+                  const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                  setNewClientId(value);
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    addClient();
+                  }
+                }}
                 placeholder="Enter Client ID"
-                className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase"
               />
               <button
-                onClick={addClientId}
+                onClick={addClient}
                 className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
+                title="Add Client"
               >
                 +
               </button>
+              <div className="relative group">
+                <button
+                  onClick={triggerExcelUpload}
+                  disabled={uploadingExcel}
+                  className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                >
+                  {uploadingExcel ? (
+                    <span className="inline-block animate-spin rounded-full h-3 w-3 border-b-2 border-white"></span>
+                  ) : (
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                  )}
+                </button>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                  Upload Excel File
+                </div>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleExcelUpload}
+                style={{ display: 'none' }}
+              />
             </div>
-            <div className="bg-white border border-gray-200 rounded overflow-hidden shadow-sm">
-              <table className="min-w-full divide-y divide-gray-200">
+            <div className="bg-white border border-gray-200 rounded shadow-sm w-full overflow-auto h-[180px]">
+              <table className="w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ID
+                    <th className="px-2 py-1 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider w-16">
+                      S.NO.
                     </th>
-                    <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-2 py-1 text-left  text-[10px] font-medium text-gray-500 uppercase tracking-wider w-32">
                       Client ID
                     </th>
-                    <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Action
+                    <th className="px-2 py-1 text-left  text-[10px] font-medium text-gray-500 uppercase tracking-wider w-24">
+                      Multiple
+                    </th>
+                    <th className="px-2 py-1 text-left  text-[10px] font-medium text-gray-500 uppercase tracking-wider w-40">
+                      Final Capital
+                    </th>
+                    <th className="px-2 py-1 text-left  text-[10px] font-medium text-gray-500 uppercase tracking-wider w-16">
+                      DELETE
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {clientIds.map((client) => (
+                  {clients.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="px-2 py-4 text-center text-xs text-gray-500">
+                        No clients added yet. Add a client ID above.
+                      </td>
+                    </tr>
+                  ) : (
+                    clients.map((client) => {
+                      // Calculate final capital for this client using individual multiple
+                      const rawReferenceCapital = parseFloat(formData.referenceCapital.replace(/[^0-9.]/g, ''));
+                      const multipleValue = client.multiple === '' || client.multiple === null || client.multiple === undefined ? 1 : client.multiple;
+                      const finalCapitalNumeric = (rawReferenceCapital * multipleValue) / 52;
+                      const finalCapitalFormatted = `₹${finalCapitalNumeric.toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      })}`;
+                      
+                      return (
                     <tr key={client.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-2 py-1 whitespace-nowrap text-xs text-gray-900">
                         {client.id}
                       </td>
+                      <td className="px-2 py-1 whitespace-nowrap text-xs text-gray-900 uppercase">
+                        {client.clientId.toUpperCase()}
+                      </td>
                       <td className="px-2 py-1 whitespace-nowrap text-xs text-gray-900">
-                        {client.clientId}
+              <input
+                              type="number"
+                              min="1"
+                              max="20"
+                              value={client.multiple}
+                              onChange={(e) => updateClientMultiple(client.id, e.target.value)}
+                              onBlur={(e) => {
+                                // Ensure minimum value of 1 when field loses focus
+                                const value = parseInt(e.target.value) || 1;
+                                updateClientMultiple(client.id, value);
+                              }}
+                              className="w-full px-1 py-0.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                      </td>
+                          <td className="px-2 py-1 whitespace-nowrap text-xs font-semibold text-green-700">
+                            {finalCapitalFormatted}
                       </td>
                       <td className="px-2 py-1 whitespace-nowrap text-xs text-gray-900">
                         <button
-                          onClick={() => removeClientId(client.id)}
-                          className="text-red-500 hover:text-red-700 transition-colors"
+                          type="button"
+                          onClick={() => openDeleteConfirm(client)}
+                          className="flex items-center justify-center text-red-600 hover:text-red-800 hover:scale-110 transition-all duration-200 p-1"
                         >
-                          ×
+                          <RiDeleteBinLine className="text-lg" />
                         </button>
                       </td>
                     </tr>
-                  ))}
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Capital Table */}
-          <div>
-            <h3 className="text-xs font-semibold text-gray-800 mb-1">Capital</h3>
-            <div className="mb-2 flex gap-1">
-              <input
-                type="text"
-                value={newCapital}
-                onChange={(e) => {
-                  const formatted = formatRupeeAmount(e.target.value)
-                  setNewCapital(formatted)
-                }}
-                placeholder="Enter Capital (e.g., 10000)"
-                className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-              <button
-                onClick={addCapital}
-                className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
-              >
-                +
-              </button>
-            </div>
-            <div className="bg-white border border-gray-200 rounded overflow-hidden shadow-sm">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ID
-                    </th>
-                    <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Capital
-                    </th>
-                    <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {capitals.map((capital) => (
-                    <tr key={capital.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-2 py-1 whitespace-nowrap text-xs text-gray-900">
-                        {capital.id}
-                      </td>
-                      <td className="px-2 py-1 whitespace-nowrap text-xs text-gray-900">
-                        {capital.capital}
-                      </td>
-                      <td className="px-2 py-1 whitespace-nowrap text-xs text-gray-900">
-                        <button
-                          onClick={() => removeCapital(capital.id)}
-                          className="text-red-500 hover:text-red-700 transition-colors"
-                        >
-                          ×
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -1116,20 +1425,9 @@ const WebHook = ({
         </div>
       )}
 
-      {deploySuccess && (
-        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center">
-            <svg className="w-4 h-4 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            <span className="text-sm text-green-700">Strategy deployed successfully! Closing modal...</span>
-          </div>
-        </div>
-      )}
-
       {/* Action Buttons */}
-      <div className="flex justify-between items-center mt-4">
-        <div className="flex space-x-2">
+      <div className="flex justify-center items-center">
+        {/* <div className="flex space-x-2">
           <button
             onClick={openJsonPopup}
             className="px-4 py-1.5 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded hover:from-green-600 hover:to-teal-700 focus:outline-none focus:ring-1 focus:ring-green-500 transition-all duration-200 font-medium text-xs shadow-lg hover:shadow-xl"
@@ -1142,16 +1440,91 @@ const WebHook = ({
           >
             Saved JSON
           </button>
-        </div>
+        </div> */}
         <div className="flex space-x-2">
           <button
             onClick={handleCancel}
-            className="px-4 py-1.5 border border-gray-300 rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-gray-500 transition-all duration-200 font-medium text-xs"
+            className="px-4 py-1.5 border border-gray-500 rounded text-black bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-gray-500 transition-all duration-200 font-medium text-xs"
           >
-            Cancel
+            Close
+          </button>
+          <button
+            onClick={handleSaveDeployment}
+            disabled={saveDeploymentLoading || saveDeploymentSuccess}
+            className={`px-4 py-1.5 rounded font-medium text-xs shadow-lg hover:shadow-xl transition-all duration-200 ${
+              saveDeploymentLoading
+                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white opacity-50 cursor-not-allowed'
+                : saveDeploymentSuccess
+                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white cursor-not-allowed'
+                : 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white hover:from-teal-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500'
+            }`}
+          >
+            {saveDeploymentLoading ? (
+              <>
+                <div className="inline-block animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                Saving...
+              </>
+            ) : saveDeploymentSuccess ? (
+              <>
+                <svg className="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Saved!
+              </>
+            ) : (
+              'Save Deployment'
+            )}
           </button>
         </div>
       </div>
+
+      {isDeleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={closeDeleteConfirm}
+          ></div>
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Delete Client</h3>
+                <p className="mt-2 text-sm text-gray-600">
+                  Are you sure you want to remove client{' '}
+                  <span className="font-semibold">
+                    {clientPendingDelete?.clientId?.toUpperCase()}
+                  </span>
+                  ?
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeDeleteConfirm}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={closeDeleteConfirm}
+                className="px-4 py-1.5 border border-gray-300 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="px-4 py-1.5 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 transition-colors"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* JSON Popup - Centered Modal */}
       {isJsonPopupOpen && (
@@ -1292,11 +1665,7 @@ const WebHook = ({
                             Saved on {(() => {
                               try {
                                 const date = new Date(json.created_at || json.updated_at || new Date())
-                                return isNaN(date.getTime()) ? getCurrentDate() : date.toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                })
+                                return isNaN(date.getTime()) ? getCurrentDate() : formatDate(date)
                               } catch (error) {
                                 return getCurrentDate()
                               }

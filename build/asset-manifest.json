@@ -1,14 +1,21 @@
 {
   "files": {
-    "main.css": "/static/css/main.080be027.css",
-    "main.js": "/static/js/main.31d433ea.js",
+    "main.css": "/static/css/main.1f39a2e3.css",
+    "main.js": "/static/js/main.12b50014.js",
+    "static/media/AutomationAI1Logo.png": "/static/media/AutomationAI1Logo.225941dd0574a2df9a44.png",
+    "static/media/MarketAI1Logo.png": "/static/media/MarketAI1Logo.1468139d798654e09933.png",
+    "static/media/ChatAI1Logo.png": "/static/media/ChatAI1Logo.b47b540786eb087d1cc5.png",
     "static/media/Logo1.png": "/static/media/Logo1.a4d08484e626b8b5d181.png",
+    "static/media/MarketsAI.png": "/static/media/MarketsAI.50e1bb9393ef810ff0fe.png",
+    "static/media/Heading.png": "/static/media/Heading.0eb9b3ef9667c66d1d93.png",
+    "static/media/AutomationAI.png": "/static/media/AutomationAI.0dca02cc0bb58575dfd3.png",
+    "static/media/ChatAI.png": "/static/media/ChatAI.9efd2cac03fdd14376b7.png",
     "index.html": "/index.html",
-    "main.080be027.css.map": "/static/css/main.080be027.css.map",
-    "main.31d433ea.js.map": "/static/js/main.31d433ea.js.map"
+    "main.1f39a2e3.css.map": "/static/css/main.1f39a2e3.css.map",
+    "main.12b50014.js.map": "/static/js/main.12b50014.js.map"
   },
   "entrypoints": [
-    "static/css/main.080be027.css",
-    "static/js/main.31d433ea.js"
+    "static/css/main.1f39a2e3.css",
+    "static/js/main.12b50014.js"
   ]
 }

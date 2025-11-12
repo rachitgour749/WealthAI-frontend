@@ -40,8 +40,9 @@ export const BACKTEST_STATUS = {
 };
 
 export const STOCK_UNIVERSE_OPTIONS = [
-  { value: 'NIFTY500', label: 'Nifty 500', description: 'Top 500 stocks by market cap' },
-  { value: 'NIFTY200', label: 'Nifty 200', description: 'Top 200 stocks by market cap' },
+  { value: 'NIFTY50', label: 'Nifty 50', description: 'Top 50 stocks by market cap' },
   { value: 'NIFTY100', label: 'Nifty 100', description: 'Top 100 stocks by market cap' },
-  { value: 'NIFTY50', label: 'Nifty 50', description: 'Top 50 stocks by market cap' }
+  { value: 'NIFTY500', label: 'Nifty 500', description: 'Top 500 stocks by market cap' },
+  
+ 
 ];

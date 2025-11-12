@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import Login from './Login';
 
 const ProtectedRoute = ({ children, redirectTo = null, setCurrentPage = null, requireSubscription = true }) => {
   const { isAuthenticated, loading } = useAuth();
-  const { hasAccess, needsUpgrade, subscriptionInfo, loading: subscriptionLoading } = useSubscription();
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const {
+    isLoading: subscriptionLoading,
+    subscription,
+    productsStatus,
+    isTrialExpired,
+  } = useSubscription();
 
   if (loading || subscriptionLoading) {
     return (
@@ -42,8 +46,14 @@ const ProtectedRoute = ({ children, redirectTo = null, setCurrentPage = null, re
     );
   }
 
+  // Determine access using current subscription context API
+  // Access is granted if: any product has access OR global trial is not expired
+  const hasAnyProductAccess = Object.values(productsStatus || {}).some(p => p?.has_access);
+  const trialExpired = isTrialExpired();
+  const hasGlobalAccess = hasAnyProductAccess || (!trialExpired && !!subscription);
+
   // Check subscription access for premium features
-  if (requireSubscription && !hasAccess) {
+  if (requireSubscription && !hasGlobalAccess) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full">
@@ -56,29 +66,17 @@ const ProtectedRoute = ({ children, redirectTo = null, setCurrentPage = null, re
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Subscription Required</h2>
               <p className="text-gray-600 mb-4">
-                {needsUpgrade ? 
-                  "Your trial has expired. Please upgrade to continue using premium features." :
-                  "This feature requires an active subscription or trial. Please start your free trial or upgrade your plan."
-                }
+                {trialExpired
+                  ? 'Your trial has expired. Please upgrade to continue using premium features.'
+                  : 'This feature requires an active subscription or trial. Please start your free trial or upgrade your plan.'}
               </p>
-              
-              {subscriptionInfo && (
-                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-700">
-                    Status: <span className="font-semibold capitalize">{subscriptionInfo.status}</span>
-                  </p>
-                  {subscriptionInfo.message && (
-                    <p className="text-sm text-gray-600 mt-1">{subscriptionInfo.message}</p>
-                  )}
-                </div>
-              )}
               
               <div className="space-y-3">
                 <button
-                  onClick={() => setCurrentPage && setCurrentPage('payment')}
+                  onClick={() => setCurrentPage && setCurrentPage('profile')}
                   className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                 >
-                  {needsUpgrade ? 'Upgrade Now' : 'Start Free Trial'}
+                  {trialExpired ? 'Upgrade Now' : 'Start Free Trial'}
                 </button>
                 
                 <button

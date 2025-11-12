@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { FaTwitter, FaLinkedin, FaInstagram, FaFacebook, FaYoutube } from 'react-icons/fa';
+import Twitter from './SocialmediaIcon/Twitter';
+import Linkedin from './SocialmediaIcon/Linkedin';
+import Insta from './SocialmediaIcon/Insta';
+import Facebook from './SocialmediaIcon/Facebook';
 
-const Footer = ({ setCurrentPage }) => {
+const Footer = ({ setCurrentPage, isHome = false }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState('');
 
@@ -64,24 +67,26 @@ Contact Information  For any cancellation, refund, or return requests, please co
 
   return (
     <>
-      <footer className="bg-gradient-to-r from-blue-900 via-teal-700 to-blue-900 text-white h-12 sm:h-16 flex-shrink-0 border-t border-teal-700 shadow-md">
+      <footer className={`bg-gradient-to-r from-blue-900 via-teal-700 to-blue-900 text-white h-12 sm:h-16 flex-shrink-0 border-t border-teal-700 shadow-[0_-6px_6px_-1px_rgba(107,114,128,0.3),0_-2px_4px_-1px_rgba(107,114,128,0.2)] transition-transform duration-300 ${isHome ? '' : 'translate-y-12 hover:translate-y-0'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center justify-between h-full">
             {/* Left Side - Company Info */}
             <div className="flex items-center space-x-3 sm:space-x-4">
-              <h3 className="text-xs sm:text-sm font-bold">WealthAI1</h3>
+              <h3 className="text-xs sm:text-sm mt-[10px] font-bold">WealthAI1</h3>
               <div className="hidden md:flex items-center space-x-3">
-                <a href="https://twitter.com/wealthai1" target="_blank" rel="noopener noreferrer" className="text-blue-200 hover:text-teal-300 transition-colors">
-                  <FaTwitter className="text-md" />
+                <a href="https://x.com/_wealthwisers_
+ " target="_blank" rel="noopener noreferrer">
+                  <Twitter />
                 </a>
-                <a href="https://linkedin.com/company/wealthai1" target="_blank" rel="noopener noreferrer" className="text-blue-200 hover:text-teal-300 transition-colors">
-                  <FaLinkedin className="text-md" />
+                <a href="https://www.linkedin.com/company/wealthwisers-technologies" target="_blank" rel="noopener noreferrer">
+                  <Linkedin />
                 </a>
-                <a href="https://instagram.com/wealthai1" target="_blank" rel="noopener noreferrer" className="text-blue-200 hover:text-teal-300 transition-colors">
-                  <FaInstagram className="text-sm" />
+                <a href="https://www.instagram.com/_wealthwisers_/
+ " target="_blank" rel="noopener noreferrer">
+                  <Insta />
                 </a>
-                <a href="https://facebook.com/wealthai1" target="_blank" rel="noopener noreferrer" className="text-blue-200 hover:text-teal-300 transition-colors">
-                  <FaFacebook className="text-md" />
+                <a href="https://www.facebook.com/people/Wealthwisers-Technologies-Pvt-Ltd/61575279190608/" target="_blank" rel="noopener noreferrer">
+                  <Facebook />
                 </a>
               </div>
             </div>

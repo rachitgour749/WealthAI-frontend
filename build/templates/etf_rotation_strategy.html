@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETF Rotation Strategy | MarketsAI1 - Powered by WealthAI1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8f4f8 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(22, 160, 133, 0.3);
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            max-width: 800px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            color: #1e3a5f;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-bottom: 3px solid #16a085;
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: #2c5282;
+            font-size: 1.3rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #f0fdfa 0%, #e6f7f5 100%);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #16a085;
+        }
+
+        .summary-card h4 {
+            color: #16a085;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card p {
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .accordion {
+            margin: 1.5rem 0;
+        }
+
+        .accordion-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .accordion-item:hover {
+            box-shadow: 0 3px 15px rgba(22, 160, 133, 0.15);
+        }
+
+        .accordion-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f0f4f8 100%);
+            padding: 1.2rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .accordion-header:hover {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d5e8ee 100%);
+        }
+
+        .accordion-header.active {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            color: white;
+        }
+
+        .accordion-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c5282;
+        }
+
+        .accordion-header.active .accordion-title {
+            color: white;
+        }
+
+        .accordion-icon {
+            font-size: 1.3rem;
+            transition: transform 0.3s ease;
+        }
+
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .accordion-content-inner {
+            padding: 1.5rem;
+        }
+
+        .phase-box {
+            background: linear-gradient(135deg, #fff8e6 0%, #fef3d9 100%);
+            border-left: 4px solid #f59e0b;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+
+        .phase-box h4 {
+            color: #f59e0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .metrics-table th {
+            background: linear-gradient(135deg, #2c5282 0%, #1e3a5f 100%);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .metrics-table td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .metrics-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #e6f7f5 0%, #d1f2eb 100%);
+            border: 2px solid #16a085;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box strong {
+            color: #16a085;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .disclaimer {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+            border-left: 4px solid #e53e3e;
+            padding: 1.5rem;
+            border-radius: 5px;
+            margin-top: 3rem;
+        }
+
+        .disclaimer h3 {
+            color: #e53e3e;
+            margin-bottom: 0.5rem;
+        }
+
+        .disclaimer p {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        ul {
+            margin: 1rem 0 1rem 2rem;
+        }
+
+        li {
+            margin: 0.5rem 0;
+            color: #555;
+        }
+
+        .cost-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .cost-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid #16a085;
+        }
+
+        .cost-item strong {
+            color: #2c5282;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cost-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .hero {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>ETF Rotation Strategy</h1>
+            <p>A mean reversion-based investment approach that systematically rotates capital between Exchange Traded Funds (ETFs), buying undervalued positions near 52-week lows and selling when they recover toward 52-week highs, capturing price normalization while managing risk through diversification.</p>
+        </div>
+
+        <div class="card">
+            <h2>Executive Summary</h2>
+            <p>The ETF Rotation Strategy is built on the fundamental principle of <strong>mean reversion</strong> - the statistical tendency for asset prices to return to their average value over time. The strategy systematically identifies ETFs trading near their 52-week lows (representing potential undervaluation) and rotates capital away from ETFs near 52-week highs (representing potential overvaluation), capturing price normalization cycles.</p>
+
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h4>Low Transaction Costs</h4>
+                    <p>ETFs offer significantly lower transaction costs compared to individual stocks, making frequent rotation economically viable even after accounting for all charges and taxes.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>Systematic Approach</h4>
+                    <p>The strategy eliminates emotional decision-making by following a rules-based framework that identifies buy and sell opportunities based on 52-week price momentum.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>Risk Management</h4>
+                    <p>Weekly rebalancing ensures portfolio diversification across multiple ETFs, reducing concentration risk while capturing opportunities across different market sectors.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>Tax Efficiency</h4>
+                    <p>The strategy implements FIFO (First-In-First-Out) accounting with comprehensive capital gains tax tracking, ensuring full compliance with Indian tax regulations.</p>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Why Mean Reversion Works:</strong> Financial markets exhibit cyclical behavior where prices oscillate around long-term averages. ETFs near their 52-week lows often represent temporary undervaluation due to market overreaction, sector rotation, or short-term negative sentiment. Similarly, ETFs near 52-week highs may be temporarily overextended. By systematically buying depressed assets and selling appreciated ones, the strategy captures the natural tendency of prices to revert to their mean, while ETF's low-cost structure ensures transaction expenses don't erode these gains.
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Strategy Overview</h2>
+            
+            <h3>Two-Phase Operation</h3>
+            
+            <div class="phase-box">
+                <h4>Phase 1: Accumulation (Weeks 1-52)</h4>
+                <p><strong>Objective:</strong> Build a diversified ETF portfolio foundation</p>
+                <ul>
+                    <li>Weekly investment of a fixed capital amount</li>
+                    <li>Purchase the ETF closest to its 52-week low each week</li>
+                    <li>Gradual position building across multiple ETFs</li>
+                    <li>Lower average entry prices by buying during weakness</li>
+                </ul>
+            </div>
+
+            <div class="phase-box">
+                <h4>Phase 2: Churning (Week 53 onwards)</h4>
+                <p><strong>Objective:</strong> Active rotation to capture momentum shifts</p>
+                <ul>
+                    <li>Sell ETFs approaching their 52-week highs</li>
+                    <li>Redeploy proceeds into ETFs near 52-week lows</li>
+                    <li>Continuous portfolio optimization</li>
+                    <li>Lock in gains and reinvest in value opportunities</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Example:</strong> Suppose you invest ₹10,000 weekly. In week 1, if ETF_A is closest to its 52-week low at ₹100 (compared to its high of ₹150), you purchase ETF_A. In week 2, if ETF_B is now closest to its low, you buy ETF_B. After 52 weeks, you've built a diversified portfolio. From week 53, you actively rotate: selling ETFs that have appreciated and are near their highs, and buying those that are near their lows.
+            </div>
+        </div>
+
+        <div class="accordion">
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">52-Week Range Analysis & Selection Criteria</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>52-Week Range Framework</h3>
+                        <p>The strategy uses a 252-trading-day window (approximately one year) to identify mean reversion opportunities by measuring price positions relative to their annual range:</p>
+
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>52-Week High</strong>
+                                Maximum closing price in the last 252 trading days
+                            </div>
+                            <div class="cost-item">
+                                <strong>52-Week Low</strong>
+                                Minimum closing price in the last 252 trading days
+                            </div>
+                            <div class="cost-item">
+                                <strong>Distance from Low</strong>
+                                (Current Price - 52W Low) / 52W Low × 100
+                            </div>
+                            <div class="cost-item">
+                                <strong>Distance from High</strong>
+                                (52W High - Current Price) / 52W High × 100
+                            </div>
+                        </div>
+
+                        <h3>Signal Generation Timeline</h3>
+                        <ul>
+                            <li><strong>Signal Date:</strong> Friday of each week (or nearest trading day if Friday is a holiday)</li>
+                            <li><strong>Execution Date:</strong> Monday of the following week (or nearest trading day if Monday is a holiday)</li>
+                            <li><strong>Price Used:</strong> Monday opening price for all transactions</li>
+                        </ul>
+
+                        <div class="highlight-box">
+                            <strong>Selection Logic:</strong> In the accumulation phase, the ETF with the smallest "distance from 52-week low" is selected for purchase. In the churning phase, ETFs are ranked by "distance from 52-week high" and sold in that order until the target capital is raised.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Transaction Costs & Taxes</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>Indian Market Cost Structure</h3>
+                        <p>The strategy accounts for all real-world costs incurred when trading ETFs on Indian exchanges:</p>
+
+                        <table class="metrics-table">
+                            <thead>
+                                <tr>
+                                    <th>Cost Component</th>
+                                    <th>Rate</th>
+                                    <th>Applied On</th>
+                                    <th>When</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Brokerage</td>
+                                    <td>User-defined %</td>
+                                    <td>Transaction Value</td>
+                                    <td>Buy & Sell</td>
+                                </tr>
+                                <tr>
+                                    <td>STT (Securities Transaction Tax)</td>
+                                    <td>0.001%</td>
+                                    <td>Transaction Value</td>
+                                    <td>Sell Only</td>
+                                </tr>
+                                <tr>
+                                    <td>Stamp Duty</td>
+                                    <td>0.005%</td>
+                                    <td>Transaction Value</td>
+                                    <td>Buy Only</td>
+                                </tr>
+                                <tr>
+                                    <td>Exchange Charges</td>
+                                    <td>0.00345%</td>
+                                    <td>Transaction Value</td>
+                                    <td>Buy & Sell</td>
+                                </tr>
+                                <tr>
+                                    <td>SEBI Charges</td>
+                                    <td>0.0001%</td>
+                                    <td>Transaction Value</td>
+                                    <td>Buy & Sell</td>
+                                </tr>
+                                <tr>
+                                    <td>GST</td>
+                                    <td>18%</td>
+                                    <td>Brokerage Amount</td>
+                                    <td>Buy & Sell</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3>Capital Gains Tax Implementation</h3>
+                        <p>The strategy uses <strong>FIFO (First-In-First-Out)</strong> methodology to track cost basis and calculate capital gains tax at 12.5% on profits:</p>
+
+                        <div class="highlight-box">
+                            <strong>FIFO Example:</strong><br>
+                            Purchase History for ETF_A:<br>
+                            • Batch 1: 100 units @ ₹50 on Jan 1<br>
+                            • Batch 2: 150 units @ ₹55 on Feb 1<br>
+                            • Batch 3: 200 units @ ₹60 on Mar 1<br><br>
+
+                            When selling 180 units @ ₹65:<br>
+                            • First 100 units use ₹50 cost basis: Profit = (65-50) × 100 = ₹1,500<br>
+                            • Next 80 units use ₹55 cost basis: Profit = (65-55) × 80 = ₹800<br>
+                            • Total Profit = ₹2,300<br>
+                            • Capital Gains Tax = ₹2,300 × 12.5% = ₹287.50
+                        </div>
+
+                        <p><strong>Net Cash Flow:</strong> For purchases, net amount = transaction value + costs. For sales, net amount = transaction value - costs - capital gains tax. This ensures your portfolio reflects actual available capital after all expenses.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Performance Metrics & Analysis</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>Return Measurements</h3>
+                        
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>Total Return</strong>
+                                (Final NAV - Total Investment) / Total Investment × 100
+                            </div>
+                            <div class="cost-item">
+                                <strong>CAGR</strong>
+                                Compound Annual Growth Rate considering investment period
+                            </div>
+                            <div class="cost-item">
+                                <strong>XIRR</strong>
+                                Extended IRR accounting for exact timing of all cash flows
+                            </div>
+                        </div>
+
+                        <h3>Risk Metrics</h3>
+                        
+                        <table class="metrics-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Description</th>
+                                    <th>Interpretation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Volatility</td>
+                                    <td>Annualized standard deviation of weekly returns</td>
+                                    <td>Lower is better - measures price fluctuation</td>
+                                </tr>
+                                <tr>
+                                    <td>Maximum Drawdown</td>
+                                    <td>Largest peak-to-trough decline in portfolio value</td>
+                                    <td>Indicates worst-case historical loss</td>
+                                </tr>
+                                <tr>
+                                    <td>Sharpe Ratio</td>
+                                    <td>(CAGR - Risk Free Rate) / Volatility</td>
+                                    <td>Higher is better - risk-adjusted returns</td>
+                                </tr>
+                                <tr>
+                                    <td>Treynor Ratio</td>
+                                    <td>(CAGR - Risk Free Rate) / Beta</td>
+                                    <td>Returns per unit of systematic risk</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3>Benchmark Comparison</h3>
+                        <p>The strategy is compared against a <strong>Nifty50 Buy-and-Hold</strong> approach to measure relative performance:</p>
+                        <ul>
+                            <li><strong>Fair Comparison:</strong> Benchmark uses same total capital invested upfront in NIFTYBEES ETF</li>
+                            <li><strong>Identical Cost Structure:</strong> Same transaction costs applied to benchmark</li>
+                            <li><strong>All Metrics:</strong> Both strategies measured using identical methodologies</li>
+                        </ul>
+
+                        <div class="highlight-box">
+                            <strong>Analysis:</strong> By comparing against the Nifty50 benchmark, you can assess whether the active rotation strategy adds value over a passive buy-and-hold approach after accounting for all costs and taxes.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Strategy Advantages & Considerations</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>Key Advantages</h3>
+                        <ul>
+                            <li><strong>Systematic Discipline:</strong> Removes emotional bias from investment decisions through rules-based execution</li>
+                            <li><strong>Cost Efficiency:</strong> ETFs have lower expense ratios and transaction costs compared to actively managed funds</li>
+                            <li><strong>Diversification:</strong> Automatically builds exposure across multiple ETFs and sectors</li>
+                            <li><strong>Mean Reversion Capture:</strong> Exploits the statistical tendency of prices to return to average levels</li>
+                            <li><strong>Transparent Accounting:</strong> All costs, taxes, and performance metrics clearly tracked</li>
+                            <li><strong>Weekly Rebalancing:</strong> Regular opportunities to optimize portfolio composition</li>
+                        </ul>
+
+                        <h3>Important Considerations</h3>
+                        <ul>
+                            <li><strong>Mean Reversion Validity:</strong> Strategy assumes prices tend to revert to their average over the measurement period</li>
+                            <li><strong>Transaction Frequency:</strong> Higher turnover than buy-and-hold generates more costs and tax events</li>
+                            <li><strong>Market Conditions:</strong> Performance may vary in trending vs. range-bound markets</li>
+                            <li><strong>Liquidity Requirements:</strong> Assumes sufficient ETF trading volumes for execution without market impact</li>
+                            <li><strong>Data Requirements:</strong> Requires minimum 252 days of historical data for accurate range calculation</li>
+                        </ul>
+
+                        <h3>Backtesting Limitations</h3>
+                        <div class="highlight-box">
+                            <strong>Important Note:</strong> Historical backtesting assumes perfect execution at Monday opening prices without slippage. Real-world results may vary due to market impact, liquidity constraints, and execution timing. The strategy only includes ETFs with complete data history, which may introduce survivorship bias.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Getting Started with MarketsAI1</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>Configuration Parameters</h3>
+                        <p>When setting up the ETF Rotation Strategy on MarketsAI1, you'll configure:</p>
+
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>ETF Universe</strong>
+                                Select the ETFs to include in the rotation pool
+                            </div>
+                            <div class="cost-item">
+                                <strong>Weekly Capital</strong>
+                                Fixed amount to invest each week during accumulation
+                            </div>
+                            <div class="cost-item">
+                                <strong>Accumulation Period</strong>
+                                Number of weeks for the accumulation phase (default: 52)
+                            </div>
+                            <div class="cost-item">
+                                <strong>Brokerage Rate</strong>
+                                Your broker's commission percentage
+                            </div>
+                            <div class="cost-item">
+                                <strong>Backtest Period</strong>
+                                Historical date range for strategy testing
+                            </div>
+                            <div class="cost-item">
+                                <strong>Risk-Free Rate</strong>
+                                Used for Sharpe and Treynor ratio calculations
+                            </div>
+                        </div>
+
+                        <h3>Backtest Workflow</h3>
+                        <ol>
+                            <li><strong>ETF Selection:</strong> Choose multiple ETFs from available universe</li>
+                            <li><strong>Parameter Setup:</strong> Configure capital, timeframes, and costs</li>
+                            <li><strong>Run Backtest:</strong> System simulates historical performance with all costs</li>
+                            <li><strong>Analyze Results:</strong> Review comprehensive performance metrics and comparisons</li>
+                            <li><strong>Optimize:</strong> Adjust parameters and re-test to find optimal configuration</li>
+                        </ol>
+
+                        <div class="highlight-box">
+                            <strong>Live Deployment:</strong> Once satisfied with backtest results, the strategy can be deployed for live execution with paper trading for validation before committing real capital.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Illustrative Backtest Example</h2>
+            <p style="background: linear-gradient(135deg, #fff8e6 0%, #fef3d9 100%); border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 5px; margin-bottom: 1.5rem;">
+                <strong>Educational Purpose Only:</strong> The following backtest results are provided solely for educational illustration to demonstrate how the strategy operates with historical data. This is NOT investment advice or a recommendation to invest. Past performance does not guarantee future results.
+            </p>
+
+            <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 2rem; border-radius: 10px; border: 2px solid #16a085;">
+                <h3 style="color: #16a085; margin-top: 0;">Sample Configuration & Results</h3>
+                
+                <div class="cost-grid" style="margin: 1.5rem 0;">
+                    <div class="cost-item">
+                        <strong>Total Capital Deployed</strong>
+                        ₹26,00,000 (26 Lakhs)
+                    </div>
+                    <div class="cost-item">
+                        <strong>Weekly Investment</strong>
+                        ₹50,000
+                    </div>
+                    <div class="cost-item">
+                        <strong>Accumulation Period</strong>
+                        52 weeks (1 year)
+                    </div>
+                    <div class="cost-item">
+                        <strong>Brokerage Rate</strong>
+                        0.1% per transaction
+                    </div>
+                </div>
+
+                <h4 style="color: #2c5282; margin: 1.5rem 0 1rem;">ETF Combination Used</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="background: white; padding: 1rem; border-radius: 8px; text-align: center; border: 2px solid #16a085;">
+                        <strong style="color: #16a085;">BANKBEES</strong>
+                        <div style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;">Banking Sector</div>
+                    </div>
+                    <div style="background: white; padding: 1rem; border-radius: 8px; text-align: center; border: 2px solid #16a085;">
+                        <strong style="color: #16a085;">CPSEETF</strong>
+                        <div style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;">CPSE Index</div>
+                    </div>
+                    <div style="background: white; padding: 1rem; border-radius: 8px; text-align: center; border: 2px solid #16a085;">
+                        <strong style="color: #16a085;">MON100</strong>
+                        <div style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;">Next 100 Companies</div>
+                    </div>
+                    <div style="background: white; padding: 1rem; border-radius: 8px; text-align: center; border: 2px solid #16a085;">
+                        <strong style="color: #16a085;">JUNIORBEES</strong>
+                        <div style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;">Nifty Junior Index</div>
+                    </div>
+                </div>
+
+                <h4 style="color: #2c5282; margin: 1.5rem 0 1rem;">Backtest Period & Results</h4>
+                <table class="metrics-table" style="margin: 1rem 0;">
+                    <tbody>
+                        <tr>
+                            <td style="width: 50%;"><strong>Backtest Period</strong></td>
+                            <td>22 July 2016 to 22 July 2025 (9 years)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stop Loss</strong></td>
+                            <td>None</td>
+                        </tr>
+                        <tr style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">
+                            <td><strong>Achieved CAGR</strong></td>
+                            <td style="font-size: 1.3rem; font-weight: bold; color: #059669;">19.10%</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="highlight-box" style="margin-top: 1.5rem;">
+                    <strong>What This Means:</strong> With this specific combination of 4 ETFs, investing ₹50,000 weekly for 52 weeks and then executing the rotation strategy for 9 years would have generated a compound annual growth rate of 19.10% after accounting for all transaction costs, taxes, and charges. This represents how the strategy would have performed historically with this particular configuration.
+                </div>
+
+                <div style="background: #fff5f5; border-left: 4px solid #e53e3e; padding: 1rem; border-radius: 5px; margin-top: 1.5rem;">
+                    <strong style="color: #e53e3e;">Important Disclaimers:</strong>
+                    <ul style="margin: 0.5rem 0 0 1.5rem; color: #666;">
+                        <li>This is a <strong>historical backtest</strong> using past data and does not predict future performance</li>
+                        <li>Different ETF combinations, time periods, or market conditions will produce different results</li>
+                        <li>Individual results may vary based on execution timing, market liquidity, and other factors</li>
+                        <li>This example is for <strong>educational demonstration only</strong> - not a recommendation to invest in these specific ETFs</li>
+                        <li>Always consult qualified financial advisors before making investment decisions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            <h3>SEBI Compliance & Regulatory Disclosure</h3>
+            <p><strong>Educational Purpose Only:</strong> The information provided in this document is for educational and informational purposes only. It is not intended as, and should not be construed as, investment advice, recommendation, or an offer to buy or sell any securities.</p>
+            
+            <p><strong>Not Investment Advice:</strong> This strategy explanation does not constitute financial, investment, trading, or any other type of professional advice. Past performance is not indicative of future results. All investments involve risk, including the potential loss of principal.</p>
+            
+            <p><strong>Consult Professionals:</strong> Before making any investment decision, you should consult with qualified financial advisors, tax consultants, and legal professionals to understand the suitability of any strategy for your specific financial situation, goals, and risk tolerance.</p>
+            
+            <p><strong>SEBI Registration:</strong> WealthAI1 and MarketsAI1 are technology platforms that provide tools for strategy backtesting and analysis. We are not SEBI registered investment advisors. We do not provide personalized investment recommendations.</p>
+            
+            <p><strong>Risk Warning:</strong> Trading and investing in securities involves substantial risk of loss. The ETF Rotation Strategy, like all investment strategies, carries risk and may not be suitable for all investors. You should carefully consider your investment objectives, level of experience, and risk appetite before implementing any strategy.</p>
+            
+            <p><strong>Data & Calculation Accuracy:</strong> While we strive for accuracy in all calculations and data presentation, we cannot guarantee error-free operation. Users should independently verify all information before making investment decisions.</p>
+            
+            <p><strong>Regulatory Compliance:</strong> This document complies with SEBI guidelines on investment education and disclosure. For official regulatory information, please visit www.sebi.gov.in</p>
+        </div>
+    </div>
+
+    <script>
+        // Accordion functionality
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const item = this.parentElement;
+                const content = this.nextElementSibling;
+                const isActive = this.classList.contains('active');
+
+                // Close all accordions
+                document.querySelectorAll('.accordion-header').forEach(h => {
+                    h.classList.remove('active');
+                    h.nextElementSibling.style.maxHeight = null;
+                });
+
+                // Open clicked accordion if it wasn't active
+                if (!isActive) {
+                    this.classList.add('active');
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        });
+
+        // Smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Adjust accordion heights on window resize
+        window.addEventListener('resize', function() {
+            document.querySelectorAll('.accordion-header.active').forEach(header => {
+                const content = header.nextElementSibling;
+                content.style.maxHeight = content.scrollHeight + "px";
+            });
+        });
+    </script>
+</body>
+</html>

@@ -38,6 +38,7 @@ This application implements a comprehensive authentication protection system tha
 - `/founders` - About Us
 - `/insights` - Insights Page
 - `/services` - Services Page
+- `/automation` - Automation AI Platform
 
 ## 🔧 Implementation Details
 
@@ -59,7 +60,7 @@ case 'home':
 ### 2. **Navigation Protection**
 ```jsx
 const handleNavigation = (page) => {
-  const protectedPages = ['products', 'marketsai1', 'chatai1', 'papertraderai1', 'scanai1'];
+  const protectedPages = ['products', 'marketsai1', 'chatai1', 'papertraderai1', 'scanai1', 'profile', 'payment'];
   
   if (protectedPages.includes(page) && !isAuthenticated) {
     setShowLoginModal(true);

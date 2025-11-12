@@ -6,7 +6,7 @@ import TradeExecutionTracker from '../components/TradeExecutionTracker';
 import CostsDashboard from '../components/CostsDashboard';
 import { useAuth } from '../context/AuthContext.jsx';
 
-const API_BASE_URL = 'http://127.0.0.1:8000' || 'https://api.wealthai1.in';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.wealthai1.in';
 
 // Define Nifty 50 stocks array (stocks only, no ; symbols without ".NS")
 const nifty50Stocks = [

@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Based Trading Strategies | MarketsAI1 - Powered by WealthAI1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8f4f8 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(22, 160, 133, 0.3);
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            max-width: 900px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            color: #1e3a5f;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-bottom: 3px solid #16a085;
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: #2c5282;
+            font-size: 1.3rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #f0fdfa 0%, #e6f7f5 100%);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #16a085;
+        }
+
+        .summary-card h4 {
+            color: #16a085;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card p {
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .accordion {
+            margin: 1.5rem 0;
+        }
+
+        .accordion-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .accordion-item:hover {
+            box-shadow: 0 3px 15px rgba(22, 160, 133, 0.15);
+        }
+
+        .accordion-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f0f4f8 100%);
+            padding: 1.2rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .accordion-header:hover {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d5e8ee 100%);
+        }
+
+        .accordion-header.active {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            color: white;
+        }
+
+        .accordion-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c5282;
+        }
+
+        .accordion-header.active .accordion-title {
+            color: white;
+        }
+
+        .accordion-icon {
+            font-size: 1.3rem;
+            transition: transform 0.3s ease;
+        }
+
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .accordion-content-inner {
+            padding: 1.5rem;
+        }
+
+        .vision-box {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .vision-box strong {
+            color: #1e40af;
+        }
+
+        .ai-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .ai-box strong {
+            color: #d97706;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #e6f7f5 0%, #d1f2eb 100%);
+            border: 2px solid #16a085;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box strong {
+            color: #16a085;
+        }
+
+        .future-box {
+            background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+            border: 2px solid #9333ea;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .future-box strong {
+            color: #7c3aed;
+        }
+
+        .disclaimer {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+            border-left: 4px solid #e53e3e;
+            padding: 1.5rem;
+            border-radius: 5px;
+            margin-top: 3rem;
+        }
+
+        .disclaimer h3 {
+            color: #e53e3e;
+            margin-bottom: 0.5rem;
+        }
+
+        .disclaimer p {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        ul {
+            margin: 1rem 0 1rem 2rem;
+        }
+
+        li {
+            margin: 0.5rem 0;
+            color: #555;
+        }
+
+        .cost-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .cost-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid #16a085;
+        }
+
+        .cost-item strong {
+            color: #2c5282;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        .example-box {
+            background: #f8f9fa;
+            border-left: 4px solid #16a085;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+
+        .example-box h4 {
+            color: #16a085;
+            margin-bottom: 0.5rem;
+        }
+
+        .comparison-table {
+            width: 100%;
+            margin: 1.5rem 0;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #2c5282 0%, #1e3a5f 100%);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            background: white;
+        }
+
+        .comparison-table tr:hover td {
+            background-color: #f8f9fa;
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .icon-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .icon-card:hover {
+            transform: translateY(-5px);
+            border-color: #16a085;
+            box-shadow: 0 8px 20px rgba(22, 160, 133, 0.2);
+        }
+
+        .icon-card .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .icon-card h4 {
+            color: #2c5282;
+            margin-bottom: 0.5rem;
+        }
+
+        .icon-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cost-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .hero {
+                padding: 2rem 1.5rem;
+            }
+
+            .teaser-section h2 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>Beyond Rule-Based Trading Strategies</h1>
+            <h2 style="font-size: 1.6rem; margin-bottom: 1rem; border: none; color: #fbbf24; font-style: italic; font-weight: 600; letter-spacing: 0.5px;">The Role of Artificial Intelligence</h2>
+            <p>While systematic rule-based strategies provide discipline and consistency, Artificial Intelligence opens new frontiers in trading and investing. MarketsAI1 is pioneering the democratization of AI-powered trading tools, making sophisticated machine learning capabilities accessible to retail traders and investors who are ready for the future of markets.</p>
+        </div>
+
+        <div class="card">
+            <h2>Our Vision: Democratizing AI in Trading</h2>
+            <p>MarketsAI1 was created with a bold vision: <strong>to make both systematic rule-based and AI-based trading easily accessible to positional traders and investors.</strong> We believe that advanced trading technology should not remain exclusive to institutional players. Every serious trader deserves access to the same powerful tools that hedge funds and proprietary trading firms use.</p>
+
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h4>Accessible Technology</h4>
+                    <p>Complex AI and machine learning algorithms packaged in user-friendly interfaces that any trader can understand and deploy without requiring a PhD in data science.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>Education First</h4>
+                    <p>We don't just sell strategies—we educate. Learn how AI works, understand the models, and gain the knowledge to design your own AI-based trading approaches.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>Transparency & Trust</h4>
+                    <p>Full disclosure of how AI models make decisions, comprehensive backtesting with realistic costs, and strict adherence to SEBI guidelines for investor protection.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>Future-Ready Trading</h4>
+                    <p>Markets are evolving rapidly. AI is not a buzzword—it's the future of trading. Join us to ensure you're not left behind in the algorithmic revolution.</p>
+                </div>
+            </div>
+
+            <div class="vision-box">
+                <strong>The MarketsAI1 Mission:</strong> We envision a future where retail traders compete on equal footing with institutions, armed with AI-powered insights, real-time analytics, and systematic execution capabilities. Our platform bridges the gap between traditional rule-based trading and cutting-edge artificial intelligence, empowering you to make data-driven decisions with confidence.
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>The Limitations of Pure Rule-Based Strategies</h2>
+            <p>Rule-based strategies like ETF Rotation, Stock Rotation, and Relative Strength have served traders well for decades. They provide:</p>
+
+            <ul>
+                <li>Systematic discipline and removal of emotional bias</li>
+                <li>Transparent, explainable logic</li>
+                <li>Consistent execution based on predefined criteria</li>
+                <li>Proven track records across market cycles</li>
+            </ul>
+
+            <h3>However, Rules Have Boundaries</h3>
+            <p>Traditional rule-based strategies operate within fixed parameters. They execute the same way regardless of changing market conditions:</p>
+
+            <div class="cost-grid">
+                <div class="cost-item">
+                    <strong>Static Parameters</strong>
+                    Fixed lookback periods, thresholds, and position sizes don't adapt to market volatility or regime changes
+                </div>
+                <div class="cost-item">
+                    <strong>Limited Pattern Recognition</strong>
+                    Cannot identify complex, non-linear patterns that emerge across multiple dimensions simultaneously
+                </div>
+                <div class="cost-item">
+                    <strong>Binary Decision Making</strong>
+                    Buy/sell decisions based on simple if-then logic miss nuanced market signals
+                </div>
+                <div class="cost-item">
+                    <strong>No Learning Ability</strong>
+                    Rules don't improve over time or learn from their successes and failures
+                </div>
+            </div>
+
+            <div class="ai-box">
+                <strong>Where AI Excels:</strong> Artificial Intelligence transcends these limitations. Machine learning models can process thousands of variables simultaneously, identify subtle patterns invisible to human eyes, adapt to changing market conditions, and continuously improve their predictions based on new data. AI doesn't replace rule-based strategies—it enhances them, adding a layer of intelligence that makes them more robust and adaptive.
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>What We're Building: The Future of MarketsAI1</h2>
+            
+            <h3>1. AI-Trained Trading Strategies</h3>
+            <p>We are developing proprietary AI models trained on decades of market data to create highly efficient trading strategies:</p>
+
+            <div class="icon-grid">
+                <div class="icon-card">
+                    <div class="icon">🧠</div>
+                    <h4>Deep Learning Models</h4>
+                    <p>Neural networks trained to predict price movements, identify optimal entry/exit points, and manage risk dynamically</p>
+                </div>
+
+                <div class="icon-card">
+                    <div class="icon">📊</div>
+                    <h4>Multi-Factor Analysis</h4>
+                    <p>AI models that simultaneously analyze technical indicators, fundamentals, sentiment, and macro factors</p>
+                </div>
+
+                <div class="icon-card">
+                    <div class="icon">⚡</div>
+                    <h4>Adaptive Strategies</h4>
+                    <p>Algorithms that recognize market regimes and automatically adjust strategy parameters for current conditions</p>
+                </div>
+            </div>
+
+            <div class="example-box">
+                <h4>Example: AI-Enhanced Momentum Strategy</h4>
+                <p><strong>Traditional Approach:</strong> Buy stocks with highest 52-week relative strength, hold for fixed period, exit when rank drops.</p>
+                <p><strong>AI-Enhanced Approach:</strong> AI model analyzes relative strength patterns across 50+ technical indicators, predicts which high-RS stocks have highest probability of sustaining momentum based on historical pattern matching, dynamically adjusts holding periods based on predicted trend duration, and provides probability scores for each position. Result: Potentially 20-40% improvement in risk-adjusted returns.</p>
+            </div>
+
+            <h3>2. Empowering Traders to Design Their Own AI Strategies</h3>
+            <p>We don't believe in black-box AI that you blindly follow. Our mission includes <strong>educating and enabling traders</strong> to harness AI in their own unique ways:</p>
+
+            <div class="cost-grid">
+                <div class="cost-item">
+                    <strong>AI Builder Interface</strong>
+                    No-code platform to design, train, and deploy custom AI models using your own parameters and preferences
+                </div>
+                <div class="cost-item">
+                    <strong>Educational Resources</strong>
+                    Comprehensive tutorials, webinars, and documentation explaining AI concepts for traders
+                </div>
+                <div class="cost-item">
+                    <strong>Model Templates</strong>
+                    Pre-built AI frameworks you can customize—momentum detection, pattern recognition, sentiment analysis
+                </div>
+                <div class="cost-item">
+                    <strong>Backtesting Lab</strong>
+                    Test your AI strategies rigorously before deployment with historical data and walk-forward analysis
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Our Philosophy:</strong> We want to teach you to fish, not just give you fish. Understanding how AI works, what its limitations are, and how to leverage it responsibly makes you a better trader. You'll learn to combine your market intuition with machine learning's computational power, creating hybrid strategies uniquely suited to your trading style.
+            </div>
+
+            <h3>3. Why AI is the Future of Trading</h3>
+            <p>The trading landscape is undergoing a fundamental transformation:</p>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Evolution Stage</th>
+                        <th>Approach</th>
+                        <th>Current Adoption</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Discretionary Trading</strong></td>
+                        <td>Manual analysis, gut feel, experience-based decisions</td>
+                        <td>Declining (40-50% of retail)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rule-Based Systems</strong></td>
+                        <td>Systematic strategies with fixed rules and parameters</td>
+                        <td>Growing (30-40% of retail)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AI-Powered Trading</strong></td>
+                        <td>Machine learning, adaptive algorithms, predictive models</td>
+                        <td>Early Stage (10-20% of retail, 80%+ institutional)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="ai-box">
+                <strong>The Reality:</strong> Institutional traders have been using AI for over a decade. Hedge funds employ teams of data scientists building sophisticated models. High-frequency trading firms use machine learning for microsecond decisions. Retail traders are just beginning this journey. <strong>MarketsAI1 exists to bridge this gap</strong>—giving you institutional-grade tools without requiring institutional resources.
+            </div>
+
+            <div class="future-box">
+                <strong>Join the Revolution:</strong> Within 5 years, AI-assisted trading will be the norm, not the exception. Traders who embrace these tools now will have a significant edge over those who resist. MarketsAI1 is your gateway to becoming future-ready. Don't wait until AI trading becomes commoditized—establish your advantage today.
+            </div>
+        </div>
+
+        <div class="accordion">
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">AI Advantage #1: Pattern Recognition & Momentum Phase Identification</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>The Challenge: Markets Don't Move in Straight Lines</h3>
+                        <p>Traditional momentum strategies identify trends but struggle to distinguish between:</p>
+                        <ul>
+                            <li>Sustainable momentum vs. temporary spikes</li>
+                            <li>Early-stage trends vs. exhausted trends</li>
+                            <li>Bullish consolidation vs. trend reversal</li>
+                            <li>Sector rotation vs. broad market moves</li>
+                        </ul>
+
+                        <h3>How AI Solves This</h3>
+                        <p>Machine learning models can be trained on thousands of historical price patterns to recognize:</p>
+
+                        <div class="example-box">
+                            <h4>AI Pattern Recognition: Real-World Example</h4>
+                            <p><strong>Scenario:</strong> Reliance Industries has been rallying for 6 weeks, up 18% from its low.</p>
+                            
+                            <p><strong>Rule-Based Strategy Says:</strong> "High relative strength, positive momentum, BUY"</p>
+                            
+                            <p><strong>AI Model Analyzes:</strong></p>
+                            <ul>
+                                <li>Current price pattern matches 847 historical instances in database</li>
+                                <li>Of these, 62% continued higher for 3+ weeks, 38% reversed within 2 weeks</li>
+                                <li>Volume profile shows institutional accumulation (positive signal)</li>
+                                <li>Price-to-moving-average ratio suggests mild overextension (caution signal)</li>
+                                <li>Sector momentum (Energy) is accelerating (positive signal)</li>
+                                <li>Volatility compression pattern precedes continuation 73% of the time (positive signal)</li>
+                            </ul>
+                            
+                            <p><strong>AI Verdict:</strong> "Strong BUY with 71% confidence, predicted upside of 8-12% over next 4 weeks, suggested stop loss at 6%"</p>
+                            
+                            <p><strong>Value Add:</strong> The AI provides not just a yes/no decision, but probability-weighted guidance with expected outcomes, allowing you to size positions appropriately and manage risk intelligently.</p>
+                        </div>
+
+                        <h3>Momentum Phase Classification</h3>
+                        <p>AI models can classify market conditions into distinct phases:</p>
+
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>Phase 1: Accumulation</strong>
+                                AI detects low volatility, tight ranges, volume patterns indicating smart money accumulation
+                            </div>
+                            <div class="cost-item">
+                                <strong>Phase 2: Markup</strong>
+                                Identifies breakouts, increasing volume, expanding price ranges—optimal momentum capture phase
+                            </div>
+                            <div class="cost-item">
+                                <strong>Phase 3: Distribution</strong>
+                                Recognizes divergences, volume exhaustion, choppy price action signaling trend exhaustion
+                            </div>
+                            <div class="cost-item">
+                                <strong>Phase 4: Markdown</strong>
+                                Detects breakdown patterns, accelerating selling—time to exit or avoid long positions
+                            </div>
+                        </div>
+
+                        <div class="highlight-box">
+                            <strong>Practical Application:</strong> Imagine your momentum strategy automatically increasing position sizes during Phase 2 (strong markup), maintaining positions in Phase 1 (accumulation), and aggressively exiting during Phase 3 (distribution) before the crowd realizes the trend is over. This phase-aware approach, powered by AI, can dramatically improve risk-adjusted returns.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">AI Advantage #2: Predictive Analytics & Better Entry/Exit Points</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>From Reactive to Predictive</h3>
+                        <p>Traditional technical analysis is <strong>reactive</strong>—it tells you what already happened. AI enables <strong>predictive</strong> analytics—forecasting what is likely to happen:</p>
+
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Aspect</th>
+                                    <th>Traditional Approach</th>
+                                    <th>AI-Powered Approach</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Entry Signal</strong></td>
+                                    <td>Stock crosses above 50-day MA</td>
+                                    <td>AI predicts 78% probability of crossing 50-day MA in next 3 days, suggests early entry</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Exit Signal</strong></td>
+                                    <td>Stock falls below 50-day MA</td>
+                                    <td>AI detects momentum weakening 5 days before MA break, provides early exit warning</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Stop Loss</strong></td>
+                                    <td>Fixed 8% from entry</td>
+                                    <td>Dynamic stop based on predicted volatility: 6% in low-vol, 10% in high-vol conditions</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3>Early Warning System</h3>
+                        <p>AI models can provide advance signals before traditional indicators trigger:</p>
+
+                        <div class="example-box">
+                            <h4>Predictive Exit Example: HDFC Bank</h4>
+                            <p><strong>Date: March 15, 2024</strong><br>
+                            HDFC Bank price: ₹1,650 (you bought at ₹1,500, up 10%)</p>
+                            
+                            <p><strong>Traditional Indicator Status:</strong></p>
+                            <ul>
+                                <li>Still above all moving averages ✓</li>
+                                <li>RSI at 62 (not overbought) ✓</li>
+                                <li>MACD still positive ✓</li>
+                                <li><strong>Signal: HOLD</strong></li>
+                            </ul>
+
+                            <p><strong>AI Model Detects:</strong></p>
+                            <ul>
+                                <li>Volume declining on up days for past 7 sessions</li>
+                                <li>Price pattern matches 342 historical instances</li>
+                                <li>83% of similar patterns resulted in 5-8% corrections within 10 days</li>
+                                <li>Options market showing increased put buying (bearish sentiment)</li>
+                                <li>Sector peers showing similar weakness patterns</li>
+                                <li><strong>AI Signal: EXIT WARNING - 80% confidence of near-term correction</strong></li>
+                            </ul>
+
+                            <p><strong>Outcome (10 days later):</strong> HDFC Bank at ₹1,570 (-4.8% from warning level)</p>
+
+                            <p><strong>Value of AI:</strong> Traditional indicators kept you in the position until it broke key support, resulting in giving back most gains. AI warned you 5-7 days earlier, allowing you to exit near the top and preserve profits.</p>
+                        </div>
+
+                        <h3>Optimal Entry Point Identification</h3>
+                        <p>AI can identify the best risk-reward entry opportunities:</p>
+
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>Support Zone Precision</strong>
+                                ML models identify high-probability support zones with 85%+ accuracy vs 60% for manual analysis
+                            </div>
+                            <div class="cost-item">
+                                <strong>Breakout Confirmation</strong>
+                                AI distinguishes real breakouts from false breaks by analyzing volume, momentum, and price action signatures
+                            </div>
+                            <div class="cost-item">
+                                <strong>Pullback Opportunities</strong>
+                                Models predict optimal pullback entry points in uptrends with precise probability scores
+                            </div>
+                            <div class="cost-item">
+                                <strong>Risk Assessment</strong>
+                                Real-time risk scores help you avoid entering when risk-reward ratio is unfavorable
+                            </div>
+                        </div>
+
+                        <div class="highlight-box">
+                            <strong>The Edge:</strong> Better entry and exit timing can add 5-10% to your annual returns without increasing risk. If you're entering 10 trades per quarter, even 1-2% improvement per trade compounds significantly over time. AI's predictive capabilities give you this edge systematically, not occasionally.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">AI Advantage #3: Real-Time News & Sentiment Analysis</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>The Information Overload Problem</h3>
+                        <p>Modern traders face an impossible challenge:</p>
+                        <ul>
+                            <li>Thousands of news articles published daily</li>
+                            <li>Millions of social media posts about stocks and markets</li>
+                            <li>Earnings calls, analyst reports, regulatory filings</li>
+                            <li>Global events, economic data, central bank announcements</li>
+                            <li>Sector-specific news and company-specific developments</li>
+                        </ul>
+
+                        <p><strong>The Reality:</strong> No human can process this information in real-time. By the time you read and analyze news, the market has already reacted.</p>
+
+                        <h3>AI-Powered News & Sentiment Monitoring</h3>
+                        <p>Natural Language Processing (NLP) and sentiment analysis AI can:</p>
+
+                        <div class="example-box">
+                            <h4>Real-Time Sentiment Analysis: Pharma Sector Example</h4>
+                            <p><strong>Date: June 10, 2024, 10:30 AM</strong></p>
+                            
+                            <p><strong>What Happened:</strong></p>
+                            <ul>
+                                <li>Health Ministry announces new drug pricing policy (news published 10:15 AM)</li>
+                                <li>Article mentions potential impact on pharma margins</li>
+                                <li>Social media and trading forums light up with discussions</li>
+                            </ul>
+
+                            <p><strong>AI System Response (within 3 minutes):</strong></p>
+                            <ul>
+                                <li>Scans and processes 200+ news articles and social posts</li>
+                                <li>Identifies 78% negative sentiment toward pharma sector</li>
+                                <li>Extracts key phrases: "margin pressure," "pricing cap," "earnings risk"</li>
+                                <li>Historical analysis: Similar policy announcements led to 3-7% sector decline in 2-5 days (81% of cases)</li>
+                                <li>Company-specific impact prediction: High-margin companies most affected</li>
+                            </ul>
+
+                            <p><strong>AI Alert Generated:</strong></p>
+                            <p style="background: #fff3cd; padding: 1rem; border-left: 4px solid #f59e0b; border-radius: 5px;">
+                                <strong>⚠️ SECTOR ALERT: PHARMA</strong><br>
+                                Sentiment Score: -0.68 (Bearish)<br>
+                                Affected Holdings: Cipla, Dr. Reddy's<br>
+                                Predicted Impact: 4-6% downside over 3-5 days<br>
+                                Suggested Action: Reduce position size or exit<br>
+                                Confidence: 76%
+                            </p>
+
+                            <p><strong>Your Action:</strong> You receive this alert at 10:35 AM, just 20 minutes after news broke. Pharma stocks haven't declined much yet. You exit your Cipla position at ₹1,420.</p>
+
+                            <p><strong>Outcome (3 days later):</strong> Cipla at ₹1,355 (-4.6%)</p>
+
+                            <p><strong>Without AI:</strong> You probably would have read the news during lunch or evening, by which time the decline was already underway, forcing you to either hold through the drop or exit at lower levels.</p>
+                        </div>
+
+                        <h3>What AI Sentiment Analysis Monitors</h3>
+
+                        <div class="icon-grid">
+                            <div class="icon-card">
+                                <div class="icon">📰</div>
+                                <h4>News Sources</h4>
+                                <p>Financial news websites, press releases, regulatory filings, earnings transcripts processed in real-time</p>
+                            </div>
+
+                            <div class="icon-card">
+                                <div class="icon">💬</div>
+                                <h4>Social Sentiment</h4>
+                                <p>Twitter, Reddit, trading forums analyzed for crowd sentiment and emerging narratives</p>
+                            </div>
+
+                            <div class="icon-card">
+                                <div class="icon">📊</div>
+                                <h4>Analyst Reports</h4>
+                                <p>Broker reports, rating changes, price target revisions automatically extracted and scored</p>
+                            </div>
+
+                            <div class="icon-card">
+                                <div class="icon">🌍</div>
+                                <h4>Global Events</h4>
+                                <p>Geopolitical developments, economic data, central bank policies with market impact assessment</p>
+                            </div>
+                        </div>
+
+                        <h3>Creating Market Views & Outlook</h3>
+                        <p>Beyond individual stock alerts, AI can generate comprehensive market outlooks:</p>
+
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>Daily Market Sentiment</strong>
+                                AI-generated morning report: bullish/bearish sentiment scores across sectors and indices
+                            </div>
+                            <div class="cost-item">
+                                <strong>Sector Rotation Signals</strong>
+                                Real-time identification of strengthening/weakening sectors based on news flow and sentiment shifts
+                            </div>
+                            <div class="cost-item">
+                                <strong>Event Impact Predictions</strong>
+                                Forecasting market reaction to upcoming earnings, policy decisions, economic data releases
+                            </div>
+                            <div class="cost-item">
+                                <strong>Risk Alerts</strong>
+                                Early warning system for emerging risks—regulatory, geopolitical, or sector-specific
+                            </div>
+                        </div>
+
+                        <div class="highlight-box">
+                            <strong>The Sentiment Edge:</strong> Academic research shows that news sentiment has predictive power for stock returns over 1-5 day horizons. However, this edge decays quickly as information spreads. AI gives you the speed advantage—reacting to sentiment shifts in minutes, not hours or days. In fast-moving markets, this speed is the difference between profit and loss.
+                        </div>
+
+                        <h3>Future Enhancement: Conversational Market Analysis</h3>
+                        <div class="future-box">
+                            <strong>Coming Soon:</strong> Imagine asking MarketsAI1: <em>"What's the current sentiment on IT stocks? Should I add to my TCS position?"</em> and receiving an AI-generated analysis combining news sentiment, technical patterns, and peer comparisons—delivered in seconds as a natural conversation. This is the future we're building.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Implementation Roadmap: What's Coming to MarketsAI1</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>Phase 1: Foundation (Current)</h3>
+                        <ul>
+                            <li>✓ Rule-based strategies (ETF Rotation, Stock Rotation, RS Strategy)</li>
+                            <li>✓ Comprehensive backtesting engine with realistic cost modeling</li>
+                            <li>✓ Educational content on systematic trading</li>
+                        </ul>
+
+                        <h3>Phase 2: AI Integration (Coming Soon)</h3>
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>AI Pattern Recognition</strong>
+                                Deploy trained models for technical pattern identification and momentum phase classification
+                            </div>
+                            <div class="cost-item">
+                                <strong>Sentiment Dashboard</strong>
+                                Real-time news and social sentiment tracking for your watchlists and holdings
+                            </div>
+                            <div class="cost-item">
+                                <strong>Predictive Indicators</strong>
+                                ML-based signals providing probability-weighted entry/exit analysis
+                            </div>
+                            <div class="cost-item">
+                                <strong>Risk Scoring</strong>
+                                AI-powered portfolio risk assessment and position-level risk alerts
+                            </div>
+                        </div>
+
+                        <h3>Phase 3: Custom AI Builder (Future Enhancement)</h3>
+                        <ul>
+                            <li><strong>No-Code AI Designer:</strong> Visual interface to create custom machine learning models</li>
+                            <li><strong>Model Templates:</strong> Pre-built frameworks for common use cases you can customize</li>
+                            <li><strong>Training Data Access:</strong> Clean, adjusted datasets for training your own models</li>
+                            <li><strong>Validation Tools:</strong> Walk-forward testing, cross-validation, and overfitting detection</li>
+                            <li><strong>Community Models:</strong> Share and discover AI strategies from other traders (with proper disclaimers)</li>
+                        </ul>
+
+                        <h3>Phase 4: Advanced Intelligence (Long-Term Vision)</h3>
+                        <ul>
+                            <li><strong>Deep Learning Strategies:</strong> Neural network-based strategies for complex pattern recognition</li>
+                            <li><strong>Reinforcement Learning:</strong> Self-improving algorithms that optimize based on results</li>
+                            <li><strong>Multi-Asset AI:</strong> Expand beyond equities to derivatives, commodities, currencies</li>
+                            <li><strong>Real-Time Execution:</strong> API integration with brokers for fully automated trading</li>
+                            <li><strong>AI Trading Coach:</strong> Personalized insights based on your trading history and preferences</li>
+                        </ul>
+
+                        <div class="vision-box">
+                            <strong>Long-Term Vision:</strong> MarketsAI1 will become a comprehensive AI-powered trading ecosystem where you can:<br>
+                            • Design and backtest any strategy (rule-based or AI-based)<br>
+                            • Get real-time AI insights and alerts on your portfolio<br>
+                            • Learn from educational content and community knowledge<br>
+                            • Execute strategies with full automation or semi-automation<br>
+                            • Track performance with institutional-grade analytics<br>
+                            All while maintaining full transparency, SEBI compliance, and user control over decisions.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>SEBI Compliance & Responsible AI</h2>
+            <p>As we pioneer AI in retail trading, we are acutely aware of our regulatory responsibilities and ethical obligations:</p>
+
+            <h3>Our Commitments</h3>
+
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h4>No Performance Guarantees</h4>
+                    <p>We will never promise or guarantee returns. All AI models are probabilistic, and past performance does not predict future results.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>Full Transparency</h4>
+                    <p>Every AI signal will include confidence scores, historical accuracy metrics, and clear disclosure of assumptions and limitations.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>Educational Focus</h4>
+                    <p>We prioritize understanding over blind following. You'll always know why the AI suggests what it suggests.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>User Control</h4>
+                    <p>AI provides signals and analysis; you make decisions. We will never execute trades without explicit user consent.</p>
+                </div>
+            </div>
+
+            <h3>Risk Disclosures</h3>
+            <ul>
+                <li><strong>Model Risk:</strong> AI models can and do make incorrect predictions. No model is perfect.</li>
+                <li><strong>Data Dependency:</strong> AI quality depends on data quality. Garbage in, garbage out applies to machine learning.</li>
+                <li><strong>Overfitting Risk:</strong> Models trained on past data may not perform well in unprecedented market conditions.</li>
+                <li><strong>Black Swan Events:</strong> AI cannot predict rare, extreme events that fall outside historical patterns.</li>
+                <li><strong>Technology Risk:</strong> System failures, data feed issues, or connectivity problems can impact AI performance.</li>
+            </ul>
+
+            <h3>Regulatory Compliance</h3>
+            <p>MarketsAI1 operates in strict adherence to SEBI guidelines:</p>
+            <ul>
+                <li>We are a <strong>technology platform</strong>, not a SEBI-registered investment advisor or portfolio manager</li>
+                <li>All AI signals are clearly marked as <strong>educational analysis</strong>, not investment advice</li>
+                <li>We maintain comprehensive audit trails of all AI decisions and model versions</li>
+                <li>Our backtests include realistic transaction costs, slippage, and market impact</li>
+                <li>We do not claim to offer proprietary "secret" algorithms—transparency is our principle</li>
+                <li>Users retain full control and responsibility for their trading decisions</li>
+            </ul>
+
+            <div class="highlight-box">
+                <strong>Our Ethical Stance:</strong> We believe AI should empower traders, not replace critical thinking. The goal is to make you a better, more informed trader—not to create dependency on black-box systems. Education and transparency are not compromises we make; they are core values that define how we build AI for trading.
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            <h3>SEBI Compliance & Regulatory Disclosure</h3>
+            <p><strong>Educational & Informational Purpose Only:</strong> All information about AI-based trading strategies on this page is for educational and informational purposes only. It is not intended as, and should not be construed as, investment advice, recommendation, or an offer to buy or sell any securities.</p>
+            
+            <p><strong>No Investment Advice:</strong> MarketsAI1 is a technology platform that provides tools for strategy development, backtesting, and analysis. We are not SEBI registered investment advisors, portfolio managers, or research analysts. We do not provide personalized investment recommendations.</p>
+            
+            <p><strong>Future Features Disclaimer:</strong> AI-powered features described on this page are under development and subject to change. Timeline estimates are approximate and not guaranteed. Actual features, capabilities, and launch dates may differ from descriptions provided.</p>
+            
+            <p><strong>No Performance Guarantees:</strong> AI models are probabilistic and can make incorrect predictions. Past performance of any AI model, strategy, or backtest does not guarantee future results. All trading involves risk of loss, including potential loss of principal.</p>
+            
+            <p><strong>AI Model Limitations:</strong> Machine learning models have inherent limitations including model risk, overfitting risk, data dependency, and inability to predict unprecedented events. AI predictions should not be the sole basis for investment decisions.</p>
+            
+            <p><strong>User Responsibility:</strong> All trading decisions are the sole responsibility of the user. AI signals (when available) are suggestions for analysis, not directives to trade. Users must conduct their own due diligence and consult qualified financial advisors before making investment decisions.</p>
+            
+            <p><strong>Consult Professionals:</strong> Before implementing any trading strategy (rule-based or AI-based), consult with qualified financial advisors, tax consultants, and legal professionals to understand suitability for your specific financial situation, goals, and risk tolerance.</p>
+            
+            <p><strong>Technology Risks:</strong> AI-powered trading involves additional risks including technology failures, data feed errors, model inaccuracies, and system connectivity issues. These risks can materially impact strategy performance.</p>
+            
+            <p><strong>Market Risks:</strong> AI cannot eliminate market risk. Stocks can decline in value, strategies can underperform, and losses can occur regardless of the sophistication of the analytical tools used.</p>
+            
+            <p><strong>Regulatory Compliance:</strong> This document complies with SEBI guidelines on investment education and disclosure. MarketsAI1 operates as a technology platform and strictly adheres to all applicable securities regulations. For official regulatory information, visit www.sebi.gov.in</p>
+
+            <p><strong>Forward-Looking Statements:</strong> Descriptions of future features, capabilities, and timelines constitute forward-looking statements subject to risks and uncertainties. Actual developments may differ materially from descriptions provided.</p>
+        </div>
+    </div>
+
+    <script>
+        // Accordion functionality
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const item = this.parentElement;
+                const content = this.nextElementSibling;
+                const isActive = this.classList.contains('active');
+
+                // Close all accordions
+                document.querySelectorAll('.accordion-header').forEach(h => {
+                    h.classList.remove('active');
+                    h.nextElementSibling.style.maxHeight = null;
+                });
+
+                // Open clicked accordion if it wasn't active
+                if (!isActive) {
+                    this.classList.add('active');
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        });
+
+        // Smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Adjust accordion heights on window resize
+        window.addEventListener('resize', function() {
+            document.querySelectorAll('.accordion-header.active').forEach(header => {
+                const content = header.nextElementSibling;
+                content.style.maxHeight = content.scrollHeight + "px";
+            });
+        });
+    </script>
+</body>
+</html>

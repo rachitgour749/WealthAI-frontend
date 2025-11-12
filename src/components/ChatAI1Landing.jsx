@@ -5,9 +5,12 @@ import ReactMarkdown from "react-markdown";
 import Navigation from './Navigation';
 import PromptGenerater from './PromptGenerater';
 import RatingDisplay from './RatingDisplay';
+import { formatDate } from '../utils/dateFormatter';
 import { useAuth } from '../context/AuthContext';
 import { useApi } from '../context/ApiContext';
 import axios from 'axios';
+import ChatAI1Logo from '../Assets/ChatAI1Logo.png';
+import ChatAI from '../Assets/ChatAI.png';
 
 const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -39,6 +42,13 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
   const fileInputRef = useRef(null);
   const { user } = useAuth();
   const { buildApiUrl } = useApi();
+
+  // Word limit calculation for ChatAI
+  // TODO: Replace with actual user data when backend is connected
+  const wordsUsed = 0; // Set to 0 to show 100% for now
+  const totalWords = 1000000;
+  const wordsRemaining = totalWords - wordsUsed;
+  const wordPercentage = wordsRemaining / totalWords;
 
   const user_id = user?.email;
 
@@ -386,7 +396,7 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
     } else if (diffInHours < 48) {
       return 'Yesterday';
     } else {
-      return date.toLocaleDateString();
+      return formatDate(date);
     }
   };
 
@@ -783,9 +793,46 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
   };
 
   return (
-      <div className="flex flex-col h-screen">
+      <div className="flex flex-col h-[calc(100vh-80px)] overflow-hidden">
         <Navigation setCurrentPage={setCurrentPage} currentPage={currentPage} transparent={false} />
-        <div className="flex-1 bg-gradient-to-br from-teal-50 via-blue-50 to-gray-50 flex">
+        
+        {/* Word Limit Percentage Circle - Top Right */}
+        <div className="absolute top-20 right-7 z-40">
+          <div className="relative w-12 h-12 bg-white rounded-full shadow-lg border-2 border-gray-200 flex items-center justify-center mt-[45px]">
+            <svg className="w-10 h-10 transform -rotate-90" viewBox="0 0 32 32">
+              <circle
+                cx="16"
+                cy="16"
+                r="14"
+                stroke="currentColor"
+                strokeWidth="3"
+                fill="none"
+                className="text-gray-200"
+              />
+              <circle
+                cx="16"
+                cy="16"
+                r="14"
+                stroke="currentColor"
+                strokeWidth="3"
+                fill="none"
+                strokeDasharray={`${2 * Math.PI * 14}`}
+                strokeDashoffset={`${2 * Math.PI * 14 * (1 - wordPercentage)}`}
+                className={`${
+                  wordPercentage >= 0.8 ? 'text-green-500' :
+                  wordPercentage >= 0.4 ? 'text-yellow-500' : 'text-red-500'
+                }`}
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-[10px] font-bold text-gray-700">
+                {Math.round(wordPercentage * 100)}%
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex-1 bg-gradient-to-br from-teal-50 via-blue-50 to-gray-50 flex min-h-0">
             {/* Sidebar */}
             <>
               {/* Overlay for mobile */}
@@ -1005,7 +1052,7 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
           {!isSidebarOpen && (
             <button
               onClick={handleSidebarToggle}
-              className="fixed top-[95px] left-4 z-[60] bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-[50px] transition-all duration-300 shadow-md border border-gray-200"
+              className="fixed top-[95px] left-4 z-[60] bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-[50px] transition-all duration-300 shadow-md border border-gray-200 mt-[30px]"
               title="Open sidebar"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1015,7 +1062,7 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
           )}
 
           {/* Main Chat Area */}
-          <div className={`flex-1 transition-all duration-300 ease-in-out h-[calc(100vh-100px)] ${isSidebarOpen ? 'ml-80 lg:ml-80' : 'ml-0'}`}>
+          <div className={`flex-1 transition-all duration-300 ease-in-out min-h-0 bg-gradient-to-br from-teal-50 via-blue-50 to-gray-50 ${isSidebarOpen ? 'ml-80 lg:ml-80' : 'ml-0'}`}>
 
             <div className="pt-12">
               <PromptGenerater 
@@ -1027,20 +1074,25 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                 }}
               />
               
-              <div className="flex flex-col justify-between font-sans mt-[-40px] w-full">
-                {/* Header */}
-                <div className="relative text-center border p-1 sm:p-2 bg-gradient-to-r from-teal-50 to-blue-50 border-teal-200 flex-shrink-0">
-                  <h1 className="text-teal-800 text-base sm:text-lg font-bold">Chat AI</h1>
-                  <p className="text-teal-600 mt-[-4px] text-xs font-normal">Hello, What are you working on?</p>
+              {/* <div className="flex flex-col justify-between font-sans mt-[-50px] h-full w-full min-h-0">
+
+                <div className='flex justify-center relative items-center h-[100px]'>
+                <div className="flex justify-center flex-col items-center">
+                  <img src={ChatAI} alt="" className="w-[170px] h-[30px] mb-[30px] mt-[25px]" />
+                  <h1 className="text-2xl sm:text-3xl lg:text-[15px] font-bold text-teal-700 mb-3 sm:mb-4 mt-[-40px]">
+                    Powered by Wealth<span style={{ color: '#ca8a04', fontFamily: 'Noto Sans Arabic', marginLeft: '3px', marginTop: '3px' }}>AI1</span>
+                  </h1>
                 </div>
+              </div> */}
 
                 {/* Chat Container */}
-                <div className="flex flex-col flex-1 w-full px-2 sm:px-3 min-h-0">
+                <div className="flex flex-col flex-1 w-full px-2 sm:px-3 min-h-0 bg-gradient-to-br from-teal-50 via-blue-50 to-gray-50">
                   {/* Messages Area */}
-                  <div className="flex-1 py-2 px-2 sm:px-4 flex flex-col gap-2 overflow-y-auto w-[800px] mx-auto messages-area scrollbar-hide" style={{
+                  <div className="flex-1 py-2 px-2 sm:px-4 flex flex-col gap-2 overflow-y-auto w-[800px] mx-auto messages-area bg-gradient-to-br from-teal-50 via-blue-50 to-gray-50" style={{
                     scrollbarWidth: 'none', 
                     msOverflowStyle: 'none',
-                    WebkitScrollbar: 'none'
+                    WebkitScrollbar: { display: 'none' },
+                    '&::-webkit-scrollbar': { display: 'none' }
                   }}>
                     
                     {messages.length === 0 ? (
@@ -1681,7 +1733,7 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
                   </div>
 
                   {/* Input Area */}
-                  <div className="py-4 flex-shrink-0 flex justify-center">
+                  <div className="py-4 flex-shrink-0 flex justify-center bg-gradient-to-br from-teal-50 via-blue-50 to-gray-50">
                     <div 
                       className={`flex flex-col bg-white/90 backdrop-blur-lg rounded-2xl px-3 sm:px-4 border border-slate-200/60 min-h-[60px] max-h-[300px] justify-center py-3 shadow-xl w-full max-w-3xl mx-2 sm:mx-4 ${isDragging ? 'border-blue-400 bg-blue-50/80' : ''}`}
                       onDragOver={handleDragOver}
@@ -1812,7 +1864,6 @@ const ChatAI1Landing = ({ setCurrentPage, currentPage }) => {
             </div>
           </div>
         </div>
-      </div>
     );
 };
 

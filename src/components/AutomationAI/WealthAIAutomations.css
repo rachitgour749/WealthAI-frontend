@@ -31,7 +31,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: linear-gradient(135deg, var(--color-cream-50) 0%, rgba(224, 247, 250, 0.3) 50%, rgba(178, 223, 219, 0.2) 100%);
-  min-height: 100vh;
+  height: calc(100vh - 80px);
 }
 
 /* Header */
@@ -119,7 +119,7 @@
 
 /* Service Cards */
 .service-card {
-  background: linear-gradient(135deg, var(--color-white) 0%, rgba(33, 128, 141, 0.08) 100%);
+  background: white;
   border: 1px solid rgba(33, 128, 141, 0.15);
   border-radius: var(--radius-lg);
   padding: var(--space-24);
@@ -168,15 +168,34 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-8);
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 2.5rem;
+}
+
+.card-platforms > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-platforms .platform-tag {
+  align-self: center;
 }
 
 .platform-tag {
   background: rgba(33, 128, 141, 0.1);
   color: var(--color-teal-600);
-  padding: var(--space-4) var(--space-12);
+  padding: var(--space-2) var(--space-6);
   border-radius: var(--radius-md);
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 500;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: fit-content;
+  line-height: 1;
 }
 
 .card-arrow {

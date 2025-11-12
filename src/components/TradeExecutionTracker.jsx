@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useApi } from '../context/ApiContext';
+import { formatDate } from '../utils/dateFormatter';
 
 const TradeExecutionTracker = () => {
   const { buildApiUrl } = useApi();
@@ -261,10 +262,10 @@ const TradeExecutionTracker = () => {
                         {safeString(skip.week)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {safeString(skip.date)}
+                        {skip.date ? formatDate(skip.date) : safeString(skip.date)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {safeString(skip.signal_date)}
+                        {skip.signal_date ? formatDate(skip.signal_date) : safeString(skip.signal_date)}
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <span className={getReasonColor(skip.reason)}>

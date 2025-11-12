@@ -6,13 +6,13 @@ const ApiContext = createContext();
 // API configuration
 const API_CONFIG = {
   BASE_URL: 'http://localhost:8000',
+  // BASE_URL: 'https://api.wealthai1.in',
   ENDPOINTS: {
     RATE: '/api/rate',
     CHAT: '/api/chat',
     USER_HISTORY: '/api/user-history',
     USER_PROMPTS: '/api/user-prompts',
     CUSTOM: '/custom',
-    PAYMENT: '/api/payment/api/payment',
     SAVE_JSON: '/api/save-json',
     SAVED_JSON: '/api/saved-json',
     STOCKS_METRICS: '/api/stocks/metrics/',
@@ -53,7 +53,14 @@ export const ApiProvider = ({ children }) => {
     // Helper function to build full URL
     buildUrl: (endpoint) => `${API_CONFIG.BASE_URL}${endpoint}`,
     // Helper function to build API URL
-    buildApiUrl: (endpoint) => `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS[endpoint] || endpoint}`
+    buildApiUrl: (endpoint) => {
+      const endpointPath = API_CONFIG.ENDPOINTS[endpoint];
+      if (!endpointPath) {
+        console.error(`Endpoint '${endpoint}' not found in API_CONFIG.ENDPOINTS`);
+        return `${API_CONFIG.BASE_URL}/api/unknown-endpoint`;
+      }
+      return `${API_CONFIG.BASE_URL}${endpointPath}`;
+    }
   };
 
   return (

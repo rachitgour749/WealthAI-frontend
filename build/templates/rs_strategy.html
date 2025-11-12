@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relative Strength (RS) Strategy | MarketsAI1 - Powered by WealthAI1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8f4f8 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(22, 160, 133, 0.3);
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            max-width: 800px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            color: #1e3a5f;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-bottom: 3px solid #16a085;
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: #2c5282;
+            font-size: 1.3rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #f0fdfa 0%, #e6f7f5 100%);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #16a085;
+        }
+
+        .summary-card h4 {
+            color: #16a085;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card p {
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .accordion {
+            margin: 1.5rem 0;
+        }
+
+        .accordion-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .accordion-item:hover {
+            box-shadow: 0 3px 15px rgba(22, 160, 133, 0.15);
+        }
+
+        .accordion-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f0f4f8 100%);
+            padding: 1.2rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .accordion-header:hover {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d5e8ee 100%);
+        }
+
+        .accordion-header.active {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            color: white;
+        }
+
+        .accordion-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c5282;
+        }
+
+        .accordion-header.active .accordion-title {
+            color: white;
+        }
+
+        .accordion-icon {
+            font-size: 1.3rem;
+            transition: transform 0.3s ease;
+        }
+
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .accordion-content-inner {
+            padding: 1.5rem;
+        }
+
+        .phase-box {
+            background: linear-gradient(135deg, #fff8e6 0%, #fef3d9 100%);
+            border-left: 4px solid #f59e0b;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+
+        .phase-box h4 {
+            color: #f59e0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .metrics-table th {
+            background: linear-gradient(135deg, #2c5282 0%, #1e3a5f 100%);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .metrics-table td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .metrics-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #e6f7f5 0%, #d1f2eb 100%);
+            border: 2px solid #16a085;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box strong {
+            color: #16a085;
+        }
+
+        .momentum-box {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border: 2px solid #059669;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .momentum-box strong {
+            color: #047857;
+        }
+
+        .comparison-box {
+            background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .comparison-box strong {
+            color: #ea580c;
+        }
+
+        .disclaimer {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+            border-left: 4px solid #e53e3e;
+            padding: 1.5rem;
+            border-radius: 5px;
+            margin-top: 3rem;
+        }
+
+        .disclaimer h3 {
+            color: #e53e3e;
+            margin-bottom: 0.5rem;
+        }
+
+        .disclaimer p {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        ul {
+            margin: 1rem 0 1rem 2rem;
+        }
+
+        li {
+            margin: 0.5rem 0;
+            color: #555;
+        }
+
+        .cost-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .cost-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid #16a085;
+        }
+
+        .cost-item strong {
+            color: #2c5282;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        .formula-box {
+            background: #f8f9fa;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+        }
+
+        .formula-box .formula {
+            font-size: 1.1rem;
+            color: #2c5282;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .timeline-container {
+            position: relative;
+            padding: 1rem 0;
+            margin: 1.5rem 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .timeline-dot {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .timeline-content {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid #16a085;
+        }
+
+        .timeline-content strong {
+            color: #16a085;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cost-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .hero {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>Relative Strength (RS) Strategy</h1>
+            <p>A momentum-driven investment approach that identifies and holds the strongest performing stocks from the Nifty 500 universe by measuring their relative strength against the Nifty 50 index. This strategy systematically rides market winners while they maintain their outperformance momentum.</p>
+        </div>
+
+        <div class="card">
+            <h2>Executive Summary</h2>
+            <p>The Relative Strength (RS) Strategy is a <strong>momentum-based approach</strong> that capitalizes on a powerful market phenomenon: stocks that are outperforming the market tend to continue outperforming in the near term. By systematically identifying and holding the top performers from the Nifty 500 universe relative to Nifty 50, this strategy aims to capture sustained upward trends.</p>
+
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h4>Momentum Capture</h4>
+                    <p>Identifies stocks demonstrating the strongest relative performance across multiple timeframes (1 week, 1 month, 1 quarter) to capture sustained momentum trends.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>Bull Market Advantage</h4>
+                    <p>This strategy performs exceptionally well during bull phases when market momentum is strong and stock prices exhibit trending behavior with clear winners emerging.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>Systematic Selection</h4>
+                    <p>Removes subjective bias by using a rules-based ranking system to identify top performers, with weekly rebalancing to ensure portfolio always holds current market leaders.</p>
+                </div>
+
+                <div class="summary-card">
+                    <h4>Risk Management</h4>
+                    <p>Built-in stop-loss mechanisms and automatic exits when stocks lose their relative strength ranking protect capital during momentum reversals.</p>
+                </div>
+            </div>
+
+            <div class="momentum-box">
+                <strong>Why Momentum Works:</strong> Financial markets exhibit "persistence of performance" - stocks that have been rising strongly tend to continue rising in the near term due to factors like positive investor sentiment, improving fundamentals, institutional accumulation, and sector tailwinds. This strategy systematically identifies these winners before the momentum exhausts, positioning your portfolio to benefit from this well-documented market behavior. This approach is particularly powerful during <strong>bull market phases</strong> when clear trends emerge and momentum persists for extended periods.
+            </div>
+
+            <div class="comparison-box">
+                <strong>Single vs Dual Momentum:</strong> This strategy implements <strong>single momentum</strong> by measuring stock performance only against the Nifty 50 benchmark. A more advanced variant would implement <strong>dual momentum</strong> by additionally measuring stocks against their sector indices (e.g., Bank Nifty for banking stocks, IT Index for IT stocks), capturing both broad market momentum and sector-specific momentum. The dual momentum approach can further enhance returns by identifying stocks that are leaders both in their sector and the broader market.
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Strategy Overview</h2>
+            
+            <h3>Core Concept: Relative Strength</h3>
+            <p>Relative Strength (RS) measures how well a stock is performing compared to a benchmark index (Nifty 50 in this case). Unlike absolute returns which just show if a stock went up or down, RS shows if a stock is outperforming or underperforming the market.</p>
+
+            <div class="formula-box">
+                <div style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem;">Relative Strength Formula:</div>
+                <div class="formula">RS = (Stock Return / Index Return) - 1</div>
+                <div style="color: #666; font-size: 0.85rem; margin-top: 1rem;">
+                    <strong>Interpretation:</strong><br>
+                    RS > 0 = Stock is outperforming the index (Momentum!)<br>
+                    RS = 0 = Stock is matching the index<br>
+                    RS < 0 = Stock is underperforming the index
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>Example:</strong> Suppose over the last month, Reliance gained 8% while Nifty 50 gained 5%. The relative strength would be (1.08/1.05) - 1 = 0.0286 or +2.86%. This positive RS indicates Reliance is outperforming the market, making it a candidate for inclusion in the portfolio. Conversely, if HDFC Bank gained only 2% in the same period, its RS would be (1.02/1.05) - 1 = -0.0286 or -2.86%, indicating underperformance.
+            </div>
+
+            <h3>Multi-Timeframe RS Score</h3>
+            <p>Rather than relying on a single timeframe, the strategy calculates RS across three periods to get a comprehensive view of momentum:</p>
+
+            <div class="cost-grid">
+                <div class="cost-item">
+                    <strong>Short-term (1 Week)</strong>
+                    Captures immediate momentum and recent price action
+                </div>
+                <div class="cost-item">
+                    <strong>Medium-term (1 Month)</strong>
+                    Identifies sustained trends over the past month
+                </div>
+                <div class="cost-item">
+                    <strong>Long-term (1 Quarter)</strong>
+                    Confirms longer-term outperformance patterns
+                </div>
+                <div class="cost-item">
+                    <strong>Composite RS Score</strong>
+                    Average of all three timeframes for robust ranking
+                </div>
+            </div>
+
+            <p>The <strong>RS Score</strong> is the average of these three RS measurements, providing a balanced view that captures both recent momentum and sustained trends. Stocks are ranked by this composite score to identify the strongest performers.</p>
+        </div>
+
+        <div class="card">
+            <h2>How the Strategy Works</h2>
+
+            <h3>Weekly Cycle</h3>
+            <p>The strategy operates on a disciplined weekly schedule to systematically capture momentum:</p>
+
+            <div class="timeline-container">
+                <div class="timeline-item">
+                    <div class="timeline-dot">1</div>
+                    <div class="timeline-content">
+                        <strong>Friday (Signal Generation)</strong>
+                        At the end of Friday's trading session, the strategy analyzes all Nifty 500 stocks, calculating their RS Score against Nifty 50 across the three timeframes. Stocks are ranked from highest to lowest RS Score.
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot">2</div>
+                    <div class="timeline-content">
+                        <strong>Weekend (Order Preparation)</strong>
+                        The system determines which stocks to buy (top ranked with positive RS) and which to sell (existing holdings that have fallen out of top ranks or hit stop loss).
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot">3</div>
+                    <div class="timeline-content">
+                        <strong>Monday (Execution)</strong>
+                        At Monday's market open, exit orders are executed first (selling underperformers), followed by entry orders (buying new top performers). All trades use market orders at opening prices.
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot">4</div>
+                    <div class="timeline-content">
+                        <strong>Week Ahead (Hold Period)</strong>
+                        Portfolio holds the selected stocks through the week. Daily monitoring for stop-loss violations, but no intra-week rebalancing. Process repeats every Friday.
+                    </div>
+                </div>
+            </div>
+
+            <h3>Stock Universe</h3>
+            <p>The strategy selects from the <strong>Nifty 500</strong> universe - India's 500 largest and most liquid companies. This provides:</p>
+            <ul>
+                <li><strong>Broad Coverage:</strong> Access to opportunities across all sectors and market capitalizations</li>
+                <li><strong>Quality Filter:</strong> All stocks are established companies with proven track records</li>
+                <li><strong>Liquidity:</strong> Easy to enter and exit positions without significant market impact</li>
+                <li><strong>Sufficient Choices:</strong> Large enough universe to always find strong momentum candidates</li>
+            </ul>
+        </div>
+
+        <div class="accordion">
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Entry & Exit Rules</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>When to Buy (Entry Conditions)</h3>
+                        
+                        <div class="phase-box">
+                            <h4>Entry Criteria</h4>
+                            <ul>
+                                <li><strong>Positive RS Score:</strong> Only consider stocks with RS Score > 0 (outperforming Nifty 50)</li>
+                                <li><strong>Top Ranked:</strong> Select from the highest-ranked stocks by RS Score</li>
+                                <li><strong>Portfolio Capacity:</strong> Buy only if there are vacant positions (e.g., if max holdings is 10 and you hold 8, buy 2 more)</li>
+                                <li><strong>Equal Weighting:</strong> Allocate equal capital to each position based on configured position size</li>
+                            </ul>
+                        </div>
+
+                        <div class="highlight-box">
+                            <strong>Example:</strong> Suppose your strategy is configured to hold maximum 10 stocks with 10% position size each. On Friday, if you're holding only 7 stocks and 3 positions are vacant, the strategy will identify the top 10 ranked stocks with positive RS scores. The 3 new stocks (not already held) with the highest rankings will be purchased on Monday morning, each receiving 10% allocation.
+                        </div>
+
+                        <h3>When to Sell (Exit Conditions)</h3>
+
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>RS Rank Exit</strong>
+                                If a held stock's rank falls below your maximum holdings threshold (e.g., if holding 10 stocks max and it falls to rank 11 or lower), sell on next Monday.
+                            </div>
+                            <div class="cost-item">
+                                <strong>Stop Loss Exit</strong>
+                                If stock price falls by the configured stop-loss percentage from your entry price, exit immediately at next day's open.
+                            </div>
+                            <div class="cost-item">
+                                <strong>Negative RS Exit</strong>
+                                If a held stock's RS Score turns negative (underperforming the market), it automatically exits the ranking and triggers a sell.
+                            </div>
+                            <div class="cost-item">
+                                <strong>Max Holding Period</strong>
+                                Optional exit after configured maximum holding period (e.g., 12 weeks) even if still ranked well.
+                            </div>
+                        </div>
+
+                        <h3>Tie-Breaking Rules</h3>
+                        <p>When multiple stocks have identical RS Scores, the strategy uses these criteria in order:</p>
+                        <ol>
+                            <li><strong>Higher short-term RS (1-week):</strong> Prefer stocks with stronger recent momentum</li>
+                            <li><strong>Higher medium-term RS (1-month):</strong> If still tied, prefer sustained monthly momentum</li>
+                            <li><strong>Lower volatility:</strong> Choose more stable performer over choppy one</li>
+                            <li><strong>Higher market cap:</strong> Prefer larger, more liquid stocks</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Capital & Position Management</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>Capital Allocation Framework</h3>
+                        <p>The strategy uses a disciplined capital management system:</p>
+
+                        <table class="metrics-table">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Description</th>
+                                    <th>Typical Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Total Capital (C)</strong></td>
+                                    <td>Your total investment amount</td>
+                                    <td>e.g., ₹10,00,000</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Buffer Capital (B%)</strong></td>
+                                    <td>Percentage kept as reserve for costs/drawdowns</td>
+                                    <td>5-10%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Effective Capital (E)</strong></td>
+                                    <td>Capital actually deployed = C - B</td>
+                                    <td>₹9,00,000</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Position Size (P%)</strong></td>
+                                    <td>Percentage of effective capital per stock</td>
+                                    <td>10-20%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Max Positions (N)</strong></td>
+                                    <td>Maximum stocks to hold = 100 / P%</td>
+                                    <td>5-10 stocks</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="highlight-box">
+                            <strong>Example Calculation:</strong><br>
+                            Total Capital: ₹10,00,000<br>
+                            Buffer: 10% = ₹1,00,000<br>
+                            Effective Capital: ₹9,00,000<br>
+                            Position Size: 10%<br>
+                            Max Positions: 100/10 = 10 stocks<br>
+                            Per Stock Allocation: 10% of ₹9,00,000 = ₹90,000 each
+                        </div>
+
+                        <h3>Capital Reset Mechanism</h3>
+                        <p>When cumulative profit or loss exceeds a threshold (e.g., ±10% of total capital), the strategy resets:</p>
+                        <ul>
+                            <li><strong>New Total Capital:</strong> Original capital ± accumulated P&L</li>
+                            <li><strong>Recalculated Allocations:</strong> Position sizes adjusted based on new capital</li>
+                            <li><strong>Prevents Concentration:</strong> Ensures positions stay proportional to current capital</li>
+                        </ul>
+
+                        <h3>Transaction Costs</h3>
+                        <p>The strategy accounts for all real trading costs:</p>
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>Brokerage</strong>
+                                User-defined % per trade (typically 0.03-0.1%)
+                            </div>
+                            <div class="cost-item">
+                                <strong>STT</strong>
+                                0.025% on sell side for equity delivery
+                            </div>
+                            <div class="cost-item">
+                                <strong>Stamp Duty</strong>
+                                0.015% on buy side
+                            </div>
+                            <div class="cost-item">
+                                <strong>Other Charges</strong>
+                                Exchange fees, SEBI charges, GST on brokerage
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Risk Management & Stop Loss</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>Stop Loss Protection</h3>
+                        <p>The strategy implements a configurable stop-loss mechanism to protect capital:</p>
+
+                        <div class="phase-box">
+                            <h4>How Stop Loss Works</h4>
+                            <ul>
+                                <li><strong>Trigger Level:</strong> Set at a percentage below entry price (e.g., 8-10%)</li>
+                                <li><strong>Monitoring:</strong> Checked daily based on closing prices</li>
+                                <li><strong>Execution:</strong> If closing price breaches stop loss, exit at next day's opening price</li>
+                                <li><strong>Gap Handling:</strong> If market gaps down through stop loss, exit at open price and record slippage</li>
+                            </ul>
+                        </div>
+
+                        <div class="highlight-box">
+                            <strong>Example:</strong> You buy TCS at ₹3,500 with a 10% stop loss. Your stop loss level is ₹3,150. If TCS closes at ₹3,140 on any day, a sell order is triggered for the next morning. If the market opens at ₹3,100 (gap down), the exit occurs at ₹3,100, and the ₹40 additional loss is recorded as slippage.
+                        </div>
+
+                        <h3>Why Stop Loss is Critical</h3>
+                        <ul>
+                            <li><strong>Momentum Reversal:</strong> Protects when stock momentum suddenly reverses</li>
+                            <li><strong>Capital Preservation:</strong> Limits loss on any single position</li>
+                            <li><strong>Portfolio Protection:</strong> Prevents one bad stock from severely impacting overall returns</li>
+                            <li><strong>Psychological Benefit:</strong> Removes emotional decision-making during drawdowns</li>
+                        </ul>
+
+                        <h3>Portfolio-Level Risk Controls</h3>
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>Diversification</strong>
+                                Multiple positions (5-10 stocks) prevent concentration risk
+                            </div>
+                            <div class="cost-item">
+                                <strong>Weekly Rebalance</strong>
+                                Regular review ensures holdings still meet criteria
+                            </div>
+                            <div class="cost-item">
+                                <strong>Positive RS Filter</strong>
+                                Only holds stocks currently outperforming market
+                            </div>
+                            <div class="cost-item">
+                                <strong>Automatic Exits</strong>
+                                Systematic removal of underperformers
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Performance & Market Conditions</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>When This Strategy Excels</h3>
+                        
+                        <div class="momentum-box">
+                            <strong>Bull Market Performance:</strong> The RS Strategy is specifically designed to capitalize on bull market conditions. When the market is in an uptrend with clear momentum, stocks tend to exhibit sustained directional moves, making relative strength patterns highly profitable. During such phases, winners keep winning and the strategy systematically captures these trends. Historical data shows momentum strategies can deliver exceptional returns during prolonged bull phases, often significantly outperforming buy-and-hold approaches.
+                        </div>
+
+                        <h3>Optimal Market Conditions</h3>
+                        <ul>
+                            <li><strong>Strong Uptrends:</strong> Clear market direction with rising indices</li>
+                            <li><strong>High Breadth:</strong> Many stocks participating in the rally</li>
+                            <li><strong>Sector Rotation:</strong> Leadership shifting between sectors provides fresh opportunities</li>
+                            <li><strong>Low Volatility:</strong> Steady trends without excessive whipsaws</li>
+                            <li><strong>Positive Sentiment:</strong> Risk-on environment with institutional buying</li>
+                        </ul>
+
+                        <h3>Challenging Market Conditions</h3>
+                        <ul>
+                            <li><strong>Range-Bound Markets:</strong> Sideways movement without clear trends reduces momentum effectiveness</li>
+                            <li><strong>High Volatility:</strong> Frequent reversals can trigger stop losses and reduce returns</li>
+                            <li><strong>Bear Markets:</strong> Downtrends cause most stocks to have negative RS scores, limiting opportunities</li>
+                            <li><strong>Market Corrections:</strong> Sharp pullbacks can result in multiple stop loss exits</li>
+                        </ul>
+
+                        <h3>Performance Metrics to Track</h3>
+                        <table class="metrics-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>What It Measures</th>
+                                    <th>Target</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>CAGR</td>
+                                    <td>Compound annual growth rate</td>
+                                    <td>15-25% in bull markets</td>
+                                </tr>
+                                <tr>
+                                    <td>Win Rate</td>
+                                    <td>Percentage of profitable trades</td>
+                                    <td>55-65%</td>
+                                </tr>
+                                <tr>
+                                    <td>Maximum Drawdown</td>
+                                    <td>Largest peak-to-trough decline</td>
+                                    <td>20-30% (higher in corrections)</td>
+                                </tr>
+                                <tr>
+                                    <td>Sharpe Ratio</td>
+                                    <td>Risk-adjusted returns</td>
+                                    <td>>1.0 indicates good risk-return balance</td>
+                                </tr>
+                                <tr>
+                                    <td>Average Holding Period</td>
+                                    <td>How long winners are held</td>
+                                    <td>3-8 weeks (varies with momentum)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="comparison-box">
+                            <strong>Strategy Adaptation Tip:</strong> During ranging or bear markets, consider reducing position sizes, tightening stop losses, or pausing the strategy altogether. Momentum strategies work best when market conditions support trending behavior. Many traders activate this strategy only when broader market indicators (like 50-day and 200-day moving averages) show clear uptrends.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Single vs Dual Momentum Enhancement</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>Current Implementation: Single Momentum</h3>
+                        <p>This strategy currently implements <strong>single momentum</strong> by measuring stock performance exclusively against the Nifty 50 index. This provides a straightforward and effective way to identify market leaders.</p>
+
+                        <div class="highlight-box">
+                            <strong>Single Momentum Example:</strong> HDFC Bank is compared only to Nifty 50. If HDFC Bank gained 12% while Nifty 50 gained 8%, it shows positive relative strength and ranks well. The sector it belongs to (banking) is not separately considered in the current implementation.
+                        </div>
+
+                        <h3>Advanced Variation: Dual Momentum</h3>
+                        <p>An enhanced version of this strategy would implement <strong>dual momentum</strong> by measuring stocks against both the broad market index AND their respective sector indices:</p>
+
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>Broad Market RS</strong>
+                                Stock performance vs Nifty 50 (existing calculation)
+                            </div>
+                            <div class="cost-item">
+                                <strong>Sector RS</strong>
+                                Stock performance vs its sector index (new addition)
+                            </div>
+                            <div class="cost-item">
+                                <strong>Combined Score</strong>
+                                Weighted average of both RS measurements
+                            </div>
+                            <div class="cost-item">
+                                <strong>Dual Filter</strong>
+                                Stock must outperform both benchmarks
+                            </div>
+                        </div>
+
+                        <div class="comparison-box">
+                            <strong>Dual Momentum Example:</strong> Consider HDFC Bank during a period when:<br>
+                            • HDFC Bank gained 12%<br>
+                            • Nifty 50 gained 8% → Market RS = +4% (positive)<br>
+                            • Bank Nifty gained 15% → Sector RS = -3% (negative)<br><br>
+                            In <strong>single momentum</strong>, HDFC Bank would rank well (+4% market RS).<br>
+                            In <strong>dual momentum</strong>, HDFC Bank might be excluded or ranked lower because it's underperforming its banking peers, even while beating the broader market. This additional filter helps identify not just market leaders, but sector leaders.
+                        </div>
+
+                        <h3>Benefits of Dual Momentum</h3>
+                        <ul>
+                            <li><strong>Sector Leadership:</strong> Captures stocks that are leaders within their industry</li>
+                            <li><strong>Enhanced Returns:</strong> Studies show dual momentum can improve performance by 2-3% CAGR</li>
+                            <li><strong>Better Risk-Adjusted Returns:</strong> Reduces false positives from sector-wide movements</li>
+                            <li><strong>Sector Rotation Capture:</strong> Automatically shifts to sectors showing strong momentum</li>
+                        </ul>
+
+                        <h3>Considerations for Dual Momentum</h3>
+                        <ul>
+                            <li><strong>More Complex:</strong> Requires sector classification and multiple benchmarks</li>
+                            <li><strong>Fewer Opportunities:</strong> Stricter filters mean fewer qualifying stocks</li>
+                            <li><strong>Higher Turnover:</strong> More frequent rebalancing as sector leadership shifts</li>
+                            <li><strong>Implementation:</strong> Currently planned as a future enhancement to MarketsAI1</li>
+                        </ul>
+
+                        <div class="highlight-box">
+                            <strong>Future Enhancement:</strong> MarketsAI1 roadmap includes adding dual momentum as an optional configuration. Users will be able to choose between single momentum (current), dual momentum (enhanced), or even create custom multi-factor momentum models combining various benchmarks and timeframes.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-title">Getting Started with MarketsAI1</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+                        <h3>Configuration Parameters</h3>
+                        <p>When setting up the RS Strategy on MarketsAI1, you'll configure:</p>
+
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <strong>Capital Settings</strong>
+                                Total capital, buffer percentage, position size
+                            </div>
+                            <div class="cost-item">
+                                <strong>Risk Parameters</strong>
+                                Stop loss percentage, maximum holding period
+                            </div>
+                            <div class="cost-item">
+                                <strong>Position Limits</strong>
+                                Maximum number of stocks to hold simultaneously
+                            </div>
+                            <div class="cost-item">
+                                <strong>Backtest Period</strong>
+                                Historical date range for strategy testing
+                            </div>
+                            <div class="cost-item">
+                                <strong>Transaction Costs</strong>
+                                Brokerage rate and other charges
+                            </div>
+                            <div class="cost-item">
+                                <strong>Universe Filters</strong>
+                                Minimum liquidity, price floors for stock eligibility
+                            </div>
+                        </div>
+
+                        <h3>Typical Configuration Example</h3>
+                        <table class="metrics-table">
+                            <tbody>
+                                <tr>
+                                    <td style="width: 40%;"><strong>Total Capital</strong></td>
+                                    <td>₹10,00,000</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Buffer Capital</strong></td>
+                                    <td>10% (₹1,00,000)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Position Size</strong></td>
+                                    <td>10% per stock</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Max Positions</strong></td>
+                                    <td>10 stocks</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Stop Loss</strong></td>
+                                    <td>8-10%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Brokerage</strong></td>
+                                    <td>0.03-0.1% per trade</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3>Backtest & Optimization Workflow</h3>
+                        <ol>
+                            <li><strong>Initial Setup:</strong> Configure parameters based on your capital and risk tolerance</li>
+                            <li><strong>Historical Backtest:</strong> Run strategy over past 5-10 years to see performance across different market cycles</li>
+                            <li><strong>Parameter Optimization:</strong> Test different position sizes, stop losses, and holding limits</li>
+                            <li><strong>Market Condition Analysis:</strong> Evaluate performance during bull, bear, and range-bound periods</li>
+                            <li><strong>Comparison:</strong> Compare against Nifty 50 buy-and-hold and other strategies</li>
+                            <li><strong>Paper Trading:</strong> Run strategy with virtual money for 4-8 weeks before going live</li>
+                        </ol>
+
+                        <div class="momentum-box">
+                            <strong>Pro Tip:</strong> Start with more conservative settings (8-10 stocks, 8% stop loss, 10% position size) and gradually optimize based on backtest results and your risk comfort. The beauty of momentum strategies is that they work across various parameter settings - the key is consistency in execution.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            <h3>SEBI Compliance & Regulatory Disclosure</h3>
+            <p><strong>Educational Purpose Only:</strong> The information provided in this document is for educational and informational purposes only. It is not intended as, and should not be construed as, investment advice, recommendation, or an offer to buy or sell any securities.</p>
+            
+            <p><strong>Not Investment Advice:</strong> This strategy explanation does not constitute financial, investment, trading, or any other type of professional advice. Past performance is not indicative of future results. All investments involve risk, including the potential loss of principal.</p>
+            
+            <p><strong>Momentum Strategy Risks:</strong> Momentum strategies are inherently dependent on market conditions and perform best during trending markets. They can experience significant drawdowns during market reversals, consolidations, or bear markets. Rapid momentum changes can result in frequent stop-loss triggers and reduced returns.</p>
+            
+            <p><strong>Market Condition Dependency:</strong> The RS Strategy performs optimally during bull market phases with strong, sustained trends. Performance may be significantly lower or negative during sideways or declining markets. Users should be prepared for periods of underperformance relative to buy-and-hold strategies during certain market conditions.</p>
+            
+            <p><strong>Weekly Rebalancing Costs:</strong> This strategy involves weekly trading which generates transaction costs, taxes, and potential slippage. While the strategy accounts for these costs in backtesting, actual costs may vary and can materially impact net returns.</p>
+            
+            <p><strong>Consult Professionals:</strong> Before implementing any momentum strategy, consult with qualified financial advisors, tax consultants, and legal professionals to understand the suitability for your specific financial situation, goals, and risk tolerance.</p>
+            
+            <p><strong>SEBI Registration:</strong> WealthAI1 and MarketsAI1 are technology platforms that provide tools for strategy backtesting and analysis. We are not SEBI registered investment advisors, portfolio managers, or research analysts. We do not provide personalized investment recommendations or manage client portfolios.</p>
+            
+            <p><strong>Data Accuracy:</strong> While we use reliable data sources and strive for calculation accuracy, we cannot guarantee error-free operation. The strategy uses end-of-day adjusted closing prices and assumes execution at Monday opening prices, which may differ from actual execution prices in live trading.</p>
+            
+            <p><strong>No Performance Guarantee:</strong> There is no guarantee that this or any strategy will generate positive returns. Historical backtest results, while useful for evaluation, do not predict future performance. You could lose some or all of your invested capital.</p>
+            
+            <p><strong>Algorithmic Trading Risks:</strong> Systematic strategies depend on accurate data feeds, reliable execution systems, and stable market conditions. Technical failures, data errors, or extreme market events can materially impact strategy performance.</p>
+            
+            <p><strong>Regulatory Compliance:</strong> This document complies with SEBI guidelines on investment education and disclosure. For official regulatory information and investor protection, please visit www.sebi.gov.in</p>
+
+            <p><strong>Market Conditions:</strong> This strategy is designed for Indian equity markets and may not be suitable for other markets or asset classes. Always understand the specific characteristics and risks of the markets you trade.</p>
+        </div>
+    </div>
+
+    <script>
+        // Accordion functionality
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const item = this.parentElement;
+                const content = this.nextElementSibling;
+                const isActive = this.classList.contains('active');
+
+                // Close all accordions
+                document.querySelectorAll('.accordion-header').forEach(h => {
+                    h.classList.remove('active');
+                    h.nextElementSibling.style.maxHeight = null;
+                });
+
+                // Open clicked accordion if it wasn't active
+                if (!isActive) {
+                    this.classList.add('active');
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        });
+
+        // Smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Adjust accordion heights on window resize
+        window.addEventListener('resize', function() {
+            document.querySelectorAll('.accordion-header.active').forEach(header => {
+                const content = header.nextElementSibling;
+                content.style.maxHeight = content.scrollHeight + "px";
+            });
+        });
+    </script>
+</body>
+</html>
